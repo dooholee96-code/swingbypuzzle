@@ -1,0 +1,44 @@
+; 스윙바이 — Godot 프로젝트 설정
+; 이 파일의 값은 docs/PLAN.md §11, §15.1, §10.0.1 근거가 있다. 임의로 바꾸지 않는다.
+
+config_version=5
+
+[application]
+
+config/name="스윙바이"
+config/description="행성 중력으로 궤도를 꺾어 목적지에 도달하는 물리 퍼즐"
+run/main_scene="res://scenes/main.tscn"
+; 아래 줄은 Godot이 프로젝트를 처음 열 때 실제 버전으로 갱신한다.
+config/features=PackedStringArray("4.3", "GL Compatibility")
+config/quit_on_go_back=false
+boot_splash/bg_color=Color(0, 0, 0, 1)
+boot_splash/show_image=false
+
+[display]
+
+; §11: 배율은 Camera2D.zoom이 담당한다. 스트레치를 쓰면 선이 뭉개진다.
+window/size/viewport_width=1080
+window/size/viewport_height=1920
+window/stretch/mode="disabled"
+window/handheld/orientation=1
+window/vsync/vsync_mode=1
+
+[input_devices]
+
+; §10.0.1
+pointing/emulate_touch_from_mouse=true
+pointing/emulate_mouse_from_touch=true
+
+[rendering]
+
+; §2 / §15.1: 저사양 안드로이드 호환성이 가장 넓다
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+environment/defaults/default_clear_color=Color(0, 0, 0, 1)
+textures/vram_compression/import_etc2_astc=true
+
+[physics]
+
+; 엔진 물리를 쓰지 않는다(§19). 틱을 낮춰 불필요한 비용을 없앤다.
+common/physics_ticks_per_second=30
+2d/default_gravity=0.0
