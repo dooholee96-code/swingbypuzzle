@@ -32,6 +32,8 @@ func _ready() -> void:
 	Lifecycle.paused.connect(_on_paused)
 	Lifecycle.resumed.connect(_on_resumed)
 	Haptics.enabled = bool(Save.settings()["haptics"])   # 설정과 연결 (§13.6)
+	field.reduce_motion = bool(Save.settings()["reduce_motion"])
+	DrawLib.glow = Save.settings()["glow"] != "low"
 	_layout()
 
 
@@ -42,6 +44,7 @@ func _load(id: String) -> bool:
 			push_error(e)
 		return false
 	session.setup(lv)
+	field.rebuild()                # 별·소행성 모양을 시드 난수로 다시 만든다 (§5.8)
 	hud.hide_result()
 	_panning = false          # 새 단계에서는 화면을 출발점으로 되돌린다
 	_layout()
@@ -88,6 +91,7 @@ func _process(delta: float) -> void:
 		return
 	session.advance(delta)
 	_follow(delta)
+	field.cam_center = camera.get_screen_center_position()   # 별 시차 (§12.3)
 	hud.refresh()
 	hud.minimap.refresh(_world_view())
 	if session.state == Session.ENDING and session.end_progress() >= 1.0:

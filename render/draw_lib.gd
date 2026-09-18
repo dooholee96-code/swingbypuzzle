@@ -72,6 +72,22 @@ static func dashed_circle(ci: CanvasItem, center: Vector2, radius: float,
 		a += step
 
 
+# 타원 호. 기울여 그릴 수 있다. §12.3 의 행성 고리와 외계인 실루엣.
+static func ellipse_arc(ci: CanvasItem, center: Vector2, rx: float, ry: float,
+		rot: float, from: float, to: float, color: Color, scale: float,
+		alpha := 1.0) -> void:
+	var seg: int = clampi(int(maxf(rx, ry) * absf(to - from) / 6.0), 8, 96)
+	var pts := PackedVector2Array()
+	var cr := cos(rot)
+	var sr := sin(rot)
+	for i in seg + 1:
+		var a: float = from + (to - from) * float(i) / float(seg)
+		var x: float = cos(a) * rx
+		var y: float = sin(a) * ry
+		pts.append(center + Vector2(x * cr - y * sr, x * sr + y * cr))
+	line(ci, pts, color, scale, alpha)
+
+
 # 정 n 각형 윤곽. §12.3 의 행성.
 static func ngon(ci: CanvasItem, center: Vector2, radius: float, sides: int,
 		rot: float, color: Color, scale: float, alpha := 1.0) -> void:

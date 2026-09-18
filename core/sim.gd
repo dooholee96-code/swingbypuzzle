@@ -316,6 +316,12 @@ func body_pos_at(b: Dictionary, t: float) -> PackedFloat64Array:
 	return PackedFloat64Array([_bp[0], _bp[1]])
 
 
+# 살아 있는 총알. 5개씩 [x, y, vx, vy, age]. 화면이 읽기만 한다.
+# PackedFloat64Array 는 기록 시 복사(CoW)라 읽기만 하면 사본이 생기지 않는다.
+func bullets() -> PackedFloat64Array:
+	return _bullets
+
+
 # 우주선 현재 상태 복사본 [x, y, vx, vy]
 func ship_state() -> PackedFloat64Array:
 	return PackedFloat64Array([_ship[0], _ship[1], _ship[2], _ship[3]])
