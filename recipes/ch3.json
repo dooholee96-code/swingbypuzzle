@@ -1,0 +1,189 @@
+{
+  "chapter": 3,
+  "defaults": {
+    "speed": 155,
+    "startZone": "bottom",
+    "goalZone": "top"
+  },
+  "slots": [
+    {
+      "slot": 2,
+      "role": "연습",
+      "name": "가장자리를 스쳐",
+      "hint": "범위에 잠깐 들어가는 건 괜찮을 수 있어요",
+      "map": {
+        "w": 400,
+        "h": 760
+      },
+      "preview": 0.9,
+      "required": [
+        {
+          "type": "planet",
+          "count": 2
+        }
+      ],
+      "hazards": {
+        "ufos": 1,
+        "rocksMax": 6
+      },
+      "window": {
+        "min": 6,
+        "max": 11
+      }
+    },
+    {
+      "slot": 3,
+      "role": "변형",
+      "name": "두 범위 사이",
+      "hint": "안전한 통로를 찾아보세요",
+      "map": {
+        "w": 400,
+        "h": 760
+      },
+      "preview": 0.9,
+      "required": [
+        {
+          "type": "planet",
+          "count": 2
+        }
+      ],
+      "hazards": {
+        "ufos": 2,
+        "rocksMax": 6
+      },
+      "window": {
+        "min": 5,
+        "max": 9
+      }
+    },
+    {
+      "slot": 4,
+      "role": "휴식",
+      "name": "가벼운 복습",
+      "map": {
+        "w": 400,
+        "h": 760
+      },
+      "preview": 0.9,
+      "required": [
+        {
+          "type": "planet",
+          "count": 1
+        }
+      ],
+      "hazards": {
+        "ufos": 1,
+        "rocksMax": 6
+      },
+      "window": {
+        "min": 7,
+        "max": 12
+      }
+    },
+    {
+      "slot": 5,
+      "role": "조합",
+      "name": "블랙홀로 빠르게",
+      "hint": "빠르게 지나가면 포격을 덜 맞아요",
+      "map": {
+        "w": 400,
+        "h": 760
+      },
+      "preview": 0.9,
+      "required": [
+        {
+          "type": "hole",
+          "count": 1
+        },
+        {
+          "type": "planet",
+          "count": 1
+        }
+      ],
+      "hazards": {
+        "ufos": 1,
+        "rocksMax": 6
+      },
+      "window": {
+        "min": 5,
+        "max": 9
+      }
+    },
+    {
+      "slot": 6,
+      "role": "조합 심화",
+      "name": "경로 선택",
+      "map": {
+        "w": 400,
+        "h": 760
+      },
+      "preview": 0.8,
+      "required": [
+        {
+          "type": "planet",
+          "count": 2
+        }
+      ],
+      "hazards": {
+        "ufos": 2,
+        "rocksMax": 6
+      },
+      "window": {
+        "min": 4,
+        "max": 8
+      }
+    },
+    {
+      "slot": 7,
+      "role": "도전",
+      "name": "포격 돌파",
+      "map": {
+        "w": 400,
+        "h": 760
+      },
+      "preview": 0.8,
+      "required": [
+        {
+          "type": "planet",
+          "count": 2
+        }
+      ],
+      "hazards": {
+        "ufos": 2,
+        "rocksMax": 8
+      },
+      "window": {
+        "min": 4,
+        "max": 8
+      }
+    },
+    {
+      "slot": 8,
+      "role": "마무리",
+      "name": "긴 항로",
+      "map": {
+        "w": 400,
+        "h": 1000
+      },
+      "preview": 0.8,
+      "required": [
+        {
+          "type": "planet",
+          "count": 2
+        },
+        {
+          "type": "hole",
+          "count": 1
+        }
+      ],
+      "hazards": {
+        "ufos": 3,
+        "rocksMax": 6
+      },
+      "window": {
+        "min": 4,
+        "max": 8
+      }
+    }
+  ]
+}

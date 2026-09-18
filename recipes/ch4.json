@@ -1,0 +1,242 @@
+{
+  "chapter": 4,
+  "defaults": {
+    "speed": 150,
+    "startZone": "bottom",
+    "goalZone": "top"
+  },
+  "slots": [
+    {
+      "slot": 2,
+      "role": "연습",
+      "name": "공전 주기 보기",
+      "hint": "공전 행성이 제자리에 올 때를 기다리세요",
+      "map": {
+        "w": 400,
+        "h": 760
+      },
+      "preview": 0.9,
+      "required": [
+        {
+          "type": "planet",
+          "count": 1
+        },
+        {
+          "type": "orbit",
+          "count": 1,
+          "role": "gate"
+        }
+      ],
+      "hazards": {
+        "ufos": 0,
+        "rocksMax": 6
+      },
+      "window": {
+        "min": 6,
+        "max": 11
+      },
+      "timing": {
+        "minFraction": 0.55,
+        "maxFraction": 0.85
+      }
+    },
+    {
+      "slot": 3,
+      "role": "변형",
+      "name": "목적지 앞을 지나감",
+      "map": {
+        "w": 400,
+        "h": 760
+      },
+      "preview": 0.9,
+      "required": [
+        {
+          "type": "planet",
+          "count": 1
+        },
+        {
+          "type": "orbit",
+          "count": 1,
+          "role": "gate"
+        }
+      ],
+      "hazards": {
+        "ufos": 0,
+        "rocksMax": 6
+      },
+      "window": {
+        "min": 5,
+        "max": 10
+      },
+      "timing": {
+        "minFraction": 0.45,
+        "maxFraction": 0.65
+      }
+    },
+    {
+      "slot": 4,
+      "role": "휴식",
+      "name": "느린 공전",
+      "map": {
+        "w": 400,
+        "h": 760
+      },
+      "preview": 0.9,
+      "required": [
+        {
+          "type": "planet",
+          "count": 1
+        },
+        {
+          "type": "orbit",
+          "count": 1,
+          "role": "gate"
+        }
+      ],
+      "hazards": {
+        "ufos": 0,
+        "rocksMax": 6
+      },
+      "window": {
+        "min": 7,
+        "max": 12
+      },
+      "timing": {
+        "minFraction": 0.7,
+        "maxFraction": 1.0
+      }
+    },
+    {
+      "slot": 5,
+      "role": "조합",
+      "name": "공전과 블랙홀",
+      "map": {
+        "w": 400,
+        "h": 760
+      },
+      "preview": 0.8,
+      "required": [
+        {
+          "type": "hole",
+          "count": 1
+        },
+        {
+          "type": "orbit",
+          "count": 1,
+          "role": "gate"
+        }
+      ],
+      "hazards": {
+        "ufos": 0,
+        "rocksMax": 6
+      },
+      "window": {
+        "min": 5,
+        "max": 9
+      },
+      "timing": {
+        "minFraction": 0.4,
+        "maxFraction": 0.6
+      }
+    },
+    {
+      "slot": 6,
+      "role": "조합 심화",
+      "name": "두 주기 맞추기",
+      "map": {
+        "w": 400,
+        "h": 760
+      },
+      "preview": 0.8,
+      "required": [
+        {
+          "type": "planet",
+          "count": 1
+        },
+        {
+          "type": "orbit",
+          "count": 2,
+          "role": "gate"
+        }
+      ],
+      "hazards": {
+        "ufos": 0,
+        "rocksMax": 6
+      },
+      "window": {
+        "min": 4,
+        "max": 8
+      },
+      "timing": {
+        "minFraction": 0.3,
+        "maxFraction": 0.5
+      }
+    },
+    {
+      "slot": 7,
+      "role": "도전",
+      "name": "타이밍과 우회",
+      "map": {
+        "w": 400,
+        "h": 760
+      },
+      "preview": 0.8,
+      "required": [
+        {
+          "type": "planet",
+          "count": 1
+        },
+        {
+          "type": "orbit",
+          "count": 1,
+          "role": "gate"
+        }
+      ],
+      "hazards": {
+        "ufos": 1,
+        "rocksMax": 6
+      },
+      "window": {
+        "min": 4,
+        "max": 8
+      },
+      "timing": {
+        "minFraction": 0.2,
+        "maxFraction": 0.4
+      }
+    },
+    {
+      "slot": 8,
+      "role": "마무리",
+      "name": "종합",
+      "map": {
+        "w": 400,
+        "h": 1100
+      },
+      "preview": 0.7,
+      "required": [
+        {
+          "type": "planet",
+          "count": 2
+        },
+        {
+          "type": "orbit",
+          "count": 2,
+          "role": "gate"
+        }
+      ],
+      "hazards": {
+        "ufos": 1,
+        "rocksMax": 6
+      },
+      "window": {
+        "min": 4,
+        "max": 8
+      },
+      "timing": {
+        "minFraction": 0.2,
+        "maxFraction": 0.4
+      }
+    }
+  ]
+}

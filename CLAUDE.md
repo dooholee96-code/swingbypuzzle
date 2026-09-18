@@ -57,7 +57,24 @@ npm run bench     성능 측정 (§8.9) — 1-1 0.061초 / 5-1 0.517초
 npm run preview   빌드 결과 서빙. **배포 전 확인은 dev 가 아니라 이것으로**
 npm run validate  §8.5 전체 검증 (--write 로 meta.metrics 기록). 커밋 전 필수
 npm run editor    스테이지 에디터 (/editor.html). 개발 서버에서만 뜬다
+npm run gen -- --recipe recipes/ch1.json --slot 2 --count 10   후보 생성 (§8.4)
 ```
+
+## 단계 만드는 흐름 (PLAN §8.2)
+
+```
+① 레시피      recipes/ch<N>.json 의 칸을 채운다. name·hint 는 사람이 짓는다
+② 생성        npm run gen -- --recipe recipes/ch2.json --slot 3 --count 10
+③ 고르기      npm run editor → 후보 목록에서 궤적 보고 고름 → 필요하면 손봄
+④ 채택        [채택하고 저장] → src/levels/data/2-3.json
+⑤ 등록        src/levels/chapters.ts 에 단계 ID 추가
+⑥ 검증·커밋   npm run validate → 통과하면 커밋 → 푸시하면 배포
+```
+
+- 생성기가 내놓는 후보는 **전부 §8.5 를 통과한 것**이다. 고르는 일만 남는다.
+- 좌표는 절대 손으로 쓰지 않는다. 에디터로 옮기는 것도 검증기가 다시 본다.
+- `name`·`hint` 는 생성기가 만들 수 없는 유일한 항목이다. 장 테마·이름을
+  짜는 데에는 AI 를 써도 된다 — 검증으로 판정할 수 있는 종류가 아니라서다.
 
 ## 스테이지 에디터 (PLAN §8.7)
 
@@ -95,6 +112,8 @@ npm run editor    스테이지 에디터 (/editor.html). 개발 서버에서만 
 | `src/save/` | localStorage (§15.3) | |
 | `src/monetization/` | 광고 정책 순수 함수 (§14) | ★ DOM 금지, M9 |
 | `src/editor/` | 스테이지 에디터 (§8.7) | **배포 제외** — editor.html 은 빌드 입력이 아니다 |
+| `recipes/` | 장별 생성 레시피 (§8.3) | 좌표는 없다. 원하는 단계의 조건만 |
+| `candidates/` | 생성 후보 (§8.4) | git 제외 |
 | `tools/` | Node CLI. `levels-fs.ts` 가 Node 용 레벨 읽기 | |
 | `docs/reference/` | 부록 A~C 의 Node 참조 구현 | 이식 대조용 |
 
@@ -109,7 +128,10 @@ npm run editor    스테이지 에디터 (/editor.html). 개발 서버에서만 
       §14.2 에 웹 광고(H5 Games Ads) 추가, 부록 D(GDScript) 삭제
 - [x] **M7** 검증기와 에디터 — 지표 9종·규칙 1~9·난이도 점수, `npm run validate`,
       웹 에디터. **브라우저에서 편집→검증→저장→CLI 재검증까지 확인함.** 테스트 88개
-- [ ] **M8** 생성기 · M9 광고 · M10 40단계 · M11 다듬기 · M12 출시
+- [x] **M8** 생성기 — 레시피 5장 34칸, §8.4 알고리즘, worker_threads 병렬화.
+      1-2 는 200시드에 후보 53개(7.6초), 공전 단계 4-2 는 300시드에 14개(80.9초).
+      **내놓은 후보는 전부 §8.5 통과**가 테스트로 묶여 있다. 테스트 105개
+- [ ] **M9** 광고 · M10 40단계 · M11 다듬기 · M12 출시
 
 ## 지금 열려 있는 것
 
@@ -117,8 +139,8 @@ npm run editor    스테이지 에디터 (/editor.html). 개발 서버에서만 
    남은 것: 타이틀 데모, 조준 감도, 발광 "낮음" 설정
 2. **색 리터럴 정리** (M11 까지) — `src/render/minimap.ts` 2곳,
    `src/ui/styles.css` 규칙 6곳이 아직 토큰 밖이다. `npm run check` 에 검사 추가 (§12.6)
-3. **M8 생성기** — "후보 10개 만들고 좋은 걸 고르는" 방식이 여기다 (§8.4).
-   에디터의 후보 목록이 이미 `candidates/` 를 읽게 되어 있어 붙이기만 하면 된다
+3. **M10 이 실제 제작이다** — 레시피는 짜 두었으니 칸마다 생성 → 고르기 →
+   채택 → 커밋을 34번 반복하면 초반부 40단계가 찬다. 이름·힌트 문구는 사람 몫
 4. **H5 Games Ads 도메인 승인 신청** — M9 시작 전에 해 두어야 한다 (§14.2)
 5. 개인정보처리방침을 Pages 에 먼저 게시 — 광고를 켜는 순간 URL 이 필요하다 (§15.5)
 6. 소리 없음 (M11), 광고 없음 (M9), PWA·서비스 워커 없음 (M11), 앱 셸 없음 (M12)

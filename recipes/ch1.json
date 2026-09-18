@@ -1,0 +1,173 @@
+{
+  "chapter": 1,
+  "defaults": {
+    "speed": 150,
+    "startZone": "bottom",
+    "goalZone": "top"
+  },
+  "slots": [
+    {
+      "slot": 2,
+      "role": "연습",
+      "name": "반대편으로",
+      "hint": "행성의 어느 쪽을 지나느냐로 꺾이는 방향이 바뀌어요",
+      "map": {
+        "w": 400,
+        "h": 740
+      },
+      "preview": 1.8,
+      "required": [
+        {
+          "type": "planet",
+          "count": 1
+        }
+      ],
+      "hazards": {
+        "ufos": 0,
+        "rocksMax": 6
+      },
+      "window": {
+        "min": 7,
+        "max": 12
+      }
+    },
+    {
+      "slot": 3,
+      "role": "변형",
+      "name": "크게 꺾기",
+      "hint": "가까이 지날수록 크게 꺾여요",
+      "map": {
+        "w": 400,
+        "h": 740
+      },
+      "preview": 1.6,
+      "required": [
+        {
+          "type": "planet",
+          "count": 1
+        }
+      ],
+      "hazards": {
+        "ufos": 0,
+        "rocksMax": 6
+      },
+      "window": {
+        "min": 6,
+        "max": 10
+      }
+    },
+    {
+      "slot": 5,
+      "role": "조합",
+      "name": "쓸 행성 고르기",
+      "hint": "모든 행성을 쓰는 게 정답은 아니에요",
+      "map": {
+        "w": 400,
+        "h": 740
+      },
+      "preview": 1.2,
+      "required": [
+        {
+          "type": "planet",
+          "count": 1
+        }
+      ],
+      "optional": [
+        {
+          "type": "planet",
+          "count": 1,
+          "role": "optional"
+        }
+      ],
+      "hazards": {
+        "ufos": 0,
+        "rocksMax": 6
+      },
+      "window": {
+        "min": 6,
+        "max": 10
+      }
+    },
+    {
+      "slot": 6,
+      "role": "조합 심화",
+      "name": "경로 고르기",
+      "map": {
+        "w": 400,
+        "h": 760
+      },
+      "preview": 1.2,
+      "required": [
+        {
+          "type": "planet",
+          "count": 2
+        }
+      ],
+      "optional": [
+        {
+          "type": "planet",
+          "count": 1,
+          "role": "optional"
+        }
+      ],
+      "hazards": {
+        "ufos": 0,
+        "rocksMax": 6
+      },
+      "window": {
+        "min": 5,
+        "max": 9
+      }
+    },
+    {
+      "slot": 7,
+      "role": "도전",
+      "name": "좁은 틈",
+      "hint": "소행성 사이를 지나가야 해요",
+      "map": {
+        "w": 400,
+        "h": 760
+      },
+      "preview": 1.0,
+      "required": [
+        {
+          "type": "planet",
+          "count": 2
+        }
+      ],
+      "hazards": {
+        "ufos": 0,
+        "rocksMax": 8
+      },
+      "window": {
+        "min": 4,
+        "max": 8
+      }
+    },
+    {
+      "slot": 8,
+      "role": "마무리",
+      "name": "긴 항로",
+      "hint": "미니맵으로 전체 항로를 먼저 살펴보세요",
+      "map": {
+        "w": 400,
+        "h": 1000
+      },
+      "preview": 1.0,
+      "required": [
+        {
+          "type": "planet",
+          "count": 3
+        }
+      ],
+      "hazards": {
+        "ufos": 0,
+        "rocksMax": 6
+      },
+      "window": {
+        "min": 4,
+        "max": 8
+      }
+    }
+  ]
+}

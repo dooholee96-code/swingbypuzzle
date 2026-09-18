@@ -1,0 +1,200 @@
+{
+  "chapter": 2,
+  "defaults": {
+    "speed": 160,
+    "startZone": "bottom",
+    "goalZone": "top"
+  },
+  "slots": [
+    {
+      "slot": 2,
+      "role": "연습",
+      "name": "지평선만 피하기",
+      "hint": "블랙홀만으로도 궤도를 꺾을 수 있어요",
+      "map": {
+        "w": 400,
+        "h": 760
+      },
+      "preview": 1.0,
+      "required": [
+        {
+          "type": "hole",
+          "count": 1
+        }
+      ],
+      "hazards": {
+        "ufos": 0,
+        "rocksMax": 6
+      },
+      "window": {
+        "min": 7,
+        "max": 12
+      }
+    },
+    {
+      "slot": 3,
+      "role": "변형",
+      "name": "급회전",
+      "hint": "블랙홀 중심 가까이 스치면 크게 꺾여요",
+      "map": {
+        "w": 400,
+        "h": 760
+      },
+      "preview": 1.0,
+      "required": [
+        {
+          "type": "hole",
+          "count": 1
+        }
+      ],
+      "hazards": {
+        "ufos": 0,
+        "rocksMax": 6
+      },
+      "window": {
+        "min": 5,
+        "max": 9
+      }
+    },
+    {
+      "slot": 4,
+      "role": "휴식",
+      "name": "비켜 가기",
+      "hint": "블랙홀은 이번엔 피하기만 하면 돼요",
+      "map": {
+        "w": 400,
+        "h": 760
+      },
+      "preview": 1.0,
+      "required": [
+        {
+          "type": "planet",
+          "count": 2
+        }
+      ],
+      "optional": [
+        {
+          "type": "hole",
+          "count": 1,
+          "role": "optional"
+        }
+      ],
+      "hazards": {
+        "ufos": 0,
+        "rocksMax": 6
+      },
+      "window": {
+        "min": 7,
+        "max": 12
+      }
+    },
+    {
+      "slot": 5,
+      "role": "조합",
+      "name": "행성에서 블랙홀로",
+      "map": {
+        "w": 400,
+        "h": 760
+      },
+      "preview": 0.9,
+      "required": [
+        {
+          "type": "planet",
+          "count": 1
+        },
+        {
+          "type": "hole",
+          "count": 1
+        }
+      ],
+      "hazards": {
+        "ufos": 0,
+        "rocksMax": 6
+      },
+      "window": {
+        "min": 5,
+        "max": 9
+      }
+    },
+    {
+      "slot": 6,
+      "role": "조합 심화",
+      "name": "두 끌림 사이",
+      "map": {
+        "w": 400,
+        "h": 760
+      },
+      "preview": 0.9,
+      "required": [
+        {
+          "type": "hole",
+          "count": 2
+        }
+      ],
+      "hazards": {
+        "ufos": 0,
+        "rocksMax": 6
+      },
+      "window": {
+        "min": 4,
+        "max": 8
+      }
+    },
+    {
+      "slot": 7,
+      "role": "도전",
+      "name": "정밀 조합",
+      "map": {
+        "w": 400,
+        "h": 760
+      },
+      "preview": 0.9,
+      "required": [
+        {
+          "type": "hole",
+          "count": 1
+        },
+        {
+          "type": "planet",
+          "count": 2
+        }
+      ],
+      "hazards": {
+        "ufos": 0,
+        "rocksMax": 8
+      },
+      "window": {
+        "min": 4,
+        "max": 8
+      }
+    },
+    {
+      "slot": 8,
+      "role": "마무리",
+      "name": "긴 연계 항로",
+      "map": {
+        "w": 400,
+        "h": 1000
+      },
+      "preview": 0.9,
+      "required": [
+        {
+          "type": "hole",
+          "count": 2
+        },
+        {
+          "type": "planet",
+          "count": 2
+        }
+      ],
+      "hazards": {
+        "ufos": 0,
+        "rocksMax": 6
+      },
+      "window": {
+        "min": 4,
+        "max": 8
+      }
+    }
+  ]
+}

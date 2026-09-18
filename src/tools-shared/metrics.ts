@@ -240,6 +240,9 @@ export function computeMetrics(L: Level): LevelMetrics {
   for (const s of scans) if (s.width > best.width) best = s;
 
   const orbiting = orbiter(L) !== undefined;
+  // timing_fraction 의 정의: **규칙 1 의 하한(MIN_WINDOW)을 넘는 발사 시점의 비율.**
+  // 생성기도 반드시 같은 문턱을 써야 한다 — 문턱이 다르면 생성기가 통과시킨
+  // 값과 여기 기록되는 값이 어긋난다(M8 에서 실제로 겪었다).
   const timing_fraction = orbiting
     ? scans.filter((s) => s.width >= MIN_WINDOW).length / scans.length
     : undefined;
@@ -296,21 +299,27 @@ export interface Report {
   warnings: string[];
 }
 
+/** 레시피가 정한 제약. 넘기면 규칙 1 의 최소 폭·규칙 6·"너무 쉬움" 경고가 켜진다. */
+export interface RecipeLimits {
+  window: { min: number; max: number };
+  timing?: { minFraction: number; maxFraction: number } | null;
+}
+
 /**
  * 필수 규칙과 경고를 검사한다.
  *
- * 레시피(§8.3)에 기대는 두 가지는 M8 에서 레시피가 생기면 켠다:
- *   · 규칙 1 의 "레시피 최소 폭" — 지금은 고정 하한 2.5° 만 본다
- *   · 규칙 6 의 `timing_fraction` 범위, "레시피 최대 폭 초과" 경고
+ * `limits` 를 넘기지 않으면(등록된 단계를 그냥 검증할 때) 레시피에 기대는
+ * 세 가지는 건너뛴다. 생성기는 언제나 넘긴다.
  */
-export function checkLevel(L: Level, m = computeMetrics(L)): Report {
+export function checkLevel(L: Level, m = computeMetrics(L), limits?: RecipeLimits): Report {
   const failures: string[] = [];
   const warnings: string[] = [];
   const sol = L.meta.solution;
 
-  // 1. 성공 폭
-  if (m.main_window < MIN_WINDOW) {
-    failures.push(`규칙1 성공 폭 ${m.main_window.toFixed(2)}° < ${MIN_WINDOW}°`);
+  // 1. 성공 폭 — 고정 하한과 레시피 최소 폭 중 큰 쪽
+  const floor = Math.max(MIN_WINDOW, limits?.window.min ?? 0);
+  if (m.main_window < floor) {
+    failures.push(`규칙1 성공 폭 ${m.main_window.toFixed(2)}° < ${floor}°`);
   }
 
   // 2. 우연한 성공
@@ -353,6 +362,18 @@ export function checkLevel(L: Level, m = computeMetrics(L)): Report {
     failures.push(`규칙8 돔 표면 ${n}곳이 충돌 판정 안에 있다 (${head}${n > 4 ? ' …' : ''})`);
   }
 
+  // 6. 공전 단계의 발사 가능 시점 비율이 레시피 범위 안인가
+  if (limits?.timing) {
+    if (m.timing_fraction === undefined) {
+      failures.push('규칙6 레시피는 공전 단계를 기대하는데 공전 행성이 없다');
+    } else if (m.timing_fraction < limits.timing.minFraction
+      || m.timing_fraction > limits.timing.maxFraction) {
+      failures.push(
+        `규칙6 timing_fraction ${m.timing_fraction.toFixed(2)} 가 레시피 범위`
+        + ` ${limits.timing.minFraction}~${limits.timing.maxFraction} 밖이다`);
+    }
+  }
+
   // 9. 정답 θ 가 걸을 수 있는 범위 안인가
   if (!inArc(L, sol.angle)) {
     failures.push(
@@ -360,6 +381,10 @@ export function checkLevel(L: Level, m = computeMetrics(L)): Report {
   }
 
   // 경고
+  if (limits && m.main_window > limits.window.max) {
+    warnings.push(
+      `성공 폭 ${m.main_window.toFixed(2)}° 가 레시피 최대 ${limits.window.max}° 초과 — 너무 쉽다`);
+  }
   if (m.clearance < WARN_CLEARANCE) {
     warnings.push(`clearance ${m.clearance.toFixed(2)} < ${WARN_CLEARANCE} — 아슬아슬하다`);
   }
