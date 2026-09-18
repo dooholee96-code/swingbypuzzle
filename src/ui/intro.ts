@@ -1,0 +1,22 @@
+// 새 요소 소개 카드. docs/PLAN.md §7.4, §13.2.1
+//
+// 장의 첫 단계에 처음 들어갈 때 한 번만 보여준다. 다시 보기는 단계 선택의 ? 버튼.
+
+export type IntroKey = 'planet' | 'rock' | 'hole' | 'ufo' | 'orbit' | 'wide';
+
+export const INTRO: Record<IntroKey, { title: string; body: string }> = {
+  planet: { title: '행성', body: '점선 원 안에 들어가면 행성 쪽으로 끌려요. 가까울수록 세게 끌려요.' },
+  rock: { title: '소행성', body: '부딪히면 끝이에요. 중력은 없어요.' },
+  hole: { title: '블랙홀', body: '끌림이 아주 강해요. 가운데에 닿으면 빨려 들어가요.' },
+  ufo: { title: '외계인', body: '붉은 원 안에 들어가면 우주선을 향해 쏴요.' },
+  orbit: { title: '움직이는 행성', body: '정해진 원을 따라 돌아요. 발사할 때를 기다려 보세요.' },
+  wide: { title: '넓은 맵', body: '빈 곳을 끌어 화면을 옮기거나, 미니맵을 눌러 이동할 수 있어요.' },
+};
+
+// §7.4: 5-1 은 같은 "넓은 맵" 카드를 쓰되 문구 끝에 한 줄을 덧붙인다.
+const EXTRA: Record<string, string> = { '5-1': ' 이제 가로로도 넓어요.' };
+
+export function introFor(levelId: string, key: IntroKey): { title: string; body: string } {
+  const base = INTRO[key];
+  return { title: base.title, body: base.body + (EXTRA[levelId] ?? '') };
+}

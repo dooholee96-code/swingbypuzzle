@@ -3,7 +3,6 @@
 // 문구는 §13 의 것을 그대로 쓴다 (§0.6).
 
 import { toUi } from '../core/angle.js';
-import { CHAPTERS } from '../levels/chapters.js';
 import type { Outcome } from '../core/types.js';
 import type { Session } from '../game/session.js';
 
@@ -30,13 +29,11 @@ export class Hud {
   readonly angle = $('angle');
   readonly hint = $('hint');
   readonly result = $('result');
-  readonly picker = $('picker');
   readonly back = $('back') as HTMLButtonElement;
   readonly retry = $('retry') as HTMLButtonElement;
 
   onRetry: () => void = () => {};
   onNext: () => void = () => {};
-  onPick: (id: string) => void = () => {};
   onOpenPicker: () => void = () => {};
 
   private chapter = 1;
@@ -59,20 +56,25 @@ export class Hud {
     this.hint.textContent = s.firstTry && s.state === 'ready' ? (s.level.hint ?? '') : '';
   }
 
-  showResult(s: Session): void {
+  showResult(s: Session, opts: { chapterLast?: boolean; last?: boolean } = {}): void {
     if (!this.result.hidden) return;
     const [title, tip] = RESULT[s.outcome as Outcome] ?? ['비행이 끝났어요', ''];
     const win = s.outcome === 'win';
+    // §13.4: 장의 마지막 단계 성공 시 "다음 장", 준비된 마지막 단계면 안내 문구
+    const nextLabel = opts.last ? null : opts.chapterLast ? '다음 장' : '다음 단계';
+    const closing = win && opts.last ? '준비된 단계를 모두 클리어했어요'
+      : win && opts.chapterLast ? `${s.level.meta.chapter}장을 클리어했어요` : '';
     this.result.className = `sheet ${win ? 'win' : 'lose'}`;
     this.result.innerHTML = `
       <h2></h2><p></p>
       <div class="row">
         ${win
-          ? '<button class="btn primary" data-a="next" type="button">다음 단계</button>' +
+          ? (nextLabel ? `<button class="btn primary" data-a="next" type="button">${nextLabel}</button>` : '') +
             '<button class="btn" data-a="retry" type="button">다시 하기</button>'
           : '<button class="btn primary" data-a="retry" type="button">다시 시도</button>'}
         <button class="btn" data-a="pick" type="button">단계 선택</button>
       </div>
+      ${closing ? `<p class="tapnote">${closing}</p>` : ''}
       ${win ? '' : '<p class="tapnote">화면 아무 곳이나 눌러도 다시 시도해요</p>'}`;
     this.result.querySelector('h2')!.textContent = title;
     this.result.querySelector('p')!.textContent = win
@@ -90,32 +92,4 @@ export class Hud {
 
   hideResult(): void { this.result.hidden = true; }
 
-  /** §13.2 단계 선택. 장 탭 + 단계 카드. */
-  showPicker(cleared: (id: string) => boolean, names: (id: string) => string): void {
-    const tabs = CHAPTERS.map((c) =>
-      `<button class="tab" data-ch="${c.chapter}" type="button"
-        aria-selected="${c.chapter === this.chapter}">${c.chapter}장 ${c.name}</button>`).join('');
-    const ch = CHAPTERS.find((c) => c.chapter === this.chapter) ?? CHAPTERS[0]!;
-    const cards = ch.levels.map((id) => `
-      <button class="card" data-id="${id}" type="button">
-        <span class="id">${id}</span>
-        <span class="nm">${names(id)}</span>
-        <span class="st${cleared(id) ? ' done' : ''}">${cleared(id) ? '✓ 클리어' : '미클리어'}</span>
-      </button>`).join('');
-    this.picker.innerHTML = `<h1>SWINGBY</h1><div class="tabs">${tabs}</div>
-      <div class="grid">${cards}</div>`;
-    for (const t of this.picker.querySelectorAll<HTMLButtonElement>('.tab')) {
-      t.addEventListener('click', () => {
-        this.chapter = Number(t.dataset['ch']);
-        this.showPicker(cleared, names);
-      });
-    }
-    for (const c of this.picker.querySelectorAll<HTMLButtonElement>('.card')) {
-      c.addEventListener('click', () => this.onPick(c.dataset['id']!));
-    }
-    this.picker.hidden = false;
-  }
-
-  hidePicker(): void { this.picker.hidden = true; }
-  get pickerOpen(): boolean { return !this.picker.hidden; }
 }

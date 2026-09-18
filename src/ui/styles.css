@@ -47,17 +47,42 @@ canvas{display:block;width:100%;height:100%;touch-action:none;background:var(--b
 .sheet.lose h2{color:var(--danger)}
 .tapnote{font-size:12px;margin-top:14px}
 
-/* §13.2 단계 선택 */
-#picker{position:absolute;inset:0;background:rgba(0,0,0,.94);
-        display:flex;flex-direction:column;padding:24px 16px;gap:16px;overflow-y:auto}
-#picker[hidden]{display:none}
-#picker h1{margin:0;font:600 30px/1.1 var(--num);letter-spacing:.18em;text-align:center}
-#picker .tabs{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
-#picker .tab{padding:7px 12px;border:1px solid var(--dim);border-radius:3px;
-             background:transparent;color:var(--dim);font:600 12px/1 var(--ko);cursor:pointer}
-#picker .tab[aria-selected="true"]{color:var(--gravity);border-color:var(--gravity)}
-#picker .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
-              gap:9px;max-width:560px;width:100%;margin:0 auto}
+/* §13.1 타이틀 · §13.2 단계 선택 · §13.6 설정 */
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;
+        padding:calc(20px + env(safe-area-inset-top,0px)) 16px
+                calc(20px + env(safe-area-inset-bottom,0px));
+        gap:16px;overflow-y:auto;background:rgba(0,0,0,.94)}
+.screen[hidden]{display:none}
+.screen h1{margin:0;font:600 34px/1.1 var(--num);letter-spacing:.2em;text-align:center}
+.screen h2{margin:0;font:600 17px/1.3 var(--ko);text-align:center}
+.screen .sub{margin:-10px 0 0;text-align:center;font:400 12px/1.5 var(--ko);color:var(--dim)}
+.screen .bar{display:flex;gap:9px;align-items:center;justify-content:center;flex-wrap:wrap}
+.screen .spacer{flex:1}
+
+/* 타이틀 뒤에서 도는 데모가 비치도록 배경을 옅게 */
+#title{background:rgba(0,0,0,.55);justify-content:center;gap:24px}
+#title .logo{text-align:center}
+#title .logo .ko{display:block;margin-top:6px;font:400 13px/1 var(--ko);
+                 letter-spacing:.3em;color:var(--dim)}
+
+.tabs{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.tab{padding:7px 12px;border:1px solid var(--dim);border-radius:3px;min-height:34px;
+     background:transparent;color:var(--dim);font:600 12px/1 var(--ko);cursor:pointer}
+.tab[aria-selected="true"]{color:var(--gravity);border-color:var(--gravity)}
+.tab[disabled]{opacity:.35;cursor:default}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+      gap:9px;max-width:560px;width:100%;margin:0 auto}
+
+/* §13.6 설정 */
+.rows{max-width:420px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:2px}
+.row2{display:flex;align-items:center;gap:12px;padding:13px 4px;
+      border-bottom:1px solid rgba(230,237,245,.12)}
+.row2 .label{flex:1;font:400 14px/1.3 var(--ko)}
+.row2 .val{font:600 12px/1 var(--num);color:var(--dim)}
+.seg{display:flex;border:1px solid var(--dim);border-radius:3px;overflow:hidden}
+.seg button{min-height:34px;padding:6px 12px;border:0;background:transparent;
+            color:var(--dim);font:600 12px/1 var(--ko);cursor:pointer}
+.seg button[aria-pressed="true"]{background:rgba(79,195,247,.16);color:var(--gravity)}
 .card{text-align:left;padding:13px;background:transparent;border:1px solid var(--dim);
       border-radius:3px;color:var(--line);cursor:pointer;display:flex;flex-direction:column;gap:3px}
 .card:active{background:rgba(230,237,245,.1)}
@@ -65,5 +90,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none;background:var(--b
 .card .nm{font:600 15px/1.3 var(--ko)}
 .card .st{font:400 11px/1.4 var(--ko);color:var(--dim)}
 .card .st.done{color:var(--goal)}
+.card[disabled]{opacity:.4;cursor:default}
+.card .st.lock{color:var(--dim)}
 
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
