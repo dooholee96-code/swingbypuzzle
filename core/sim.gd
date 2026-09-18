@@ -26,6 +26,12 @@ var _next_fire := PackedFloat64Array()                 # 외계인별 다음 사
 # 마지막 simulate()의 비행 스텝 수. 검증기(§8.5)의 flight_time 계산에 쓴다.
 var last_steps := 0
 
+# 경로 기록. 켜면 simulate()가 매 스텝 우주선 위치를 last_path에 x,y 쌍으로 쌓는다.
+# 검증기의 clearance 계산(§8.5)과 에디터 궤적 표시(§8.7)에 쓴다.
+# 전수 스캔에서는 꺼 둔다.
+var record_path := false
+var last_path := PackedFloat64Array()
+
 
 static func dist(ax: float, ay: float, bx: float, by: float) -> float:
 	var dx := ax - bx
@@ -33,7 +39,7 @@ static func dist(ax: float, ay: float, bx: float, by: float) -> float:
 	return sqrt(dx * dx + dy * dy)
 
 
-func _body_pos(b: Dictionary, t: float) -> void:
+func body_pos(b: Dictionary, t: float) -> void:
 	if not b.has("orbit"):
 		_bp[0] = b["x"]
 		_bp[1] = b["y"]
@@ -44,11 +50,11 @@ func _body_pos(b: Dictionary, t: float) -> void:
 	_bp[1] = o["cy"] + o["rad"] * sin(a)
 
 
-func _accel(gravs: Array, x: float, y: float, t: float) -> void:
+func accel(gravs: Array, x: float, y: float, t: float) -> void:
 	var ax := 0.0
 	var ay := 0.0
 	for b in gravs:
-		_body_pos(b, t)
+		body_pos(b, t)
 		var dx: float = _bp[0] - x
 		var dy: float = _bp[1] - y
 		var r2: float = dx * dx + dy * dy
@@ -66,8 +72,8 @@ func _accel(gravs: Array, x: float, y: float, t: float) -> void:
 
 
 # 반환 "" = 계속, 그 외 = 결과 문자열. 판정 순서는 §5.4를 따른다.
-func _step_ship(level: Dictionary, gravs: Array, t: float) -> String:
-	_accel(gravs, _ship[0], _ship[1], t)
+func step_ship(level: Dictionary, gravs: Array, t: float) -> String:
+	accel(gravs, _ship[0], _ship[1], t)
 	_ship[2] += _ac[0] * DT
 	_ship[3] += _ac[1] * DT
 	_ship[0] += _ship[2] * DT
@@ -76,7 +82,7 @@ func _step_ship(level: Dictionary, gravs: Array, t: float) -> String:
 	var sx: float = _ship[0]
 	var sy: float = _ship[1]
 	for p in level.get("planets", []):
-		_body_pos(p, tt)
+		body_pos(p, tt)
 		if dist(_bp[0], _bp[1], sx, sy) < p["r"] + SHIP_R:
 			return "planet"
 	for h in level.get("holes", []):
@@ -96,7 +102,7 @@ func _step_ship(level: Dictionary, gravs: Array, t: float) -> String:
 	return ""
 
 
-func _fire_ufos(ufos: Array, ft: float) -> void:
+func fire_ufos(ufos: Array, ft: float) -> void:
 	for i in ufos.size():
 		var u: Dictionary = ufos[i]
 		while ft >= _next_fire[i]:
@@ -114,7 +120,7 @@ func _fire_ufos(ufos: Array, ft: float) -> void:
 
 
 # 부록 A와 같은 순서: 전부 이동 → 수명·범위로 거르기 → 살아남은 것만 피격 판정
-func _step_bullets(level: Dictionary) -> String:
+func step_bullets(level: Dictionary) -> String:
 	var w: float = level["w"]
 	var h: float = level["h"]
 	var count: int = _bullets.size() / 5
@@ -158,6 +164,7 @@ func simulate(level: Dictionary, angle_deg: float, launch_step: int, gravs: Arra
 	for i in ufos.size():
 		_next_fire[i] = ufos[i]["delay"]
 	_bullets.resize(0)
+	last_path.resize(0)
 
 	var a: float = angle_deg * PI / 180.0
 	var start: Dictionary = level["start"]
@@ -170,16 +177,73 @@ func simulate(level: Dictionary, angle_deg: float, launch_step: int, gravs: Arra
 	var n: int = 0
 	var max_n: float = MAX_FLIGHT / DT   # 배정밀도에서 정확히 7200.0
 	while n < max_n:
-		var r: String = _step_ship(level, gravs, t)
+		var r: String = step_ship(level, gravs, t)
 		t += DT
 		n += 1
+		if record_path:
+			last_path.append(_ship[0])
+			last_path.append(_ship[1])
 		if r != "":
 			last_steps = n
 			return r
-		_fire_ufos(ufos, n * DT)
-		var rb: String = _step_bullets(level)
+		fire_ufos(ufos, n * DT)
+		var rb: String = step_bullets(level)
 		if rb != "":
 			last_steps = n
 			return rb
 	last_steps = n
 	return "drift"
+
+
+# ── 예측선 (§5.7) ────────────────────────────────────────────────────────
+#
+# 현재 level_step에서 발사했다고 가정하고 step_ship만 preview/DT 스텝 돌린다.
+# 총알은 무시한다. 실제 비행과 **같은 함수**를 쓰는 것이 이 게임의 신뢰 기반이다.
+#
+# 반환: { "points": PackedFloat64Array(x,y 쌍), "outcome": String }
+#   outcome이 ""가 아니면 마지막 점에서 그 결과로 끝난 것이다(× 표시 지점).
+func predict(level: Dictionary, angle_deg: float, launch_step: int, gravs: Array = []) -> Dictionary:
+	if gravs.is_empty():
+		gravs = gravs_of(level)
+
+	var a: float = angle_deg * PI / 180.0
+	var start: Dictionary = level["start"]
+	_ship[0] = start["x"]
+	_ship[1] = start["y"]
+	_ship[2] = cos(a) * level["speed"]
+	_ship[3] = sin(a) * level["speed"]
+
+	var points := PackedFloat64Array()
+	var t: float = launch_step * DT
+	var n := 0
+	var max_n: int = int(float(level["preview"]) / DT)
+	var outcome := ""
+	while n < max_n:
+		outcome = step_ship(level, gravs, t)
+		t += DT
+		n += 1
+		points.append(_ship[0])
+		points.append(_ship[1])
+		if outcome != "":
+			break
+	return { "points": points, "outcome": outcome }
+
+
+# ── 테스트·검증용 편의 함수 ──────────────────────────────────────────────
+#
+# 값을 새로 할당해 반환하므로 전수 스캔 루프 안에서는 쓰지 않는다.
+# 루프에서는 위의 in-place 버전(accel/body_pos)을 쓴다.
+
+func accel_at(gravs: Array, x: float, y: float, t: float) -> PackedFloat64Array:
+	accel(gravs, x, y, t)
+	return PackedFloat64Array([_ac[0], _ac[1]])
+
+
+func body_pos_at(b: Dictionary, t: float) -> PackedFloat64Array:
+	body_pos(b, t)
+	return PackedFloat64Array([_bp[0], _bp[1]])
+
+
+# 우주선 현재 상태 복사본 [x, y, vx, vy]
+func ship_state() -> PackedFloat64Array:
+	return PackedFloat64Array([_ship[0], _ship[1], _ship[2], _ship[3]])
