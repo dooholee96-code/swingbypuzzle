@@ -47,9 +47,25 @@ Godot의 `Vector2`는 **32비트**다. 시뮬레이션 상태를 여기 담으�
 ./run.sh validate [단계ID|장번호]        전체 검증 (§16.3) — 커밋 전 필수
 ./run.sh gen --recipe <파일> --slot <칸>  후보 생성 (§16.4)
 ./run.sh test                         gdUnit4 (§16.5)
+./run.sh serve                        웹으로 내보내고 로컬 서버 (폰에서 접속)
 ```
 
 `GODOT` 환경변수로 실행 파일 지정: `GODOT=~/bin/godot4 ./run.sh bench`
+
+## 폰에서 확인하기 (PLAN §15.1.1)
+
+안드로이드 SDK 를 갖추기 전까지는 웹 빌드가 가장 빠르다.
+
+```
+cp export_presets.example.cfg export_presets.cfg     # 처음 한 번
+./run.sh serve
+```
+
+같은 Wi-Fi 의 폰에서 표시된 주소로 접속한다. 에디터 → 편집기 →
+내보내기 템플릿 관리 에서 템플릿을 한 번 받아 두어야 한다.
+
+**웹에서 확인되지 않는 것:** 진동·뒤로 버튼·앱 생명주기(§15.2), 60fps 수치.
+그건 APK 로만 본다.
 
 ## 안드로이드 빌드 (PLAN §15.1)
 

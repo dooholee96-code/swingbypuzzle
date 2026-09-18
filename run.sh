@@ -8,6 +8,8 @@
 #   ./run.sh fan <단계> …               궤적 SVG (§16.2)
 #   ./run.sh test                     gdUnit4 전체 실행 (§16.5)
 #   ./run.sh check                    §2.1 정밀도 규칙 위반 검사
+#   ./run.sh web [--release]          웹으로 내보내기 → build/web/
+#   ./run.sh serve [포트]              내보내고 로컬 서버로 띄운다 (폰에서 접속)
 #
 # GODOT 환경변수로 실행 파일을 지정할 수 있다.
 #   예: GODOT=~/bin/godot4 ./run.sh bench
@@ -15,13 +17,13 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-usage() { sed -n '2,13p' "${BASH_SOURCE[0]}" | sed 's/^#\( \|$\)//'; }
+usage() { sed -n '2,15p' "${BASH_SOURCE[0]}" | sed 's/^#\( \|$\)//'; }
 
 cmd="${1:-}"
 [ $# -gt 0 ] && shift
 
 case "$cmd" in
-  bench|solve|validate|gen|fan|test) ;;
+  bench|solve|validate|gen|fan|test|web|serve) ;;
   check)
     # core/·tools_shared/에 §2.1 금지 API가 있는지 본다. 주석은 제외한다.
     if grep -rnE '^[^#]*(Vector2|deg_to_rad|TAU|distance_to|\.length\(\))' \
@@ -42,6 +44,29 @@ if ! command -v "$GODOT" >/dev/null 2>&1; then
   echo "godot 실행 파일을 찾지 못했습니다: $GODOT" >&2
   echo "GODOT 환경변수로 경로를 지정하세요. 예: GODOT=/opt/godot/godot4 ./run.sh $cmd" >&2
   exit 127
+fi
+
+if [ "$cmd" = "web" ] || [ "$cmd" = "serve" ]; then
+  out="$ROOT/build/web"
+  mkdir -p "$out"
+  mode="--export-debug"          # 디버그 빌드여야 개발용 단계 이동이 열린다
+  port=8080
+  for a in "$@"; do
+    case "$a" in
+      --release) mode="--export-release" ;;
+      [0-9]*)    port="$a" ;;
+    esac
+  done
+  echo "웹으로 내보내는 중… ($mode)"
+  if ! "$GODOT" --headless --path "$ROOT" "$mode" "Web" "$out/index.html"; then
+    echo "" >&2
+    echo "내보내기에 실패했습니다. 확인할 것:" >&2
+    echo "  · export_presets.cfg 가 있는가 (cp export_presets.example.cfg export_presets.cfg)" >&2
+    echo "  · 에디터 → 편집기 → 내보내기 템플릿 관리 에서 템플릿을 받았는가" >&2
+    exit 1
+  fi
+  [ "$cmd" = "web" ] && { echo "완료: $out"; exit 0; }
+  exec python3 "$ROOT/tools/serve.py" "$out" "$port"
 fi
 
 if [ "$cmd" = "test" ]; then
