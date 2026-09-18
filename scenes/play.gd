@@ -16,23 +16,47 @@ var session := Session.new()
 var aim := AimInput.new()
 var view_scale := 1.0
 
+var _loader := LevelLoader.new()
+var _panning := false
+
 
 func _ready() -> void:
-	var loader := LevelLoader.new()
-	var lv := loader.load_level("1-1")
-	if lv.is_empty():
-		for e in loader.errors:
-			push_error(e)
-		return
-	session.setup(lv)
 	field.session = session
 	hud.session = session
 	hud.retry_pressed.connect(_on_retry)
+	hud.next_level_requested.connect(_cycle_level)      # 개발 빌드 전용
+	hud.minimap.camera_requested.connect(_on_minimap)
+	if not _load("1-1"):
+		return
 	get_viewport().size_changed.connect(_layout)
 	Lifecycle.paused.connect(_on_paused)
 	Lifecycle.resumed.connect(_on_resumed)
 	Haptics.enabled = bool(Save.settings()["haptics"])   # 설정과 연결 (§13.6)
 	_layout()
+
+
+func _load(id: String) -> bool:
+	var lv := _loader.load_level(id)
+	if lv.is_empty():
+		for e in _loader.errors:
+			push_error(e)
+		return false
+	session.setup(lv)
+	hud.hide_result()
+	_panning = false          # 새 단계에서는 화면을 출발점으로 되돌린다
+	_layout()
+	return true
+
+
+# M4·M5 를 4-1·5-1 에서 확인하기 위한 임시 수단. 단계 선택 화면은 M6 이다.
+func _cycle_level() -> void:
+	var ids := Chapters.all_ids()
+	var i := 0
+	for k in ids.size():
+		if ids[k] == session.level["id"]:
+			i = k
+			break
+	_load(ids[(i + 1) % ids.size()])
 
 
 # 백그라운드로 가면 시뮬레이션을 멈추고 누산기를 버린다 (§5.8, §15.2).
@@ -65,6 +89,7 @@ func _process(delta: float) -> void:
 	session.advance(delta)
 	_follow(delta)
 	hud.refresh()
+	hud.minimap.refresh(_world_view())
 	if session.state == Session.ENDING and session.end_progress() >= 1.0:
 		_finish()
 
@@ -89,13 +114,29 @@ func _layout() -> void:
 	camera.limit_top = int(floor(top))
 	camera.limit_right = int(ceil(left + view.x if lv["w"] <= view.x else lv["w"]))
 	camera.limit_bottom = int(ceil(top + view.y if lv["h"] <= view.y else lv["h"]))
-	if session.state != Session.FLYING:      # 비행 중 화면 회전에 카메라를 되돌리지 않는다
-		_snap_to_start()
+	if session.state != Session.FLYING and not _panning:
+		_snap_to_start()                     # 비행 중이거나 사용자가 옮겨 둔 화면은 건드리지 않는다
 
 
 func _snap_to_start() -> void:
 	var s: Dictionary = session.level["start"]
 	camera.position = Vector2(s["x"], s["y"])
+	camera.reset_smoothing()
+
+
+# 화면이 보는 월드 영역. 미니맵의 뷰포트 윤곽에 쓴다 (§12.5).
+func _world_view() -> Rect2:
+	var size := Vector2(get_viewport_rect().size) / view_scale
+	return Rect2(camera.get_screen_center_position() - size * 0.5, size)
+
+
+# §10.4 미니맵 이동. 스무딩을 끄고 즉시 옮긴다 (§11).
+func _on_minimap(world: Vector2) -> void:
+	if session.state == Session.FLYING or session.state == Session.ENDING:
+		return
+	_panning = true
+	camera.position_smoothing_enabled = false
+	camera.position = world
 	camera.reset_smoothing()
 
 
@@ -145,6 +186,7 @@ func _update_aim(pos: Vector2) -> void:
 func _release() -> void:
 	if aim.should_launch():
 		session.launch()
+		_panning = false
 		Haptics.launch()
 	else:
 		session.cancel_aim()
@@ -172,4 +214,5 @@ func _on_retry() -> void:
 	session.reset()
 	aim.finish()
 	hud.hide_result()
+	_panning = false
 	_snap_to_start()

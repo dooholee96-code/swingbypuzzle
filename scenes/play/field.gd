@@ -49,12 +49,47 @@ func _draw() -> void:
 	_draw_ship()
 
 
+# §11 맵 경계. 옅은 사각형 + 모서리 꺾쇠 + 바깥쪽 사선 해칭으로 "벽"임을 보인다.
+const BRACKET := 28.0
+const HATCH_STEP := 26.0
+const HATCH_LEN := 15.0
+
+
 func _draw_bounds(lv: Dictionary) -> void:
 	var w: float = lv["w"]
 	var h: float = lv["h"]
 	DrawLib.line(self, PackedVector2Array([
 		Vector2(0, 0), Vector2(w, 0), Vector2(w, h), Vector2(0, h)]),
 		Palette.LINE, view_scale, 0.28, true)
+
+	for c in [[Vector2(0, 0), 1.0, 1.0], [Vector2(w, 0), -1.0, 1.0],
+			  [Vector2(w, h), -1.0, -1.0], [Vector2(0, h), 1.0, -1.0]]:
+		var p: Vector2 = c[0]
+		var sx: float = c[1]
+		var sy: float = c[2]
+		DrawLib.line(self, PackedVector2Array([
+			p + Vector2(BRACKET * sx, 0), p, p + Vector2(0, BRACKET * sy)]),
+			Palette.LINE, view_scale, 0.6)
+
+	# 바깥쪽 사선. 각 변을 따라 짧은 빗금을 긋는다.
+	var x := HATCH_STEP
+	while x < w:
+		DrawLib.line(self, PackedVector2Array([
+			Vector2(x, 0), Vector2(x - HATCH_LEN, -HATCH_LEN)]),
+			Palette.LINE, view_scale, 0.16, false)
+		DrawLib.line(self, PackedVector2Array([
+			Vector2(x, h), Vector2(x - HATCH_LEN, h + HATCH_LEN)]),
+			Palette.LINE, view_scale, 0.16, false)
+		x += HATCH_STEP
+	var y := HATCH_STEP
+	while y < h:
+		DrawLib.line(self, PackedVector2Array([
+			Vector2(0, y), Vector2(-HATCH_LEN, y - HATCH_LEN)]),
+			Palette.LINE, view_scale, 0.16, false)
+		DrawLib.line(self, PackedVector2Array([
+			Vector2(w, y), Vector2(w + HATCH_LEN, y - HATCH_LEN)]),
+			Palette.LINE, view_scale, 0.16, false)
+		y += HATCH_STEP
 
 
 func _draw_gravity(lv: Dictionary, t: float) -> void:

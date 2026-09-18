@@ -5,6 +5,7 @@
 extends CanvasLayer
 
 signal retry_pressed
+signal next_level_requested   # 개발 빌드 전용. 단계 선택 화면은 M6 이다.
 
 # §13.4 결과 화면 문구
 const RESULT := {
@@ -20,6 +21,7 @@ const RESULT := {
 
 var session: Session = null
 
+@onready var top: HBoxContainer = $Root/Top
 @onready var stage: Label = $Root/Top/Stage
 @onready var retry: Button = $Root/Top/Retry
 @onready var angle_label: Label = $Root/Angle
@@ -27,14 +29,43 @@ var session: Session = null
 @onready var result: PanelContainer = $Root/Result
 @onready var result_title: Label = $Root/Result/Box/Title
 @onready var result_tip: Label = $Root/Result/Box/Tip
+@onready var minimap: Minimap = $Root/Minimap
 
 
 func _ready() -> void:
 	retry.pressed.connect(func(): retry_pressed.emit())
 	result.hide()
 	result.gui_input.connect(_on_result_input)
+	minimap.hide()
+	_scale_ui()
+	# 개발 빌드에서 단계 표기를 누르면 다음 단계로. M6 의 단계 선택이 대신하게 된다.
+	if OS.is_debug_build():
+		stage.mouse_filter = Control.MOUSE_FILTER_STOP
+		stage.gui_input.connect(func(e):
+			if e is InputEventScreenTouch and e.pressed:
+				next_level_requested.emit())
 	_apply_safe_area()
 	get_viewport().size_changed.connect(_apply_safe_area)
+
+
+# hud.tscn 의 오프셋·크기는 **dp 기준**으로 작성했다(§10.0). Godot 의 Control 은
+# 자동으로 환산해 주지 않으므로 여기서 한 번 기기 픽셀로 옮긴다.
+# 안 하면 고DPI 폰에서 버튼이 44px(≈15dp)로 쪼그라들어 §13.3 의 터치 영역을 못 지킨다.
+func _scale_ui() -> void:
+	var k := Dp.scale()
+	if is_equal_approx(k, 1.0):
+		return
+	for c: Control in [top, hint, angle_label]:
+		c.offset_left *= k
+		c.offset_top *= k
+		c.offset_right *= k
+		c.offset_bottom *= k
+	retry.custom_minimum_size *= k
+	top.add_theme_constant_override("separation", int(round(10.0 * k)))
+	var t: Theme = $Root.theme
+	if t != null:
+		t.default_font_size = int(round(13.0 * k))
+	result_title.add_theme_font_size_override("font_size", int(round(25.0 * k)))
 
 
 # 노치·홈 인디케이터를 피한다 (§13). 데스크톱에서는 여백이 0 이다.
@@ -57,6 +88,7 @@ func _apply_safe_area() -> void:
 func refresh() -> void:
 	if session == null or session.level.is_empty():
 		return
+	minimap.session = session
 	stage.text = "%s %s" % [session.level["id"], session.level["name"]]
 	# 조준 중 화면 하단에 표시 각도 (§13.3). 0° = 위쪽 (§4).
 	angle_label.text = "각도 %.1f°" % AimInput.ui_angle(session.angle) \
