@@ -1,0 +1,69 @@
+/* docs/PLAN.md §12.1 팔레트 · §13 UI
+   1979년 아케이드 벡터 화면. 검은 배경에 발광하는 선으로만 그린다. */
+:root{
+  --bg:#000; --line:#E6EDF5; --dim:rgba(230,237,245,.30);
+  --gravity:#4FC3F7; --hole:#B388FF; --danger:#FF5252; --goal:#FFD54F;
+  --ko:'Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',system-ui,sans-serif;
+  --num:'Oxanium','Apple SD Gothic Neo','Noto Sans KR',system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--line);
+          font-family:var(--ko);overflow:hidden;overscroll-behavior:none;
+          -webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+#app{position:fixed;inset:0}
+canvas{display:block;width:100%;height:100%;touch-action:none;background:var(--bg)}
+
+.hud{position:absolute;left:0;right:0;pointer-events:none;
+     padding:0 14px;display:flex;align-items:flex-start;gap:10px}
+.hud.top{top:0;padding-top:calc(10px + env(safe-area-inset-top,0px))}
+.hud .grow{flex:1}
+/* §13.3 최소 44×44 터치 영역 */
+.btn{pointer-events:auto;min-width:44px;min-height:44px;padding:8px 13px;
+     background:rgba(0,0,0,.55);border:1px solid var(--dim);color:var(--line);
+     border-radius:3px;font:600 13px/1.2 var(--ko);cursor:pointer;
+     display:inline-flex;align-items:center;justify-content:center}
+.btn:active{background:rgba(230,237,245,.14)}
+.btn:focus-visible{outline:2px solid var(--goal);outline-offset:2px}
+.btn.primary{border-color:var(--goal);color:var(--goal)}
+.stage{font:600 13px/1.5 var(--ko);background:rgba(0,0,0,.55);
+       border:1px solid var(--dim);border-radius:3px;padding:9px 12px;
+       pointer-events:auto;cursor:pointer}
+
+#angle{position:absolute;left:0;right:0;bottom:calc(20px + env(safe-area-inset-bottom,0px));
+       text-align:center;font:600 19px/1 var(--num);letter-spacing:.06em;
+       color:var(--goal);text-shadow:0 0 12px rgba(255,213,79,.5);pointer-events:none}
+#hint{position:absolute;left:14px;right:14px;bottom:calc(58px + env(safe-area-inset-bottom,0px));
+      text-align:center;font:400 13px/1.55 var(--ko);color:var(--dim);pointer-events:none}
+
+/* §13.4 결과는 반투명. 뒤의 궤적이 보여야 한다. */
+.sheet{position:absolute;inset:0;display:flex;flex-direction:column;
+       align-items:center;justify-content:center;gap:9px;padding:24px;
+       background:rgba(0,0,0,.66);text-align:center}
+.sheet[hidden]{display:none}
+.sheet h2{margin:0;font:600 25px/1.3 var(--ko);text-wrap:balance}
+.sheet p{margin:0;font:400 14px/1.6 var(--ko);color:var(--dim);max-width:30ch;text-wrap:balance}
+.sheet .row{display:flex;gap:9px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+.sheet.win h2{color:var(--goal)}
+.sheet.lose h2{color:var(--danger)}
+.tapnote{font-size:12px;margin-top:14px}
+
+/* §13.2 단계 선택 */
+#picker{position:absolute;inset:0;background:rgba(0,0,0,.94);
+        display:flex;flex-direction:column;padding:24px 16px;gap:16px;overflow-y:auto}
+#picker[hidden]{display:none}
+#picker h1{margin:0;font:600 30px/1.1 var(--num);letter-spacing:.18em;text-align:center}
+#picker .tabs{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+#picker .tab{padding:7px 12px;border:1px solid var(--dim);border-radius:3px;
+             background:transparent;color:var(--dim);font:600 12px/1 var(--ko);cursor:pointer}
+#picker .tab[aria-selected="true"]{color:var(--gravity);border-color:var(--gravity)}
+#picker .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+              gap:9px;max-width:560px;width:100%;margin:0 auto}
+.card{text-align:left;padding:13px;background:transparent;border:1px solid var(--dim);
+      border-radius:3px;color:var(--line);cursor:pointer;display:flex;flex-direction:column;gap:3px}
+.card:active{background:rgba(230,237,245,.1)}
+.card .id{font:600 12px/1 var(--num);letter-spacing:.1em;color:var(--gravity)}
+.card .nm{font:600 15px/1.3 var(--ko)}
+.card .st{font:400 11px/1.4 var(--ko);color:var(--dim)}
+.card .st.done{color:var(--goal)}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
