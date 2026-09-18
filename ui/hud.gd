@@ -19,7 +19,6 @@ const RESULT := {
 }
 
 var session: Session = null
-var haptics := true
 
 @onready var stage: Label = $Root/Top/Stage
 @onready var retry: Button = $Root/Top/Retry
@@ -81,6 +80,10 @@ func show_result() -> void:
 
 func hide_result() -> void:
 	result.hide()
+
+
+func result_visible() -> bool:
+	return result.visible
 
 
 # 실패 결과는 화면 아무 곳이나 탭해도 재시도 (§13.4)

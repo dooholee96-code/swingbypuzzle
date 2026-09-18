@@ -29,16 +29,34 @@ func _ready() -> void:
 	hud.session = session
 	hud.retry_pressed.connect(_on_retry)
 	get_viewport().size_changed.connect(_layout)
+	Lifecycle.paused.connect(_on_paused)
+	Lifecycle.resumed.connect(_on_resumed)
+	Haptics.enabled = bool(Save.settings()["haptics"])   # 설정과 연결 (§13.6)
 	_layout()
 
 
-func _notification(what: int) -> void:
-	# 백그라운드에 갔다 오면 누산기를 버린다 (§5.8, §15.2)
-	if what == NOTIFICATION_APPLICATION_PAUSED or what == NOTIFICATION_APPLICATION_FOCUS_OUT:
-		session.pause_reset()
-		if aim.active:
-			aim.finish()
-			session.cancel_aim()
+# 백그라운드로 가면 시뮬레이션을 멈추고 누산기를 버린다 (§5.8, §15.2).
+# 고정 스텝이라 돌아와서 그대로 이어가도 결과가 달라지지 않는다.
+func _on_paused() -> void:
+	session.pause_reset()
+	if aim.active:
+		aim.finish()
+		session.cancel_aim()
+	set_process(false)
+
+
+func _on_resumed() -> void:
+	session.pause_reset()
+	set_process(true)
+
+
+# 뒤로 버튼 (§15.2). 결과 화면이 떠 있으면 닫는 것으로 소비한다.
+# 단계 선택 화면은 M6 에서 붙인다.
+func handle_back() -> bool:
+	if hud.result_visible():
+		_on_retry()
+		return true
+	return false
 
 
 func _process(delta: float) -> void:
@@ -48,7 +66,7 @@ func _process(delta: float) -> void:
 	_follow(delta)
 	hud.refresh()
 	if session.state == Session.ENDING and session.end_progress() >= 1.0:
-		hud.show_result()
+		_finish()
 
 
 # §11 배율과 클램프. 맵이 뷰포트보다 작은 축은 가운데 정렬한다.
@@ -127,11 +145,22 @@ func _update_aim(pos: Vector2) -> void:
 func _release() -> void:
 	if aim.should_launch():
 		session.launch()
-		if hud.haptics:
-			Input.vibrate_handheld(20)
+		Haptics.launch()
 	else:
 		session.cancel_aim()
 	aim.finish()
+
+
+# 연출이 끝나는 순간 한 번만. 기록을 남기고 결과를 띄운다.
+func _finish() -> void:
+	if hud.result_visible():
+		return
+	Save.record_attempt(session.level["id"], session.outcome, session.flight_seconds())
+	if session.outcome == "win":
+		Haptics.arrived()
+	else:
+		Haptics.game_over()
+	hud.show_result()
 
 
 func _to_screen(world: Vector2) -> Vector2:

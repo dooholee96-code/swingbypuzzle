@@ -14,6 +14,13 @@ config/quit_on_go_back=false
 boot_splash/bg_color=Color(0, 0, 0, 1)
 boot_splash/show_image=false
 
+[autoload]
+
+; 생명주기·저장은 화면이 바뀌어도 살아 있어야 한다 (§15.2).
+Lifecycle="*res://platform/lifecycle.gd"
+Haptics="*res://platform/haptics.gd"
+Save="*res://save/save.gd"
+
 [display]
 
 ; §11: 배율은 Camera2D.zoom이 담당한다. 스트레치를 쓰면 선이 뭉개진다.
