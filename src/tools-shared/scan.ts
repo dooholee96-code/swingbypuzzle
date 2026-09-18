@@ -36,34 +36,39 @@ export function launchSteps(L: Level, divisions: number): number[] {
     Math.round(k * period / divisions / DT));
 }
 
-export function angles(L: Level, launchStep: number, Gin?: Grav[]): ScanResult {
+/**
+ * 전 각도 스캔. `step` 은 검증용 0.25° 가 기본이고, 에디터의 1차 대략 스캔만
+ * 1° 를 넘긴다(§8.7). **기준값(§6.2)은 언제나 0.25° 다** — 대략 스캔의 결과를
+ * 기록하거나 규칙 판정에 쓰지 않는다.
+ */
+export function angles(L: Level, launchStep: number, Gin?: Grav[], step = STEP): ScanResult {
   const sim = new Sim();
   const G = Gin ?? gravs(L);
   const counts: Partial<Record<Outcome, number>> = {};
   const wins: number[] = [];
 
-  for (let a = FROM; a < TO; a += STEP) {
+  for (let a = FROM; a < TO; a += step) {
     const r = sim.simulate(L, a, launchStep, G);
     counts[r] = (counts[r] ?? 0) + 1;
     if (r === 'win') wins.push(a);
   }
-  return { counts, runs: runsOf(wins) };
+  return { counts, runs: runsOf(wins, step) };
 }
 
 /** 연속한 성공 각도를 구간으로 묶는다. 부록 C 와 같은 판정. */
-export function runsOf(wins: number[]): Run[] {
+export function runsOf(wins: number[], step = STEP): Run[] {
   const runs: Run[] = [];
   for (const a of wins) {
     const last = runs[runs.length - 1];
-    if (last && Math.abs(a - last[1] - STEP) < 1e-6) last[1] = a;
+    if (last && Math.abs(a - last[1] - step) < 1e-6) last[1] = a;
     else runs.push([a, a]);
   }
   return runs;
 }
 
-/** 구간 폭 (끝 − 시작 + STEP). §6.2 의 "폭"과 같은 정의. */
-export function widthOf(r: Run): number {
-  return r[1] - r[0] + STEP;
+/** 구간 폭 (끝 − 시작 + step). §6.2 의 "폭"과 같은 정의. */
+export function widthOf(r: Run, step = STEP): number {
+  return r[1] - r[0] + step;
 }
 
 /** 폭 1° 이상인 구간만. 그보다 좁은 것은 §8.5 규칙 2 가 허용하는 우연이다. */

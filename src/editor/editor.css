@@ -1,0 +1,49 @@
+/* 스테이지 에디터. docs/PLAN.md §8.7
+   색은 §12.6 대로 :root 토큰으로만 쓴다. 규칙 안에서 리터럴을 쓰지 않는다. */
+:root {
+  --bg: #000000; --line: #E6EDF5; --dim: #6B7684;
+  --gravity: #4FC3F7; --hole: #B388FF; --danger: #FF5252; --goal: #FFD54F;
+  --panel: #10141A; --edge: #232A33; --ok: #5FD38D;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--line);
+  font: 13px/1.5 ui-sans-serif, system-ui, sans-serif; }
+#app { display: grid; grid-template-columns: 1fr 340px; height: 100%; }
+#left { display: flex; flex-direction: column; min-width: 0; }
+#right { border-left: 1px solid var(--edge); overflow-y: auto; background: var(--panel); }
+
+#bar { display: flex; flex-wrap: wrap; gap: 4px; align-items: center;
+  padding: 8px; border-bottom: 1px solid var(--edge); }
+.sp { width: 10px; }
+button, select { font: inherit; color: var(--line); background: transparent;
+  border: 1px solid var(--edge); border-radius: 6px; padding: 5px 10px; cursor: pointer; }
+button:hover:not(:disabled) { border-color: var(--dim); }
+button.on { border-color: var(--gravity); color: var(--gravity); }
+button.primary { border-color: var(--ok); color: var(--ok); }
+button:disabled { opacity: .4; cursor: default; }
+select { background: var(--panel); }
+
+#cv { flex: 1; min-height: 0; width: 100%; display: block; touch-action: none; cursor: crosshair; }
+#tip { padding: 6px 10px; color: var(--dim); border-top: 1px solid var(--edge); }
+
+section { padding: 12px; border-bottom: 1px solid var(--edge); }
+h2 { margin: 0 0 8px; font-size: 12px; letter-spacing: .08em; color: var(--dim);
+  text-transform: uppercase; font-weight: 600; }
+.dim { color: var(--dim); }
+.form { display: grid; grid-template-columns: 84px 1fr; gap: 6px 8px; align-items: center; }
+.form label { color: var(--dim); }
+.form input, .form select { width: 100%; font: inherit; color: var(--line);
+  background: var(--bg); border: 1px solid var(--edge); border-radius: 4px; padding: 3px 6px; }
+.form p { grid-column: 1 / -1; margin: 0; }
+
+#verdict ul { margin: 6px 0 0; padding-left: 16px; }
+#verdict li { margin: 2px 0; }
+.fail { color: var(--danger); }
+.warn { color: var(--goal); }
+.pass { color: var(--ok); }
+.kv { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; }
+.kv span:nth-child(even) { font-variant-numeric: tabular-nums; }
+
+#cands .cand { display: flex; justify-content: space-between; gap: 8px;
+  padding: 5px 0; border-bottom: 1px solid var(--edge); cursor: pointer; }
+#cands .cand:hover { color: var(--gravity); }

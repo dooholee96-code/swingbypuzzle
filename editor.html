@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>스윙바이 스테이지 에디터</title>
+<!--
+  개발자용 도구다. docs/PLAN.md §8.7
+  이 파일은 vite build 의 입력(index.html)이 아니므로 dist/ 에 들어가지 않는다.
+  확인: npm run build && grep -r editor dist/  → 아무것도 안 나와야 한다 (§19).
+-->
+<link rel="stylesheet" href="/src/editor/editor.css">
+</head>
+<body>
+  <div id="app">
+    <div id="left">
+      <div id="bar">
+        <select id="pick" title="단계"></select>
+        <span class="sp"></span>
+        <button data-tool="select" class="tool on">선택</button>
+        <button data-tool="planet" class="tool">행성</button>
+        <button data-tool="orbit"  class="tool">공전</button>
+        <button data-tool="hole"   class="tool">블랙홀</button>
+        <button data-tool="rock"   class="tool">소행성</button>
+        <button data-tool="ufo"    class="tool">외계인</button>
+        <span class="sp"></span>
+        <button id="undo" title="Ctrl+Z">되돌리기</button>
+        <button id="redo" title="Ctrl+Shift+Z">다시하기</button>
+        <span class="sp"></span>
+        <button id="del">삭제</button>
+        <button id="copy">JSON 복사</button>
+        <button id="paste">붙여넣기</button>
+        <span class="sp"></span>
+        <button id="save" class="primary" disabled>채택하고 저장</button>
+      </div>
+      <canvas id="cv"></canvas>
+      <div id="tip">드래그로 이동 · 5유닛 격자 스냅(Shift 로 해제) · 바깥 고리를 끌면 중력 범위 R</div>
+    </div>
+
+    <div id="right">
+      <section>
+        <h2>단계</h2>
+        <div id="levelform" class="form"></div>
+      </section>
+      <section>
+        <h2>선택 요소</h2>
+        <div id="propform" class="form"><p class="dim">아무것도 선택하지 않았어요.</p></div>
+      </section>
+      <section>
+        <h2>검증 <span id="spin" class="dim"></span></h2>
+        <div id="verdict"></div>
+      </section>
+      <section>
+        <h2>후보</h2>
+        <div id="cands"><p class="dim">candidates/ 가 비어 있어요. M8 의 생성기가 채웁니다.</p></div>
+      </section>
+    </div>
+  </div>
+  <script type="module" src="/src/editor/main.ts"></script>
+</body>
+</html>

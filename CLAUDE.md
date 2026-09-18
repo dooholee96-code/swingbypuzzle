@@ -55,7 +55,23 @@ npm run build     타입 검사 후 dist/ 생성
 npm run solve     전 각도 스캔 (§16.1)
 npm run bench     성능 측정 (§8.9) — 1-1 0.061초 / 5-1 0.517초
 npm run preview   빌드 결과 서빙. **배포 전 확인은 dev 가 아니라 이것으로**
+npm run validate  §8.5 전체 검증 (--write 로 meta.metrics 기록). 커밋 전 필수
+npm run editor    스테이지 에디터 (/editor.html). 개발 서버에서만 뜬다
 ```
+
+## 스테이지 에디터 (PLAN §8.7)
+
+개발자용이다. 배포 번들에 들어가지 않는다 — `editor.html` 은 `vite build` 의
+입력이 아니라서 `dist/` 에 파일도 코드도 남지 않는다.
+
+**에디터에서 출시까지 가는 길은 하나다:**
+`[채택하고 저장]` → `src/levels/data/<ID>.json` 이 실제로 바뀜 →
+`npm run validate` → 커밋 → 기본 브랜치 푸시 → Pages 배포.
+
+- 필수 규칙에 하나라도 걸리면 저장 버튼이 잠긴다. 검증기를 우회할 방법이 없다.
+- 저장 경로는 `src/levels/data/` 와 `candidates/` 로만 제한된다
+  (`tools/editor-plugin.ts`, 판정은 `tests/editor-plugin.test.ts` 가 지킨다).
+- 손대지 않고 저장하면 `meta.source` 를 건드리지 않는다 (`verified` 보존).
 
 ## 웹 배포
 
@@ -78,6 +94,7 @@ npm run preview   빌드 결과 서빙. **배포 전 확인은 dev 가 아니라
 | `src/ui/` | 화면과 문구 (§13) | |
 | `src/save/` | localStorage (§15.3) | |
 | `src/monetization/` | 광고 정책 순수 함수 (§14) | ★ DOM 금지, M9 |
+| `src/editor/` | 스테이지 에디터 (§8.7) | **배포 제외** — editor.html 은 빌드 입력이 아니다 |
 | `tools/` | Node CLI. `levels-fs.ts` 가 Node 용 레벨 읽기 | |
 | `docs/reference/` | 부록 A~C 의 Node 참조 구현 | 이식 대조용 |
 
@@ -90,7 +107,9 @@ npm run preview   빌드 결과 서빙. **배포 전 확인은 dev 가 아니라
       잠금이 새로고침 후 유지되는 것을 확인
 - [x] **계획서 v5** — 스택 절 전면 개정, §12.6 테마 신설, 웹 출시를 범위 안으로,
       §14.2 에 웹 광고(H5 Games Ads) 추가, 부록 D(GDScript) 삭제
-- [ ] **M7** 검증기·에디터 · M8 생성기 · M9 광고 · M10 40단계 · M11 다듬기 · M12 출시
+- [x] **M7** 검증기와 에디터 — 지표 9종·규칙 1~9·난이도 점수, `npm run validate`,
+      웹 에디터. **브라우저에서 편집→검증→저장→CLI 재검증까지 확인함.** 테스트 88개
+- [ ] **M8** 생성기 · M9 광고 · M10 40단계 · M11 다듬기 · M12 출시
 
 ## 지금 열려 있는 것
 
@@ -98,6 +117,8 @@ npm run preview   빌드 결과 서빙. **배포 전 확인은 dev 가 아니라
    남은 것: 타이틀 데모, 조준 감도, 발광 "낮음" 설정
 2. **색 리터럴 정리** (M11 까지) — `src/render/minimap.ts` 2곳,
    `src/ui/styles.css` 규칙 6곳이 아직 토큰 밖이다. `npm run check` 에 검사 추가 (§12.6)
-3. **H5 Games Ads 도메인 승인 신청** — M9 시작 전에 해 두어야 한다 (§14.2)
-4. 개인정보처리방침을 Pages 에 먼저 게시 — 광고를 켜는 순간 URL 이 필요하다 (§15.5)
-5. 소리 없음 (M11), 광고 없음 (M9), PWA·서비스 워커 없음 (M11), 앱 셸 없음 (M12)
+3. **M8 생성기** — "후보 10개 만들고 좋은 걸 고르는" 방식이 여기다 (§8.4).
+   에디터의 후보 목록이 이미 `candidates/` 를 읽게 되어 있어 붙이기만 하면 된다
+4. **H5 Games Ads 도메인 승인 신청** — M9 시작 전에 해 두어야 한다 (§14.2)
+5. 개인정보처리방침을 Pages 에 먼저 게시 — 광고를 켜는 순간 URL 이 필요하다 (§15.5)
+6. 소리 없음 (M11), 광고 없음 (M9), PWA·서비스 워커 없음 (M11), 앱 셸 없음 (M12)
