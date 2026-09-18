@@ -15,6 +15,8 @@ extends RefCounted
 const DT := SwConsts.DT
 const SHIP_R := SwConsts.SHIP_R
 const MAX_FLIGHT := SwConsts.MAX_FLIGHT
+const PAD_R := SwConsts.PAD_R
+const ARC := SwConsts.ARC
 
 # 스크래치 버퍼를 인스턴스 필드로 둬 루프 안 할당을 없앤다.
 var _bp := PackedFloat64Array([0.0, 0.0])              # body_pos 결과
@@ -146,6 +148,31 @@ func step_bullets(level: Dictionary) -> String:
 	return ""
 
 
+# ── 발사대 행성 (§5.9) ──────────────────────────────────────────────────
+#
+# θ 는 우주선이 돔 표면에 서 있는 위치이자 이륙 방향이다. 두 가지를 겸한다.
+# 발사 좌표는 돔 중심에서 θ 방향으로 PAD_R 만큼 떨어진 점이다.
+
+# 돔 중심 방향 = 출발점 → 목적지. 걸을 수 있는 범위는 이 방향 ±ARC.
+static func pad_angle(level: Dictionary) -> float:
+	var s: Dictionary = level["start"]
+	var g: Dictionary = level["goal"]
+	return atan2(g["y"] - s["y"], g["x"] - s["x"]) * 180.0 / PI
+
+
+# θ 가 걸을 수 있는 범위 안인가. 검증기 규칙(§8.5)이 이걸 본다.
+static func in_arc(level: Dictionary, theta_deg: float) -> bool:
+	var d: float = fposmod(theta_deg - pad_angle(level) + 180.0, 360.0) - 180.0
+	return absf(d) <= ARC
+
+
+# θ 에서의 발사 좌표 [x, y]
+static func launch_pos(level: Dictionary, theta_deg: float) -> PackedFloat64Array:
+	var a: float = theta_deg * PI / 180.0
+	var s: Dictionary = level["start"]
+	return PackedFloat64Array([s["x"] + PAD_R * cos(a), s["y"] + PAD_R * sin(a)])
+
+
 # 중력원 배열. 호출자가 한 번 만들어 전수 스캔 내내 재사용하면 더 빠르다.
 static func gravs_of(level: Dictionary) -> Array:
 	var g: Array = []
@@ -168,8 +195,8 @@ func simulate(level: Dictionary, angle_deg: float, launch_step: int, gravs: Arra
 
 	var a: float = angle_deg * PI / 180.0
 	var start: Dictionary = level["start"]
-	_ship[0] = start["x"]
-	_ship[1] = start["y"]
+	_ship[0] = start["x"] + PAD_R * cos(a)      # 돔 표면에서 이륙한다 (§5.9)
+	_ship[1] = start["y"] + PAD_R * sin(a)
 	_ship[2] = cos(a) * level["speed"]
 	_ship[3] = sin(a) * level["speed"]
 
@@ -208,8 +235,8 @@ func predict(level: Dictionary, angle_deg: float, launch_step: int, gravs: Array
 
 	var a: float = angle_deg * PI / 180.0
 	var start: Dictionary = level["start"]
-	_ship[0] = start["x"]
-	_ship[1] = start["y"]
+	_ship[0] = start["x"] + PAD_R * cos(a)      # 돔 표면에서 이륙한다 (§5.9)
+	_ship[1] = start["y"] + PAD_R * sin(a)
 	_ship[2] = cos(a) * level["speed"]
 	_ship[3] = sin(a) * level["speed"]
 

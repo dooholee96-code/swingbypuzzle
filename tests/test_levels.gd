@@ -24,7 +24,7 @@ const WINDOWS := [
 	{ "id": "1-4", "step": 0,   "width": 11.25, "from": -139.25, "to": -128.25 },
 	{ "id": "2-1", "step": 0,   "width": 9.75,  "from": -80.25,  "to": -70.75 },
 	{ "id": "3-1", "step": 0,   "width": 7.00,  "from": -33.25,  "to": -26.5 },
-	{ "id": "4-1", "step": 800, "width": 9.00,  "from": -48.25,  "to": -39.5 },
+	{ "id": "4-1", "step": 800, "width": 9.50,  "from": -48.50,  "to": -39.25 },
 	{ "id": "5-1", "step": 0,   "width": 7.25,  "from": -15.5,   "to": -8.5 },
 ]
 const WIDTH_TOLERANCE := 0.5
