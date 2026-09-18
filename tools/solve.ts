@@ -7,23 +7,15 @@
 
 import { DT } from '../src/core/constants.js';
 import { allIds } from '../src/levels/chapters.js';
-import { FROM, STEP, TO, angles, widthOf } from '../src/tools-shared/scan.js';
+import { angles, launchSteps, widthOf } from '../src/tools-shared/scan.js';
 import type { Level, Outcome } from '../src/core/types.js';
 import { LevelError, } from '../src/levels/loader.js';
 import { loadLevel } from './levels-fs.js';
 
-const ORBIT_DIVISIONS = 12;
+const ORBIT_DIVISIONS = 12;      // §16.1. 검증기는 24 를 쓴다 (§8.4)
 
 // §5.4 판정 순서로 고정해서 낸다. 객체 삽입 순서에 기대면 대조가 어렵다.
 const ORDER: Outcome[] = ['planet', 'hole', 'rock', 'ufo', 'wall', 'shot', 'drift', 'win'];
-
-export function launchSteps(L: Level): number[] {
-  const orbiting = (L.planets ?? []).find((p) => p.orbit);
-  if (!orbiting?.orbit) return [0];
-  const period = Math.abs(orbiting.orbit.period);
-  return Array.from({ length: ORBIT_DIVISIONS }, (_, k) =>
-    Math.round(k * period / ORBIT_DIVISIONS / DT));
-}
 
 export function solveLine(L: Level, launchStep: number): string {
   const { counts, runs } = angles(L, launchStep);
@@ -41,7 +33,7 @@ function main(): number {
   for (const id of ids.length ? ids : allIds()) {
     try {
       const L = loadLevel(id);
-      for (const s of launchSteps(L)) console.log(solveLine(L, s));
+      for (const s of launchSteps(L, ORBIT_DIVISIONS)) console.log(solveLine(L, s));
     } catch (e) {
       failed = true;
       for (const m of (e as LevelError).errors ?? [String(e)]) console.error(`  ${m}`);

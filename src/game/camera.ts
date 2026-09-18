@@ -3,10 +3,10 @@
 // 배율은 400×760 을 기준으로 잡는다. 1~4장은 대부분의 폰에서 한 화면에 들어오고
 // 5·6장은 스크롤된다. 맵이 뷰포트보다 작은 축은 가운데 정렬한다.
 
+import { REF_H, REF_W } from '../core/constants.js';
 import type { Level } from '../core/types.js';
 
-export const REF_W = 400;
-export const REF_H = 760;
+export { REF_H, REF_W };
 export const HUD_RESERVE = 96;    // 상단 HUD 와 안전 영역 몫 (CSS px)
 export const FOLLOW_SPEED = 6;    // §11 추적 감쇠
 export const LOOK_AHEAD = 0.35;   // 속도 × 이 값만큼 앞을 본다

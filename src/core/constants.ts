@@ -12,3 +12,8 @@ export const PAD_R = 22;
 
 // 우주선이 걸어 다닐 수 있는 범위. 돔 중심 방향(출발점 → 목적지) ±ARC.
 export const ARC = 90;
+
+// 기준 뷰포트 (§11). 카메라 배율의 기준이자, 난이도 점수 G 항이
+// "맵이 화면을 넘는가"를 판단하는 기준이다 (§8.6).
+export const REF_W = 400;
+export const REF_H = 760;

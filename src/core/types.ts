@@ -19,7 +19,11 @@ export interface Goal { x: number; y: number; r: number }
 export type Grav = Planet | Hole;
 
 export interface Metrics {
+  /** 저장된 solution.launch_step 에서의 성공 폭. 힌트의 방향 표시가 쓴다 (§14.3) */
   main_window: number;
+  /** 최적 발사 시점의 폭. 저장된 시점과 다를 때만 있다 (공전 단계) */
+  main_window_best?: number;
+  best_launch_step?: number;
   flight_time: number;
   clearance: number;
   timing_fraction?: number;

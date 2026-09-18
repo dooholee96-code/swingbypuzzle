@@ -10,12 +10,12 @@ import { dirname, join } from 'node:path';
 import { LevelError, parseLevel } from '../src/levels/loader.js';
 import type { Level } from '../src/core/types.js';
 
-const DATA = join(dirname(fileURLToPath(import.meta.url)), '..', 'src', 'levels', 'data');
+export const DATA_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'src', 'levels', 'data');
 
 export function loadLevel(id: string): Level {
   let text: string;
   try {
-    text = readFileSync(join(DATA, `${id}.json`), 'utf8');
+    text = readFileSync(join(DATA_DIR, `${id}.json`), 'utf8');
   } catch {
     throw new LevelError([`${id}: 단계 파일을 읽을 수 없습니다`]);
   }

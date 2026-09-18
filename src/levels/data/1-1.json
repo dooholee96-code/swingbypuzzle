@@ -67,6 +67,12 @@
       "launch_step": 0
     },
     "source": "verified",
-    "updated": "2026-09-18"
+    "updated": "2026-09-18",
+    "metrics": {
+      "main_window": 7,
+      "flight_time": 4.03,
+      "clearance": 17.18,
+      "difficulty": 0.55
+    }
   }
 }

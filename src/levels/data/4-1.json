@@ -96,6 +96,15 @@
       "launch_step": 800
     },
     "source": "verified",
-    "updated": "2026-09-18"
+    "updated": "2026-09-18",
+    "metrics": {
+      "main_window": 9.5,
+      "flight_time": 5.71,
+      "clearance": 18.38,
+      "difficulty": 2.14,
+      "main_window_best": 10,
+      "best_launch_step": 960,
+      "timing_fraction": 0.5
+    }
   }
 }

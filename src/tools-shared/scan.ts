@@ -2,9 +2,10 @@
 //
 // DOM 을 import 하지 않는다. CLI 와 에디터가 공용으로 쓴다 (§0.3).
 
+import { DT } from '../core/constants.js';
 import { Sim } from '../core/simulate.js';
 import { gravs } from '../core/physics.js';
-import type { Level, Outcome } from '../core/types.js';
+import type { Grav, Level, Outcome } from '../core/types.js';
 
 export const STEP = 0.25;
 export const FROM = -180;
@@ -17,9 +18,27 @@ export interface ScanResult {
   runs: Run[];
 }
 
-export function angles(L: Level, launchStep: number): ScanResult {
+/** 공전 행성이 있으면 그 행성, 없으면 undefined. 여러 개면 첫 번째. */
+export function orbiter(L: Level) {
+  return (L.planets ?? []).find((p) => p.orbit);
+}
+
+/**
+ * 훑어 볼 발사 시점(스텝 단위). 고정 단계는 [0] 하나.
+ * 공전 단계는 주기를 `divisions` 등분한다 — solve 는 12(§16.1),
+ * 검증기와 생성기는 24(§8.4, §8.9.1)를 쓴다.
+ */
+export function launchSteps(L: Level, divisions: number): number[] {
+  const o = orbiter(L)?.orbit;
+  if (!o) return [0];
+  const period = Math.abs(o.period);
+  return Array.from({ length: divisions }, (_, k) =>
+    Math.round(k * period / divisions / DT));
+}
+
+export function angles(L: Level, launchStep: number, Gin?: Grav[]): ScanResult {
   const sim = new Sim();
-  const G = gravs(L);
+  const G = Gin ?? gravs(L);
   const counts: Partial<Record<Outcome, number>> = {};
   const wins: number[] = [];
 
