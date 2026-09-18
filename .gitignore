@@ -1,19 +1,13 @@
-# Godot
-.godot/
-.import/
-export_presets.cfg
-*.translation
-
-# 빌드 산출물
+node_modules/
+dist/
 build/
-*.apk
-*.aab
-*.ipa
 
 # 비밀 정보 (§14.2, §15.5)
-platform/ads_config.gd
+src/platform/ads.config.ts
 *.keystore
 *.jks
+android/
+ios/
 
 # 생성 후보 (§8.2)
 candidates/

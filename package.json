@@ -1,0 +1,25 @@
+{
+  "name": "swingby",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "bench": "tsx tools/bench.ts",
+    "solve": "tsx tools/solve.ts",
+    "validate": "tsx tools/validate.ts",
+    "gen": "tsx tools/generate.ts",
+    "check": "tsc --noEmit && node tools/check-core.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.1",
+    "tsx": "^4.20.6",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.0",
+    "vitest": "^5.0.1"
+  }
+}
