@@ -34,6 +34,14 @@ var last_steps := 0
 var record_path := false
 var last_path := PackedFloat64Array()
 
+# 대화형 진행 상태 (begin / step_live). simulate() 도 이것을 쓴다.
+var _lv: Dictionary = {}
+var _lv_gravs: Array = []
+var _lv_ufos: Array = []
+var _lv_t := 0.0
+var _lv_n := 0
+var _lv_max := 0.0
+
 
 static func dist(ax: float, ay: float, bx: float, by: float) -> float:
 	var dx := ax - bx
@@ -181,15 +189,23 @@ static func gravs_of(level: Dictionary) -> Array:
 	return g
 
 
-# 전체 비행 시뮬레이션. 결과 문자열을 반환한다(§5.4의 결과 종류).
-func simulate(level: Dictionary, angle_deg: float, launch_step: int, gravs: Array = []) -> String:
-	if gravs.is_empty():
-		gravs = gravs_of(level)
-	var ufos: Array = level.get("ufos", [])
+# ── 비행 진행 ───────────────────────────────────────────────────────────
+#
+# 게임(한 프레임에 몇 스텝씩)과 검증기(끝까지 한 번에)가 **같은 스테퍼**를 쓴다.
+# 스테핑을 두 벌 두면 검증기가 통과시킨 단계가 게임에서 다르게 날아갈 수 있다(§0.3).
+#
+# 시각 t 는 launch_step * DT 에서 시작해 **누산**한다. level_step * DT 로 다시
+# 계산하면 배정밀도 결과가 미세하게 갈린다. 부록 A 와 같은 방식을 유지한다.
 
-	_next_fire.resize(ufos.size())
-	for i in ufos.size():
-		_next_fire[i] = ufos[i]["delay"]
+# 발사 준비. 이후 step_live() 를 반복 호출한다.
+func begin(level: Dictionary, angle_deg: float, launch_step: int, gravs: Array = []) -> void:
+	_lv = level
+	_lv_gravs = gravs_of(level) if gravs.is_empty() else gravs
+	_lv_ufos = level.get("ufos", [])
+
+	_next_fire.resize(_lv_ufos.size())
+	for i in _lv_ufos.size():
+		_next_fire[i] = _lv_ufos[i]["delay"]
 	_bullets.resize(0)
 	last_path.resize(0)
 
@@ -200,26 +216,55 @@ func simulate(level: Dictionary, angle_deg: float, launch_step: int, gravs: Arra
 	_ship[2] = cos(a) * level["speed"]
 	_ship[3] = sin(a) * level["speed"]
 
-	var t: float = launch_step * DT
-	var n: int = 0
-	var max_n: float = MAX_FLIGHT / DT   # 배정밀도에서 정확히 7200.0
-	while n < max_n:
-		var r: String = step_ship(level, gravs, t)
-		t += DT
-		n += 1
-		if record_path:
-			last_path.append(_ship[0])
-			last_path.append(_ship[1])
-		if r != "":
-			last_steps = n
-			return r
-		fire_ufos(ufos, n * DT)
-		var rb: String = step_bullets(level)
-		if rb != "":
-			last_steps = n
-			return rb
-	last_steps = n
-	return "drift"
+	_lv_t = launch_step * DT
+	_lv_n = 0
+	_lv_max = MAX_FLIGHT / DT                   # 배정밀도에서 정확히 7200.0
+	last_steps = 0
+
+
+# 한 스텝. "" = 계속, 그 외 = 결과. 시간이 다하면 "drift".
+func step_live() -> String:
+	if _lv_n >= _lv_max:
+		last_steps = _lv_n
+		return "drift"
+	var r: String = step_ship(_lv, _lv_gravs, _lv_t)
+	_lv_t += DT
+	_lv_n += 1
+	if record_path:
+		last_path.append(_ship[0])
+		last_path.append(_ship[1])
+	if r != "":
+		last_steps = _lv_n
+		return r
+	fire_ufos(_lv_ufos, _lv_n * DT)
+	var rb: String = step_bullets(_lv)
+	if rb != "":
+		last_steps = _lv_n
+		return rb
+	if _lv_n >= _lv_max:
+		last_steps = _lv_n
+		return "drift"
+	return ""
+
+
+# 비행 시계(스텝). 30초 제한과 외계인 사격 타이밍의 기준이다(§5.2).
+func flight_step() -> int:
+	return _lv_n
+
+
+# 진행 중인 비행의 현재 시각. 공전 행성을 **시뮬레이션과 같은 자리에** 그리려면
+# level_step * DT 로 다시 계산하지 말고 이 누산값을 써야 한다.
+func live_time() -> float:
+	return _lv_t
+
+
+# 전체 비행 시뮬레이션. 결과 문자열을 반환한다(§5.4의 결과 종류).
+func simulate(level: Dictionary, angle_deg: float, launch_step: int, gravs: Array = []) -> String:
+	begin(level, angle_deg, launch_step, gravs)
+	var r := ""
+	while r == "":
+		r = step_live()
+	return r
 
 
 # ── 예측선 (§5.7) ────────────────────────────────────────────────────────

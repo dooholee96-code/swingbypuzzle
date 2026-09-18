@@ -1,0 +1,16 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scenes/play.gd" id="1_play"]
+[ext_resource type="Script" path="res://scenes/play/field.gd" id="2_field"]
+[ext_resource type="PackedScene" path="res://ui/hud.tscn" id="3_hud"]
+
+[node name="Play" type="Node2D"]
+script = ExtResource("1_play")
+
+[node name="Field" type="Node2D" parent="."]
+script = ExtResource("2_field")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position_smoothing_speed = 6.0
+
+[node name="Hud" parent="." instance=ExtResource("3_hud")]
