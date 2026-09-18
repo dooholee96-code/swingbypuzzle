@@ -1,0 +1,63 @@
+# 웹 배포. docs/PLAN.md §15.1.1
+#
+# 기본 브랜치에 푸시하면 검사 → 테스트 → 빌드 → GitHub Pages 배포.
+# 회귀 테스트(§16.5)가 배포 관문이다. 깨진 물리는 올라가지 않는다.
+#
+# 처음 한 번: 저장소 Settings → Pages → Source 를 "GitHub Actions" 로 바꾼다.
+
+name: 웹 배포
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 배포는 한 번에 하나만. 새 푸시가 오면 진행 중인 것을 취소한다.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    # 기본 브랜치에서만 배포한다. 브랜치 이름을 적어 두면 나중에 바꿀 때 잊는다.
+    if: github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      # tsc --noEmit + core/ 의 DOM 사용 검사 (§0.3)
+      - name: 검사
+        run: npm run check
+
+      # §6.2 회귀. 여기서 막히면 배포하지 않는다 (§16.5)
+      - name: 테스트
+        run: npm test
+
+      - name: 빌드
+        run: npm run build
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

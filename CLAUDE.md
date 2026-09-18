@@ -52,6 +52,18 @@ Godot의 `Vector2`는 **32비트**다. 시뮬레이션 상태를 여기 담으�
 
 `GODOT` 환경변수로 실행 파일 지정: `GODOT=~/bin/godot4 ./run.sh bench`
 
+## 웹 배포 (PLAN §15.1.1)
+
+기본 브랜치에 푸시하면 `.github/workflows/pages.yml` 이
+검사 → 테스트 → 빌드 → GitHub Pages 배포를 한다.
+**회귀 테스트(§16.5)가 배포 관문이다.** 깨진 물리는 올라가지 않는다.
+
+처음 한 번: 저장소 Settings → Pages → Source 를 **"GitHub Actions"** 로.
+
+주소: `https://dooholee96-code.github.io/swingbypuzzle/`
+
+`vite.config.ts` 의 `base` 는 `'./'` 다. 하위 경로에 올라가도 자산을 찾는다.
+
 ## 폰에서 확인하기 (PLAN §15.1.1)
 
 안드로이드 SDK 를 갖추기 전까지는 웹 빌드가 가장 빠르다.
