@@ -92,7 +92,7 @@ npm run gen -- --recipe recipes/ch1.json --slot 2 --count 10   후보 생성 (§
 
 ## 웹 배포
 
-`main` 에 푸시하면 `.github/workflows/pages.yml` 이
+기본 브랜치에 푸시하면 `.github/workflows/pages.yml` 이
 검사 → 테스트 → 빌드 → GitHub Pages 배포를 한다.
 **회귀 테스트가 배포 관문이다.** 깨진 물리는 올라가지 않는다.
 
@@ -100,10 +100,14 @@ Settings → Pages → Source 는 **"GitHub Actions"** 로 되어 있다 (확인
 주소: `https://dooholee96-code.github.io/swingbypuzzle/`
 
 **기본 브랜치가 아직 `claude/kind-wozniak-x4heoi` 다.** 저장소가 그 브랜치
-하나로 시작했고, 기본 브랜치 변경은 저장소 Settings 에서만 된다. 그동안
-워크플로가 기본 브랜치와 `main` 양쪽을 받는다. Settings → General →
-Default branch 를 `main` 으로 바꾸고 나면 워크플로의 `|| ...` 와 이 문단을
-지우고, 옛 브랜치를 지운다.
+하나로 시작했다. `main` 을 만들어 두었고 두 브랜치는 같은 커밋을 가리키지만,
+**배포는 기본 브랜치에서만 된다.** 워크플로 조건 때문이 아니라 GitHub Pages
+의 `github-pages` 환경이 기본 브랜치의 배포만 허용해서다 — `main` 에서
+돌려 보니 build 는 통과하고 deploy 가 거부됐다. 코드로 우회할 수 없다.
+
+옮기려면 저장소 Settings 를 고쳐야 한다 (PC 브라우저에서):
+**Settings → General → Default branch** 를 `main` 으로. 그러면 워크플로는
+그대로 두어도 맞다. 바꾼 뒤 이 문단을 지우고 옛 브랜치를 지운다.
 
 ## 폴더
 
