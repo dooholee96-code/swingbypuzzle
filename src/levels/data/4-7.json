@@ -1,0 +1,91 @@
+{
+  "id": "4-7",
+  "name": "타이밍과 우회",
+  "w": 400,
+  "h": 760,
+  "speed": 150,
+  "preview": 0.8,
+  "start": {
+    "x": 135,
+    "y": 630
+  },
+  "goal": {
+    "x": 105,
+    "y": 65,
+    "r": 24
+  },
+  "planets": [
+    {
+      "x": 200,
+      "y": 445,
+      "r": 26,
+      "g": 740,
+      "R": 140,
+      "sides": 13
+    },
+    {
+      "x": 0,
+      "y": 0,
+      "r": 22,
+      "g": 600,
+      "R": 130,
+      "sides": 8,
+      "role": "gate",
+      "orbit": {
+        "cx": 190,
+        "cy": 155,
+        "rad": 65,
+        "period": 8,
+        "phase": 1.5707963267948966
+      }
+    }
+  ],
+  "ufos": [
+    {
+      "x": 270,
+      "y": 320,
+      "range": 175,
+      "interval": 1,
+      "delay": 0.5,
+      "bs": 230
+    }
+  ],
+  "meta": {
+    "chapter": 4,
+    "slot": 7,
+    "role": "도전",
+    "solution": {
+      "angle": -53.5,
+      "launch_step": 0
+    },
+    "source": "generated",
+    "updated": "2026-09-19",
+    "metrics": {
+      "main_window": 6,
+      "flight_time": 3.42,
+      "clearance": 8.57,
+      "difficulty": 3.89,
+      "timing_fraction": 0.25
+    }
+  },
+  "rocks": [
+    {
+      "x": 85,
+      "y": 185,
+      "r": 23,
+      "seed": 1
+    },
+    {
+      "x": 40,
+      "y": 450,
+      "r": 23,
+      "seed": 2
+    },
+    {
+      "x": 235,
+      "y": 640,
+      "r": 19,
+      "seed": 3
+    }
+  ]
+}
