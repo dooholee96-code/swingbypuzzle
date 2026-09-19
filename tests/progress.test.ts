@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   isChapterLast, isChapterUnlocked, isUnlocked, nextLevel, resumeLevel,
 } from '../src/levels/progress.js';
-import { allIds } from '../src/levels/chapters.js';
+import { CHAPTERS, allIds } from '../src/levels/chapters.js';
 import type { Progress } from '../src/levels/progress.js';
 import { Save } from '../src/save/save.js';
 
@@ -11,6 +11,13 @@ const P = (cleared: string[] = [], skipped: string[] = []): Progress => ({
   cleared: (id) => cleared.includes(id),
   skipped: (id) => skipped.includes(id),
 });
+
+// 단계 목록은 장이 채워질 때마다 늘어난다. "1-4" 같은 상수를 적으면
+// 단계를 더할 때마다 테스트를 고치게 된다 — 규칙을 chapters.ts 에서 끌어온다.
+const CH1 = CHAPTERS[0]!.levels;
+const CH2 = CHAPTERS[1]!.levels;
+const FIRST = CH1[0]!;
+const CH1_LAST = CH1[CH1.length - 1]!;
 
 describe('단계 잠금 (§13.2)', () => {
   it('첫 단계는 언제나 열려 있다', () => {
@@ -36,8 +43,8 @@ describe('장 잠금 (§13.2)', () => {
 
   it('이전 장을 다 끝내야 다음 장이 열린다', () => {
     expect(isChapterUnlocked(2, P())).toBe(false);
-    expect(isChapterUnlocked(2, P(['1-1']))).toBe(false);      // 1장에 1-4 가 남았다
-    expect(isChapterUnlocked(2, P(['1-1', '1-4']))).toBe(true);
+    expect(isChapterUnlocked(2, P([FIRST]))).toBe(false);      // 1장이 아직 안 끝났다
+    expect(isChapterUnlocked(2, P([...CH1]))).toBe(true);
   });
 });
 
@@ -48,13 +55,13 @@ describe('다음 단계와 이어 하기', () => {
   });
 
   it('다음 단계는 열려 있는 것만 준다', () => {
-    expect(nextLevel('1-1', P(['1-1']))).toBe('1-4');
-    expect(nextLevel('1-1', P())).toBeNull();                  // 1-4 가 아직 잠김
+    expect(nextLevel(FIRST, P([FIRST]))).toBe(CH1[1]!);
+    expect(nextLevel(FIRST, P())).toBeNull();                  // 다음 단계가 아직 잠김
   });
 
   it('이어 하기는 아직 안 깬 첫 단계', () => {
-    expect(resumeLevel(P())).toBe('1-1');
-    expect(resumeLevel(P(['1-1']))).toBe('1-4');
+    expect(resumeLevel(P())).toBe(FIRST);
+    expect(resumeLevel(P([FIRST]))).toBe(CH1[1]!);
   });
 
   it('전부 깼으면 마지막 단계로', () => {
@@ -63,9 +70,10 @@ describe('다음 단계와 이어 하기', () => {
   });
 
   it('장의 마지막 단계를 알아본다 — §13.4 의 "다음 장"', () => {
-    expect(isChapterLast('1-4')).toBe(true);
-    expect(isChapterLast('1-1')).toBe(false);
-    expect(isChapterLast('2-1')).toBe(true);
+    expect(isChapterLast(CH1_LAST)).toBe(true);
+    expect(isChapterLast(FIRST)).toBe(false);
+    expect(isChapterLast(CH2[CH2.length - 1]!)).toBe(true);
+    expect(isChapterLast(CH2[0]!)).toBe(false);
   });
 });
 
