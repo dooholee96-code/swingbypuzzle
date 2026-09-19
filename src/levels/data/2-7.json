@@ -1,0 +1,82 @@
+{
+  "id": "2-7",
+  "name": "정밀 조합",
+  "w": 400,
+  "h": 760,
+  "speed": 160,
+  "preview": 0.9,
+  "start": {
+    "x": 200,
+    "y": 690
+  },
+  "goal": {
+    "x": 115,
+    "y": 55,
+    "r": 24
+  },
+  "planets": [
+    {
+      "x": 190,
+      "y": 95,
+      "r": 27,
+      "g": 735,
+      "R": 170,
+      "sides": 8
+    },
+    {
+      "x": 60,
+      "y": 510,
+      "r": 22,
+      "g": 760,
+      "R": 135,
+      "sides": 10,
+      "role": "optional"
+    }
+  ],
+  "holes": [
+    {
+      "x": 280,
+      "y": 385,
+      "rH": 18,
+      "g": 875,
+      "R": 175
+    }
+  ],
+  "meta": {
+    "chapter": 2,
+    "slot": 7,
+    "role": "도전",
+    "solution": {
+      "angle": -61,
+      "launch_step": 0
+    },
+    "source": "generated",
+    "updated": "2026-09-19",
+    "metrics": {
+      "main_window": 6,
+      "flight_time": 3.8,
+      "clearance": 29.59,
+      "difficulty": 2.73
+    }
+  },
+  "rocks": [
+    {
+      "x": 40,
+      "y": 690,
+      "r": 21,
+      "seed": 1
+    },
+    {
+      "x": 185,
+      "y": 305,
+      "r": 21,
+      "seed": 2
+    },
+    {
+      "x": 70,
+      "y": 500,
+      "r": 22,
+      "seed": 3
+    }
+  ]
+}

@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import { generateOne } from '../src/tools-shared/generator.js';
+import { generateOne, seedOf } from '../src/tools-shared/generator.js';
 import { checkLevel, computeMetrics } from '../src/tools-shared/metrics.js';
 import { type Recipe, checkRecipe, slotOf } from '../src/tools-shared/recipe.js';
 import { validateSchema } from '../src/levels/loader.js';
@@ -63,18 +63,41 @@ describe('생성기 불변식 (§8.4 8단계)', () => {
   const r = load('ch1.json');
   const s = slotOf(r, 2)!;
 
+  /** 후보가 나오는 시드 하나. 시드를 코드에 박으면 배치 규칙을 손볼 때마다 깨진다. */
+  function luckySeed(): number {
+    for (let seed = 1; seed <= 300; seed++) if ('ok' in generateOne(r, s, seed)) return seed;
+    throw new Error('후보가 나오는 시드를 못 찾았다');
+  }
+
   it('같은 시드는 같은 단계를 낸다', () => {
-    const a = generateOne(r, s, 153);
-    const b = generateOne(r, s, 153);
+    const seed = luckySeed();
+    const a = generateOne(r, s, seed);
+    const b = generateOne(r, s, seed);
     expect('ok' in a).toBe(true);
     expect(JSON.stringify(a)).toBe(JSON.stringify(b));
-  }, 30_000);
+  }, 60_000);
 
   it('다른 시드는 다른 단계를 낸다', () => {
-    const a = generateOne(r, s, 153);
-    const b = generateOne(r, s, 162);
-    expect(JSON.stringify(a)).not.toBe(JSON.stringify(b));
-  }, 30_000);
+    const seed = luckySeed();
+    expect(JSON.stringify(generateOne(r, s, seed)))
+      .not.toBe(JSON.stringify(generateOne(r, s, seed + 1)));
+  }, 60_000);
+
+  it('레시피가 같아도 칸이 다르면 다른 단계가 나온다', () => {
+    // M10 에서 3-6 과 3-7 이 글자까지 같은 단계를 냈다. 난수를 시드로만
+    // 잡으면 레시피가 같은 두 칸이 같은 결과를 낸다 — seedOf 가 막는다.
+    const twin = { ...s, slot: s.slot + 40 };
+    for (let seed = 1; seed <= 40; seed++) {
+      const a = generateOne(r, s, seed);
+      const b = generateOne(r, twin, seed);
+      if ('ok' in a && 'ok' in b) {
+        expect(JSON.stringify(a.ok.level.start)).not.toBe(JSON.stringify(b.ok.level.start));
+        return;
+      }
+    }
+    // 둘 다 후보를 못 낸 경우라도 난수열 자체는 달라야 한다
+    expect(seedOf(r.chapter, s.slot, 1)).not.toBe(seedOf(r.chapter, s.slot + 40, 1));
+  }, 60_000);
 
   it('내놓은 후보는 스키마와 §8.5 규칙을 모두 통과한다', () => {
     let checked = 0;

@@ -1,0 +1,84 @@
+{
+  "id": "2-8",
+  "name": "긴 연계 항로",
+  "w": 400,
+  "h": 1000,
+  "speed": 160,
+  "preview": 0.9,
+  "start": {
+    "x": 85,
+    "y": 805
+  },
+  "goal": {
+    "x": 275,
+    "y": 195,
+    "r": 24
+  },
+  "planets": [
+    {
+      "x": 155,
+      "y": 330,
+      "r": 28,
+      "g": 775,
+      "R": 140,
+      "sides": 9
+    },
+    {
+      "x": 340,
+      "y": 150,
+      "r": 27,
+      "g": 725,
+      "R": 155,
+      "sides": 13,
+      "role": "optional"
+    }
+  ],
+  "holes": [
+    {
+      "x": 70,
+      "y": 575,
+      "rH": 15,
+      "g": 905,
+      "R": 175
+    },
+    {
+      "x": 330,
+      "y": 820,
+      "rH": 16,
+      "g": 930,
+      "R": 160,
+      "role": "optional"
+    }
+  ],
+  "meta": {
+    "chapter": 2,
+    "slot": 8,
+    "role": "마무리",
+    "solution": {
+      "angle": -113,
+      "launch_step": 0
+    },
+    "source": "generated",
+    "updated": "2026-09-19",
+    "metrics": {
+      "main_window": 6,
+      "flight_time": 3.71,
+      "clearance": 30.07,
+      "difficulty": 3.63
+    }
+  },
+  "rocks": [
+    {
+      "x": 40,
+      "y": 285,
+      "r": 16,
+      "seed": 1
+    },
+    {
+      "x": 290,
+      "y": 475,
+      "r": 20,
+      "seed": 2
+    }
+  ]
+}

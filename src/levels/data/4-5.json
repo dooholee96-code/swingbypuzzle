@@ -1,0 +1,82 @@
+{
+  "id": "4-5",
+  "name": "공전과 블랙홀",
+  "w": 400,
+  "h": 760,
+  "speed": 150,
+  "preview": 0.8,
+  "start": {
+    "x": 70,
+    "y": 630
+  },
+  "goal": {
+    "x": 165,
+    "y": 65,
+    "r": 24
+  },
+  "planets": [
+    {
+      "x": 0,
+      "y": 0,
+      "r": 24,
+      "g": 665,
+      "R": 135,
+      "sides": 8,
+      "role": "gate",
+      "orbit": {
+        "cx": 160,
+        "cy": 150,
+        "rad": 80,
+        "period": 7,
+        "phase": 2.356194490192345
+      }
+    }
+  ],
+  "holes": [
+    {
+      "x": 255,
+      "y": 405,
+      "rH": 18,
+      "g": 880,
+      "R": 185
+    }
+  ],
+  "meta": {
+    "chapter": 4,
+    "slot": 5,
+    "role": "조합",
+    "solution": {
+      "angle": -33,
+      "launch_step": 0
+    },
+    "source": "generated",
+    "updated": "2026-09-19",
+    "metrics": {
+      "main_window": 7,
+      "flight_time": 3.88,
+      "clearance": 28.43,
+      "difficulty": 1.7,
+      "timing_fraction": 0.54
+    }
+  },
+  "rocks": [
+    {
+      "x": 130,
+      "y": 190,
+      "r": 19,
+      "seed": 1
+    },
+    {
+      "x": 35,
+      "y": 420,
+      "r": 24,
+      "seed": 2
+    },
+    {
+      "x": 55,
+      "y": 110,
+      "r": 19,
+      "seed": 3
+    }
+  ]
+}

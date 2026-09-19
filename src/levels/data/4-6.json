@@ -1,0 +1,103 @@
+{
+  "id": "4-6",
+  "name": "두 주기 맞추기",
+  "w": 400,
+  "h": 760,
+  "speed": 150,
+  "preview": 0.8,
+  "start": {
+    "x": 335,
+    "y": 680
+  },
+  "goal": {
+    "x": 75,
+    "y": 145,
+    "r": 24
+  },
+  "planets": [
+    {
+      "x": 110,
+      "y": 490,
+      "r": 28,
+      "g": 740,
+      "R": 160,
+      "sides": 11
+    },
+    {
+      "x": 0,
+      "y": 0,
+      "r": 21,
+      "g": 625,
+      "R": 135,
+      "sides": 8,
+      "role": "gate",
+      "orbit": {
+        "cx": 260,
+        "cy": 130,
+        "rad": 85,
+        "period": 9,
+        "phase": 4.71238898038469
+      }
+    },
+    {
+      "x": 0,
+      "y": 0,
+      "r": 20,
+      "g": 620,
+      "R": 110,
+      "sides": 8,
+      "role": "gate",
+      "orbit": {
+        "cx": 120,
+        "cy": 255,
+        "rad": 80,
+        "period": 9,
+        "phase": 3.9269908169872414
+      }
+    }
+  ],
+  "meta": {
+    "chapter": 4,
+    "slot": 6,
+    "role": "조합 심화",
+    "solution": {
+      "angle": -153.5,
+      "launch_step": 0
+    },
+    "source": "generated",
+    "updated": "2026-09-19",
+    "metrics": {
+      "main_window": 6,
+      "flight_time": 4,
+      "clearance": 13.36,
+      "difficulty": 2.66,
+      "timing_fraction": 0.42
+    }
+  },
+  "rocks": [
+    {
+      "x": 145,
+      "y": 295,
+      "r": 21,
+      "seed": 1
+    },
+    {
+      "x": 85,
+      "y": 640,
+      "r": 21,
+      "seed": 2
+    },
+    {
+      "x": 280,
+      "y": 135,
+      "r": 20,
+      "seed": 3
+    },
+    {
+      "x": 245,
+      "y": 505,
+      "r": 19,
+      "seed": 4
+    }
+  ]
+}

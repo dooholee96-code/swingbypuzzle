@@ -1,0 +1,78 @@
+{
+  "id": "3-5",
+  "name": "블랙홀로 빠르게",
+  "w": 400,
+  "h": 760,
+  "speed": 155,
+  "preview": 0.9,
+  "start": {
+    "x": 275,
+    "y": 665
+  },
+  "goal": {
+    "x": 155,
+    "y": 115,
+    "r": 24
+  },
+  "planets": [
+    {
+      "x": 70,
+      "y": 95,
+      "r": 22,
+      "g": 855,
+      "R": 140,
+      "sides": 12
+    }
+  ],
+  "holes": [
+    {
+      "x": 80,
+      "y": 375,
+      "rH": 15,
+      "g": 890,
+      "R": 185
+    }
+  ],
+  "ufos": [
+    {
+      "x": 195,
+      "y": 240,
+      "range": 160,
+      "interval": 1.1,
+      "delay": 0.5,
+      "bs": 245
+    }
+  ],
+  "meta": {
+    "chapter": 3,
+    "slot": 5,
+    "role": "조합",
+    "solution": {
+      "angle": -138,
+      "launch_step": 0
+    },
+    "source": "generated",
+    "updated": "2026-09-19",
+    "metrics": {
+      "main_window": 7,
+      "flight_time": 3.65,
+      "clearance": 34.64,
+      "difficulty": 2.58
+    }
+  },
+  "rocks": [
+    {
+      "x": 325,
+      "y": 295,
+      "r": 23,
+      "seed": 1
+    },
+    {
+      "x": 365,
+      "y": 445,
+      "r": 24,
+      "seed": 2
+    }
+  ],
+  "hint": "빠르게 지나가면 포격을 덜 맞아요"
+}

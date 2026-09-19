@@ -1,0 +1,81 @@
+{
+  "id": "4-4",
+  "name": "느린 공전",
+  "w": 400,
+  "h": 760,
+  "speed": 150,
+  "preview": 0.9,
+  "start": {
+    "x": 300,
+    "y": 620
+  },
+  "goal": {
+    "x": 175,
+    "y": 115,
+    "r": 24
+  },
+  "planets": [
+    {
+      "x": 140,
+      "y": 445,
+      "r": 22,
+      "g": 885,
+      "R": 155,
+      "sides": 12
+    },
+    {
+      "x": 0,
+      "y": 0,
+      "r": 22,
+      "g": 650,
+      "R": 120,
+      "sides": 8,
+      "role": "gate",
+      "orbit": {
+        "cx": 195,
+        "cy": 175,
+        "rad": 85,
+        "period": 11,
+        "phase": 3.141592653589793
+      }
+    }
+  ],
+  "meta": {
+    "chapter": 4,
+    "slot": 4,
+    "role": "휴식",
+    "solution": {
+      "angle": -149,
+      "launch_step": 2420
+    },
+    "source": "generated",
+    "updated": "2026-09-19",
+    "metrics": {
+      "main_window": 9.75,
+      "flight_time": 3.43,
+      "clearance": 15.19,
+      "difficulty": 1.04,
+      "timing_fraction": 0.75
+    }
+  },
+  "rocks": [
+    {
+      "x": 210,
+      "y": 225,
+      "r": 15,
+      "seed": 1
+    },
+    {
+      "x": 190,
+      "y": 315,
+      "r": 17,
+      "seed": 2
+    },
+    {
+      "x": 130,
+      "y": 615,
+      "r": 23,
+      "seed": 3
+    }
+  ]
+}

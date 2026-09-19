@@ -1,0 +1,92 @@
+{
+  "id": "5-6",
+  "name": "긴 연계",
+  "w": 680,
+  "h": 1100,
+  "speed": 160,
+  "preview": 0.7,
+  "start": {
+    "x": 445,
+    "y": 925
+  },
+  "goal": {
+    "x": 525,
+    "y": 205,
+    "r": 24
+  },
+  "planets": [
+    {
+      "x": 540,
+      "y": 690,
+      "r": 22,
+      "g": 730,
+      "R": 160,
+      "sides": 13
+    },
+    {
+      "x": 550,
+      "y": 345,
+      "r": 25,
+      "g": 745,
+      "R": 175,
+      "sides": 9
+    }
+  ],
+  "holes": [
+    {
+      "x": 225,
+      "y": 755,
+      "rH": 15,
+      "g": 850,
+      "R": 180,
+      "role": "optional"
+    }
+  ],
+  "ufos": [
+    {
+      "x": 235,
+      "y": 625,
+      "range": 150,
+      "interval": 1,
+      "delay": 0.4,
+      "bs": 250
+    }
+  ],
+  "meta": {
+    "chapter": 5,
+    "slot": 6,
+    "role": "조합 심화",
+    "solution": {
+      "angle": -54.5,
+      "launch_step": 0
+    },
+    "source": "generated",
+    "updated": "2026-09-19",
+    "metrics": {
+      "main_window": 6,
+      "flight_time": 4.25,
+      "clearance": 11.8,
+      "difficulty": 4.76
+    }
+  },
+  "rocks": [
+    {
+      "x": 440,
+      "y": 570,
+      "r": 23,
+      "seed": 1
+    },
+    {
+      "x": 275,
+      "y": 260,
+      "r": 23,
+      "seed": 2
+    },
+    {
+      "x": 455,
+      "y": 635,
+      "r": 19,
+      "seed": 3
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "id": "3-4",
+  "name": "가벼운 복습",
+  "w": 400,
+  "h": 760,
+  "speed": 155,
+  "preview": 0.9,
+  "start": {
+    "x": 150,
+    "y": 630
+  },
+  "goal": {
+    "x": 295,
+    "y": 145,
+    "r": 24
+  },
+  "planets": [
+    {
+      "x": 110,
+      "y": 360,
+      "r": 23,
+      "g": 870,
+      "R": 180,
+      "sides": 12
+    }
+  ],
+  "ufos": [
+    {
+      "x": 275,
+      "y": 300,
+      "range": 145,
+      "interval": 1.2,
+      "delay": 0.3,
+      "bs": 235
+    }
+  ],
+  "meta": {
+    "chapter": 3,
+    "slot": 4,
+    "role": "휴식",
+    "solution": {
+      "angle": -115.5,
+      "launch_step": 0
+    },
+    "source": "generated",
+    "updated": "2026-09-19",
+    "metrics": {
+      "main_window": 9.5,
+      "flight_time": 3.23,
+      "clearance": 20.99,
+      "difficulty": 1.44
+    }
+  },
+  "rocks": [
+    {
+      "x": 305,
+      "y": 535,
+      "r": 18,
+      "seed": 1
+    },
+    {
+      "x": 315,
+      "y": 265,
+      "r": 23,
+      "seed": 2
+    },
+    {
+      "x": 355,
+      "y": 325,
+      "r": 19,
+      "seed": 3
+    },
+    {
+      "x": 230,
+      "y": 515,
+      "r": 24,
+      "seed": 4
+    }
+  ]
+}

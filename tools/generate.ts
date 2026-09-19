@@ -8,33 +8,18 @@
 //
 // 오래 걸리는 배치 작업이다. 10초마다 진행률을 한 줄 낸다 (§8.4).
 
-import { cpus } from 'node:os';
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { Worker } from 'node:worker_threads';
+import { join, resolve } from 'node:path';
 
 import type { Candidate } from '../src/tools-shared/generator.js';
 import { type Recipe, checkRecipe, levelId, resolve as resolveSlot, slotOf } from '../src/tools-shared/recipe.js';
+import { REJECT_LABEL, ROOT, runSlot, spread, threadCount } from './gen-run.js';
 import { svgOf } from './svg.js';
-import type { Done, Job, Progress } from './gen-worker.js';
-
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 function arg(name: string): string | undefined {
   const i = process.argv.indexOf(`--${name}`);
   return i >= 0 ? process.argv[i + 1] : undefined;
 }
-
-const REJECT_LABEL: Record<string, string> = {
-  place: '배치 실패(제약을 못 맞춤)',
-  goal: '쓸 만한 목적지 칸 없음',
-  shortcut: '지름길을 막을 자리 없음',
-  rocks: '소행성 한도 초과',
-  timing: '공전 타이밍 비율이 범위 밖',
-  nowin: '성공 각도 없음',
-  rules: '검증 규칙(§8.5) 불통과',
-};
 
 async function main(): Promise<number> {
   const recipePath = arg('recipe');
@@ -57,50 +42,16 @@ async function main(): Promise<number> {
 
   const seeds = Number(arg('seeds') ?? resolveSlot(recipe, slot).seeds);
   const id = levelId(recipe, slot);
-  const threads = Math.max(1, Math.min(cpus().length, 8));
+  const threads = threadCount();
 
   console.log(`${id} ${slot.name} — 시드 ${seeds}개, 스레드 ${threads}개`);
   console.log(`  목표 성공 폭 ${slot.window.min}~${slot.window.max}°` +
     (slot.timing ? `, 타이밍 ${slot.timing.minFraction}~${slot.timing.maxFraction}` : ''));
 
-  const started = Date.now();
-  const per = Math.ceil(seeds / threads);
-  const tally = { tried: 0, found: 0 };
-  const rejected: Record<string, number> = {};
-  const all: Candidate[] = [];
-
-  const ticker = setInterval(() => {
-    const el = ((Date.now() - started) / 1000).toFixed(0);
-    console.log(`  … ${el}초  시도 ${tally.tried}/${seeds}  후보 ${tally.found}개`);
-  }, 10_000);
-
-  await Promise.all(Array.from({ length: threads }, (_, k) => new Promise<void>((ok, no) => {
-    const job: Job = {
-      recipe, slot,
-      from: k * per + 1,
-      to: Math.min((k + 1) * per, seeds) + 1,
-    };
-    // 워커는 부모의 tsx 로더를 물려받지 않는다. 부트스트랩이 걸어 준다.
-    const w = new Worker(join(ROOT, 'tools/gen-worker-boot.mjs'), { workerData: job });
-    let mine = 0;
-    w.on('message', (m: Progress | Done) => {
-      if (m.kind === 'progress') {
-        tally.tried += m.tried - mine;
-        mine = m.tried;
-        tally.found = all.length + m.found;
-      } else {
-        tally.tried += m.tried - mine;
-        all.push(...m.candidates);
-        tally.found = all.length;
-        for (const [k2, v] of Object.entries(m.rejected)) rejected[k2] = (rejected[k2] ?? 0) + v;
-      }
-    });
-    w.on('error', no);
-    w.on('exit', () => { ok(); });
-  })));
-  clearInterval(ticker);
-
-  const secs = (Date.now() - started) / 1000;
+  const { candidates: all, rejected, seconds: secs } = await runSlot(
+    recipe, slot, seeds,
+    (tried, found, el) => console.log(`  … ${el.toFixed(0)}초  시도 ${tried}/${seeds}  후보 ${found}개`),
+  );
 
   // 난이도 순으로 정렬한 뒤 **고르게 솎아** count 개 (§8.4 8단계)
   //
@@ -150,13 +101,6 @@ async function main(): Promise<number> {
   console.log('');
   console.log(`  candidates/${id}/ 에 있습니다. npm run editor 의 후보 목록에서 열립니다.`);
   return top.length ? 0 : 1;
-}
-
-/** 정렬된 목록에서 고르게 n 개. 양 끝을 포함한다. */
-function spread<T>(list: T[], n: number): T[] {
-  if (list.length <= n) return list;
-  return Array.from({ length: n }, (_, i) =>
-    list[Math.round(i * (list.length - 1) / (n - 1))]!);
 }
 
 function summary(

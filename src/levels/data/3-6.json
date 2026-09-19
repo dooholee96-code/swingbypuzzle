@@ -1,0 +1,91 @@
+{
+  "id": "3-6",
+  "name": "경로 선택",
+  "w": 400,
+  "h": 760,
+  "speed": 155,
+  "preview": 0.8,
+  "start": {
+    "x": 185,
+    "y": 610
+  },
+  "goal": {
+    "x": 185,
+    "y": 105,
+    "r": 24
+  },
+  "planets": [
+    {
+      "x": 70,
+      "y": 380,
+      "r": 23,
+      "g": 830,
+      "R": 180,
+      "sides": 9
+    },
+    {
+      "x": 355,
+      "y": 215,
+      "r": 23,
+      "g": 730,
+      "R": 165,
+      "sides": 13,
+      "role": "optional"
+    }
+  ],
+  "ufos": [
+    {
+      "x": 240,
+      "y": 280,
+      "range": 145,
+      "interval": 0.9,
+      "delay": 0.5,
+      "bs": 255
+    },
+    {
+      "x": 50,
+      "y": 110,
+      "range": 160,
+      "interval": 1.1,
+      "delay": 0.5,
+      "bs": 230
+    }
+  ],
+  "meta": {
+    "chapter": 3,
+    "slot": 6,
+    "role": "조합 심화",
+    "solution": {
+      "angle": -134.5,
+      "launch_step": 0
+    },
+    "source": "generated",
+    "updated": "2026-09-19",
+    "metrics": {
+      "main_window": 7,
+      "flight_time": 3.24,
+      "clearance": 21.2,
+      "difficulty": 2.5
+    }
+  },
+  "rocks": [
+    {
+      "x": 195,
+      "y": 170,
+      "r": 19,
+      "seed": 1
+    },
+    {
+      "x": 310,
+      "y": 120,
+      "r": 24,
+      "seed": 2
+    },
+    {
+      "x": 255,
+      "y": 65,
+      "r": 18,
+      "seed": 3
+    }
+  ]
+}

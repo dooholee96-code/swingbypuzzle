@@ -1,0 +1,74 @@
+{
+  "id": "1-5",
+  "name": "쓸 행성 고르기",
+  "w": 400,
+  "h": 740,
+  "speed": 150,
+  "preview": 1.2,
+  "start": {
+    "x": 295,
+    "y": 635
+  },
+  "goal": {
+    "x": 275,
+    "y": 125,
+    "r": 24
+  },
+  "planets": [
+    {
+      "x": 155,
+      "y": 370,
+      "r": 21,
+      "g": 890,
+      "R": 175,
+      "sides": 10
+    },
+    {
+      "x": 110,
+      "y": 105,
+      "r": 22,
+      "g": 735,
+      "R": 135,
+      "sides": 10,
+      "role": "optional"
+    }
+  ],
+  "meta": {
+    "chapter": 1,
+    "slot": 5,
+    "role": "조합",
+    "solution": {
+      "angle": -133.5,
+      "launch_step": 0
+    },
+    "source": "generated",
+    "updated": "2026-09-19",
+    "metrics": {
+      "main_window": 8,
+      "flight_time": 3.47,
+      "clearance": 23.01,
+      "difficulty": 0.69
+    }
+  },
+  "rocks": [
+    {
+      "x": 285,
+      "y": 190,
+      "r": 17,
+      "seed": 1
+    },
+    {
+      "x": 320,
+      "y": 525,
+      "r": 17,
+      "seed": 2
+    },
+    {
+      "x": 265,
+      "y": 385,
+      "r": 19,
+      "seed": 3
+    }
+  ],
+  "hint": "모든 행성을 쓰는 게 정답은 아니에요"
+}

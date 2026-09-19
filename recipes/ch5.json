@@ -21,7 +21,7 @@
       "required": [
         {
           "type": "planet",
-          "count": 3
+          "count": 2
         }
       ],
       "hazards": {
@@ -31,7 +31,14 @@
       "window": {
         "min": 6,
         "max": 11
-      }
+      },
+      "optional": [
+        {
+          "type": "planet",
+          "count": 1,
+          "role": "optional"
+        }
+      ]
     },
     {
       "slot": 3,
@@ -48,7 +55,7 @@
       "required": [
         {
           "type": "planet",
-          "count": 2
+          "count": 1
         }
       ],
       "hazards": {
@@ -58,7 +65,14 @@
       "window": {
         "min": 5,
         "max": 9
-      }
+      },
+      "optional": [
+        {
+          "type": "planet",
+          "count": 1,
+          "role": "optional"
+        }
+      ]
     },
     {
       "slot": 4,
@@ -73,10 +87,6 @@
         {
           "type": "planet",
           "count": 2
-        },
-        {
-          "type": "hole",
-          "count": 1
         }
       ],
       "hazards": {
@@ -86,7 +96,14 @@
       "window": {
         "min": 6,
         "max": 11
-      }
+      },
+      "optional": [
+        {
+          "type": "hole",
+          "count": 1,
+          "role": "optional"
+        }
+      ]
     },
     {
       "slot": 5,
@@ -134,10 +151,6 @@
         {
           "type": "planet",
           "count": 2
-        },
-        {
-          "type": "hole",
-          "count": 1
         }
       ],
       "hazards": {
@@ -147,7 +160,14 @@
       "window": {
         "min": 4,
         "max": 8
-      }
+      },
+      "optional": [
+        {
+          "type": "hole",
+          "count": 1,
+          "role": "optional"
+        }
+      ]
     },
     {
       "slot": 7,
@@ -161,7 +181,7 @@
       "required": [
         {
           "type": "planet",
-          "count": 2
+          "count": 1
         },
         {
           "type": "orbit",
@@ -180,7 +200,14 @@
       "timing": {
         "minFraction": 0.3,
         "maxFraction": 0.5
-      }
+      },
+      "optional": [
+        {
+          "type": "planet",
+          "count": 1,
+          "role": "optional"
+        }
+      ]
     },
     {
       "slot": 8,
@@ -195,10 +222,6 @@
         {
           "type": "planet",
           "count": 2
-        },
-        {
-          "type": "hole",
-          "count": 1
         },
         {
           "type": "orbit",
@@ -217,7 +240,14 @@
       "timing": {
         "minFraction": 0.2,
         "maxFraction": 0.4
-      }
+      },
+      "optional": [
+        {
+          "type": "hole",
+          "count": 1,
+          "role": "optional"
+        }
+      ]
     }
   ]
 }

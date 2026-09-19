@@ -1,0 +1,82 @@
+{
+  "id": "4-2",
+  "name": "공전 주기 보기",
+  "w": 400,
+  "h": 760,
+  "speed": 150,
+  "preview": 0.9,
+  "start": {
+    "x": 100,
+    "y": 655
+  },
+  "goal": {
+    "x": 265,
+    "y": 105,
+    "r": 24
+  },
+  "planets": [
+    {
+      "x": 305,
+      "y": 450,
+      "r": 21,
+      "g": 855,
+      "R": 165,
+      "sides": 8
+    },
+    {
+      "x": 0,
+      "y": 0,
+      "r": 21,
+      "g": 610,
+      "R": 115,
+      "sides": 9,
+      "role": "gate",
+      "orbit": {
+        "cx": 260,
+        "cy": 175,
+        "rad": 95,
+        "period": 11,
+        "phase": 2.356194490192345
+      }
+    }
+  ],
+  "meta": {
+    "chapter": 4,
+    "slot": 2,
+    "role": "연습",
+    "solution": {
+      "angle": -30.5,
+      "launch_step": 0
+    },
+    "source": "generated",
+    "updated": "2026-09-19",
+    "metrics": {
+      "main_window": 8.5,
+      "flight_time": 3.93,
+      "clearance": 16.88,
+      "difficulty": 1.04,
+      "timing_fraction": 0.67
+    }
+  },
+  "rocks": [
+    {
+      "x": 235,
+      "y": 220,
+      "r": 18,
+      "seed": 1
+    },
+    {
+      "x": 60,
+      "y": 170,
+      "r": 19,
+      "seed": 2
+    },
+    {
+      "x": 290,
+      "y": 395,
+      "r": 22,
+      "seed": 3
+    }
+  ],
+  "hint": "공전 행성이 제자리에 올 때를 기다리세요"
+}

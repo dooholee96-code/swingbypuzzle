@@ -351,10 +351,22 @@ function nearPaths(paths: number[][], x: number, y: number): number {
 export type Reject =
   | 'place' | 'goal' | 'shortcut' | 'rocks' | 'timing' | 'rules' | 'nowin';
 
+/**
+ * 시드를 장·칸과 섞는다.
+ *
+ * 그냥 `mulberry32(seed)` 를 쓰면 **레시피가 같은 두 칸이 글자까지 같은 단계를
+ * 낸다.** M10 에서 3-6 과 3-7 이 실제로 그랬다 — 둘은 `rocksMax` 만 달랐고,
+ * 그 값은 지름길이 없으면 아무 데도 쓰이지 않아 결과가 완전히 일치했다.
+ * 칸마다 다른 난수열을 쓰면 레시피가 비슷해도 다른 배치를 탐색한다.
+ */
+export function seedOf(chapter: number, slot: number, seed: number): number {
+  return ((chapter * 100 + slot) * 1000003 + seed) | 0;
+}
+
 export function generateOne(
   r: Recipe, s: SlotRecipe, seed: number,
 ): { ok: Candidate } | { reject: Reject } {
-  const rnd = mulberry32(seed);
+  const rnd = mulberry32(seedOf(r.chapter, s.slot, seed));
   const { speed, startZone, goalZone } = resolve(r, s);
   const { w, h } = s.map;
 
