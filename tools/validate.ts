@@ -14,7 +14,7 @@ import { join } from 'node:path';
 import { Worker } from 'node:worker_threads';
 
 import { allIds, idsOf } from '../src/levels/chapters.js';
-import { curveWarnings, metaMetrics } from '../src/tools-shared/metrics.js';
+import { chapterJumpWarnings, curveWarnings, metaMetrics } from '../src/tools-shared/metrics.js';
 import { ROOT } from './gen-run.js';
 import { DATA_DIR, loadLevel } from './levels-fs.js';
 import type { VDone, VJob } from './validate-worker.js';
@@ -97,6 +97,8 @@ async function main(): Promise<number> {
   for (const ch of [...new Set(curve.map((c) => c.chapter))].sort((a, b) => a - b)) {
     for (const w of curveWarnings(curve.filter((c) => c.chapter === ch))) notes.push(`  ! ${w}`);
   }
+  // 장을 넘을 때의 톱니. 한 장만 훑으면 직전 장이 없어 아무 말도 하지 않는다
+  for (const w of chapterJumpWarnings(curve)) notes.push(`  ! ${w}`);
 
   if (notes.length) { console.log(''); for (const n of notes) console.log(n); }
 

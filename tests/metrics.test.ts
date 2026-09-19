@@ -19,7 +19,7 @@ import { loadLevel } from '../tools/levels-fs.js';
 import {
   type LevelMetrics, type Report,
   MAX_FLIGHT_TIME, MIN_CLEARANCE,
-  checkDome, checkLevel, computeMetrics, curveWarnings, difficultyOf,
+  chapterJumpWarnings, checkDome, checkLevel, computeMetrics, curveWarnings, difficultyOf,
   gravEntries, launchAccel, roleOf, sizeTerm, splitRuns, windowAt,
 } from '../src/tools-shared/metrics.js';
 import type { Level } from '../src/core/types.js';
@@ -239,6 +239,51 @@ describe('곡선 경고 — §8.5, §7.2', () => {
       { id: 'g', slot: 7, difficulty: 4, window: 5.5 },
       { id: 'h', slot: 8, difficulty: 5.5, window: 6 },
     ])).toEqual([]);
+  });
+
+  it('7번이 장에서 가장 어렵지 않으면 경고 — 8번은 빼고 본다', () => {
+    // M10 에서 5장이 실제로 이랬다. 6칸 4.76 > 도전 칸 4.18.
+    const w = curveWarnings([
+      { id: 'f', slot: 6, difficulty: 4.8, window: 6 },
+      { id: 'g', slot: 7, difficulty: 4.2, window: 5 },
+      { id: 'h', slot: 8, difficulty: 5.0, window: 6.5 },   // 맵이 커서 높다 — 빼고 본다
+    ]);
+    expect(w.length).toBe(1);
+    expect(w[0]).toContain('도전 칸');
+    expect(w[0]).toContain('f');
+  });
+
+  it('7번이 가장 어려우면 8번이 더 높아도 경고 없음', () => {
+    expect(curveWarnings([
+      { id: 'f', slot: 6, difficulty: 4.0, window: 6 },
+      { id: 'g', slot: 7, difficulty: 4.7, window: 5 },
+      { id: 'h', slot: 8, difficulty: 5.0, window: 6.5 },
+    ])).toEqual([]);
+  });
+});
+
+describe('장을 넘는 톱니 — §7.2', () => {
+  const lv = (id: string, chapter: number, slot: number, difficulty: number) =>
+    ({ id, chapter, slot, difficulty });
+
+  it('장의 1칸이 직전 장 7칸보다 어려우면 경고', () => {
+    const w = chapterJumpWarnings([
+      lv('1-7', 1, 7, 3.9), lv('2-1', 2, 1, 4.6),
+    ]);
+    expect(w.length).toBe(1);
+    expect(w[0]).toContain('2-1');
+    expect(w[0]).toContain('1-7');
+  });
+
+  it('더 쉬우면 경고 없음', () => {
+    expect(chapterJumpWarnings([
+      lv('1-7', 1, 7, 3.9), lv('2-1', 2, 1, 1.5),
+    ])).toEqual([]);
+  });
+
+  it('직전 장을 함께 훑지 않으면 아무 말도 하지 않는다', () => {
+    // `npm run validate 2` 처럼 한 장만 볼 때다.
+    expect(chapterJumpWarnings([lv('2-1', 2, 1, 4.6)])).toEqual([]);
   });
 });
 

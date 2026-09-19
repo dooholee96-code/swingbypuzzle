@@ -462,5 +462,42 @@ export function curveWarnings(
       + ` 도전 칸 ${hard.window.toFixed(2)}° 보다 좁다 (§7.2)`);
   }
 
+  // 7번: 장에서 가장 어려운 칸이어야 한다.
+  // 마무리(8번)는 긴 맵의 G 항 때문에 점수가 올라가므로 빼고 본다 — 위와 같은 이유다.
+  if (hard) {
+    const higher = levels.filter((l) => l.slot < 7 && l.difficulty > hard.difficulty);
+    if (higher.length) {
+      const worst = higher.reduce((a, b) => (b.difficulty > a.difficulty ? b : a));
+      out.push(`${hard.id}: 도전 칸인데 난이도 ${hard.difficulty.toFixed(1)} 가`
+        + ` ${worst.id} 의 ${worst.difficulty.toFixed(1)} 보다 낮다 (§7.2)`);
+    }
+  }
+
+  return out;
+}
+
+/**
+ * 장을 넘을 때의 톱니. §7.2 "장의 1단계는 직전 장 7단계보다 쉽고".
+ *
+ * 장 안에서는 알 수 없으므로 `curveWarnings` 와 따로 둔다. 전 단계를 한꺼번에
+ * 훑을 때만(`npm run validate` 를 인자 없이) 볼 수 있다.
+ */
+export function chapterJumpWarnings(
+  levels: { id: string; chapter: number; slot: number; difficulty: number }[],
+): string[] {
+  const at = (chapter: number, slot: number): { id: string; difficulty: number } | undefined =>
+    levels.find((l) => l.chapter === chapter && l.slot === slot);
+
+  const chapters = [...new Set(levels.map((l) => l.chapter))].sort((a, b) => a - b);
+  const out: string[] = [];
+
+  for (const ch of chapters) {
+    const head = at(ch, 1), prevHard = at(ch - 1, 7);
+    if (!head || !prevHard) continue;                 // 직전 장을 함께 훑지 않았다
+    if (head.difficulty <= prevHard.difficulty) continue;
+    out.push(`${head.id}: 장의 첫 칸인데 난이도 ${head.difficulty.toFixed(1)} 가`
+      + ` 직전 장 도전 칸 ${prevHard.id} 의 ${prevHard.difficulty.toFixed(1)} 보다 높다 (§7.2)`);
+  }
+
   return out;
 }
