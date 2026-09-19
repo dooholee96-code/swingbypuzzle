@@ -29,7 +29,8 @@
       "window": {
         "min": 7,
         "max": 12
-      }
+      },
+      "intro": "rock"
     },
     {
       "slot": 3,
@@ -157,7 +158,7 @@
       "required": [
         {
           "type": "planet",
-          "count": 3
+          "count": 2
         }
       ],
       "hazards": {
@@ -167,7 +168,14 @@
       "window": {
         "min": 4,
         "max": 8
-      }
+      },
+      "optional": [
+        {
+          "type": "planet",
+          "count": 1,
+          "role": "optional"
+        }
+      ]
     }
   ]
 }

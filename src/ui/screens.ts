@@ -29,6 +29,9 @@ export interface ScreenDeps {
     sfx: boolean; haptics: boolean;
     glow: 'normal' | 'low'; reduce_motion: boolean; reduce_motion_set?: boolean;
   };
+  /** 광고 SDK 가 동의 양식을 다시 열 수 있는가 (§13.6, §14.5). 해당 지역에서만 참 */
+  canOpenPrivacyOptions?(): boolean;
+  openPrivacyOptions?(): Promise<void>;
   onStart(): void;                 // 타이틀 → 이어서 하기
   onPick(id: string): void;
   onSettingChange(): void;
@@ -183,12 +186,23 @@ export class Screens {
             <button data-set="glow" data-v="low" aria-pressed="${s.glow === 'low'}" type="button">낮음</button>
           </div></div>
         ${toggle('reduce_motion', '모션 줄이기', s.reduce_motion)}
+        ${this.d.canOpenPrivacyOptions?.()
+          ? '<div class="row2"><span class="label">개인정보 옵션</span>'
+            + '<button class="btn" data-a="privacy" type="button">열기</button></div>'
+          : ''}
+        <div class="row2"><span class="label">개인정보처리방침</span>
+          <a class="btn" href="./privacy/" target="_blank" rel="noopener">보기</a></div>
+        <div class="row2"><span class="label">만든 것</span>
+          <span class="val dim">오픈소스 고지</span></div>
+        <p class="tapnote">이 게임은 오픈소스 라이브러리를 쓰지 않습니다.
+          Oxanium 글꼴은 SIL Open Font License 를 따릅니다.</p>
         <div class="row2"><span class="label">버전</span>
           <span class="val">${__APP_VERSION__}</span></div>
       </div>`;
 
     this.bind(this.settingsEl, {
       back: () => { this.settingsEl.hidden = true; if (back === 'title') this.showTitle(); else if (back === 'select') this.showSelect(); },
+      privacy: () => { void this.d.openPrivacyOptions?.(); },
     });
     for (const b of this.settingsEl.querySelectorAll<HTMLButtonElement>('[data-set]')) {
       b.addEventListener('click', () => {

@@ -1,0 +1,66 @@
+{
+  "id": "1-2",
+  "name": "반대편으로",
+  "w": 400,
+  "h": 740,
+  "speed": 150,
+  "preview": 1.8,
+  "start": {
+    "x": 260,
+    "y": 605
+  },
+  "goal": {
+    "x": 165,
+    "y": 85,
+    "r": 24
+  },
+  "planets": [
+    {
+      "x": 295,
+      "y": 240,
+      "r": 20,
+      "g": 860,
+      "R": 180,
+      "sides": 13
+    }
+  ],
+  "meta": {
+    "chapter": 1,
+    "slot": 2,
+    "role": "연습",
+    "intro": "rock",
+    "solution": {
+      "angle": -72,
+      "launch_step": 0
+    },
+    "source": "generated",
+    "updated": "2026-09-19",
+    "metrics": {
+      "main_window": 9.5,
+      "flight_time": 3.38,
+      "clearance": 22.14,
+      "difficulty": 0
+    }
+  },
+  "rocks": [
+    {
+      "x": 160,
+      "y": 150,
+      "r": 21,
+      "seed": 1
+    },
+    {
+      "x": 60,
+      "y": 550,
+      "r": 23,
+      "seed": 2
+    },
+    {
+      "x": 245,
+      "y": 300,
+      "r": 18,
+      "seed": 3
+    }
+  ],
+  "hint": "행성의 어느 쪽을 지나느냐로 꺾이는 방향이 바뀌어요"
+}

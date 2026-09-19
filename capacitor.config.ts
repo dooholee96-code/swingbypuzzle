@@ -7,9 +7,10 @@
 //
 // 앱 ID 는 출시 전에 사용자와 확정한다 (§15.2).
 
-import type { CapacitorConfig } from '@capacitor/cli';
-
-const config: CapacitorConfig = {
+// @capacitor/cli 는 아직 설치돼 있지 않다(M12 에서 사용자가 넣는다). 타입을
+// import 하면 지금 tsc 와 CI 가 깨지므로 구조만 적는다 — Capacitor CLI 는
+// 이 파일의 기본 내보내기를 그대로 읽는다.
+const config = {
   appId: 'com.example.swingby',      // ← 출시 전 확정
   appName: '스윙바이',
   webDir: 'dist',

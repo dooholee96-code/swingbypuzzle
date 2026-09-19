@@ -73,6 +73,8 @@ const screens = new Screens({
   })),
   onPick: (id) => startPlay(id),
   onSettingChange: () => { applySettings(); save.touch(); },
+  canOpenPrivacyOptions: () => ads.canOpenPrivacyOptions(),
+  openPrivacyOptions: () => ads.openPrivacyOptions(),
 });
 
 const cap = detect();
