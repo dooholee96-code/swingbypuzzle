@@ -158,7 +158,7 @@
         "rocksMax": 6
       },
       "window": {
-        "min": 4,
+        "min": 5,
         "max": 8
       },
       "optional": [
