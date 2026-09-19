@@ -1,0 +1,124 @@
+{
+  "id": "5-8",
+  "name": "초반부 총정리",
+  "w": 800,
+  "h": 1200,
+  "speed": 160,
+  "preview": 0.7,
+  "start": {
+    "x": 135,
+    "y": 1095
+  },
+  "goal": {
+    "x": 535,
+    "y": 235,
+    "r": 24
+  },
+  "planets": [
+    {
+      "x": 345,
+      "y": 985,
+      "r": 25,
+      "g": 845,
+      "R": 155,
+      "sides": 9
+    },
+    {
+      "x": 0,
+      "y": 0,
+      "r": 20,
+      "g": 600,
+      "R": 135,
+      "sides": 8,
+      "role": "gate",
+      "orbit": {
+        "cx": 360,
+        "cy": 415,
+        "rad": 100,
+        "period": 10,
+        "phase": 5.497787143782138
+      }
+    },
+    {
+      "x": 565,
+      "y": 125,
+      "r": 21,
+      "g": 835,
+      "R": 180,
+      "sides": 9,
+      "role": "optional"
+    }
+  ],
+  "holes": [
+    {
+      "x": 240,
+      "y": 130,
+      "rH": 15,
+      "g": 940,
+      "R": 165,
+      "role": "optional"
+    }
+  ],
+  "ufos": [
+    {
+      "x": 190,
+      "y": 425,
+      "range": 165,
+      "interval": 1.2,
+      "delay": 0.4,
+      "bs": 245
+    },
+    {
+      "x": 615,
+      "y": 810,
+      "range": 170,
+      "interval": 1.1,
+      "delay": 0.5,
+      "bs": 240
+    }
+  ],
+  "meta": {
+    "chapter": 5,
+    "slot": 8,
+    "role": "초반부 최종",
+    "solution": {
+      "angle": -11.5,
+      "launch_step": 0
+    },
+    "source": "generated",
+    "updated": "2026-09-19",
+    "metrics": {
+      "main_window": 6.75,
+      "flight_time": 6.08,
+      "clearance": 13.89,
+      "difficulty": 4.57,
+      "timing_fraction": 0.42
+    }
+  },
+  "rocks": [
+    {
+      "x": 375,
+      "y": 135,
+      "r": 22,
+      "seed": 1
+    },
+    {
+      "x": 615,
+      "y": 510,
+      "r": 22,
+      "seed": 2
+    },
+    {
+      "x": 315,
+      "y": 360,
+      "r": 20,
+      "seed": 3
+    },
+    {
+      "x": 535,
+      "y": 740,
+      "r": 19,
+      "seed": 4
+    }
+  ]
+}
