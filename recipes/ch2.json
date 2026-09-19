@@ -69,12 +69,17 @@
       "required": [
         {
           "type": "planet",
-          "count": 2
+          "count": 1
         }
       ],
       "optional": [
         {
           "type": "hole",
+          "count": 1,
+          "role": "optional"
+        },
+        {
+          "type": "planet",
           "count": 1,
           "role": "optional"
         }
@@ -84,7 +89,7 @@
         "rocksMax": 6
       },
       "window": {
-        "min": 7,
+        "min": 8,
         "max": 12
       }
     },
@@ -156,7 +161,7 @@
         },
         {
           "type": "planet",
-          "count": 2
+          "count": 1
         }
       ],
       "hazards": {
@@ -166,7 +171,14 @@
       "window": {
         "min": 4,
         "max": 8
-      }
+      },
+      "optional": [
+        {
+          "type": "planet",
+          "count": 1,
+          "role": "optional"
+        }
+      ]
     },
     {
       "slot": 8,
@@ -180,11 +192,11 @@
       "required": [
         {
           "type": "hole",
-          "count": 2
+          "count": 1
         },
         {
           "type": "planet",
-          "count": 2
+          "count": 1
         }
       ],
       "hazards": {
@@ -194,7 +206,19 @@
       "window": {
         "min": 4,
         "max": 8
-      }
+      },
+      "optional": [
+        {
+          "type": "hole",
+          "count": 1,
+          "role": "optional"
+        },
+        {
+          "type": "planet",
+          "count": 1,
+          "role": "optional"
+        }
+      ]
     }
   ]
 }

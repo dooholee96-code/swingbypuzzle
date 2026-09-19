@@ -72,7 +72,7 @@ async function main(): Promise<number> {
 
   let failed = 0;
   const notes: string[] = [];
-  const curve: { id: string; slot: number; difficulty: number; chapter: number }[] = [];
+  const curve: { id: string; slot: number; difficulty: number; window: number; chapter: number }[] = [];
 
   for (const r of rows) {
     if ('error' in r) { failed++; console.log(`  ✗ ${r.id}  ${r.error}`); continue; }
@@ -81,7 +81,10 @@ async function main(): Promise<number> {
     console.log(row(r, ok));
     for (const f of r.failures) notes.push(`  ✗ ${r.id}: ${f}`);
     for (const w of r.warnings) notes.push(`  ! ${r.id}: ${w}`);
-    curve.push({ id: r.id, slot: r.slot, chapter: r.chapter, difficulty: r.metrics.difficulty });
+    curve.push({
+      id: r.id, slot: r.slot, chapter: r.chapter,
+      difficulty: r.metrics.difficulty, window: r.metrics.main_window_at_solution,
+    });
 
     if (write && ok) {
       const L = loadLevel(r.id);

@@ -432,15 +432,35 @@ function round2(v: number): number {
   return Math.round(v * 100) / 100;
 }
 
-/** 장 안의 난이도 곡선 경고 (§8.5). 휴식 칸은 4, 8 번째다. */
-export function curveWarnings(levels: { id: string; slot: number; difficulty: number }[]): string[] {
+/**
+ * 장 안의 곡선 경고 (§8.5, §7.2).
+ *
+ * 4번과 8번 칸은 **기준이 다르다.** §7.2 가 그렇게 적어 두었다:
+ *   · 4 휴식  — "직전 단계보다 **난이도 점수**가 낮아야 함"
+ *   · 8 마무리 — "도전(7번)보다 **폭**은 넓게"
+ *
+ * 둘 다 난이도로 비교하면 8번이 늘 걸린다. 마무리는 긴 맵을 쓰므로 §8.6 의
+ * G 항 때문에 점수가 올라가는데, 그건 어려워서가 아니라 맵이 커서다.
+ */
+export function curveWarnings(
+  levels: { id: string; slot: number; difficulty: number; window?: number }[],
+): string[] {
   const out: string[] = [];
-  const sorted = [...levels].sort((a, b) => a.slot - b.slot);
-  for (let i = 1; i < sorted.length; i++) {
-    const cur = sorted[i]!, prev = sorted[i - 1]!;
-    if ((cur.slot === 4 || cur.slot === 8) && cur.difficulty > prev.difficulty) {
-      out.push(`${cur.id}: 휴식 칸인데 난이도 ${cur.difficulty.toFixed(1)} 가 직전 칸 ${prev.difficulty.toFixed(1)} 보다 높다`);
-    }
+  const bySlot = new Map(levels.map((l) => [l.slot, l]));
+
+  // 4번: 직전 칸보다 난이도가 낮아야 한다
+  const rest = bySlot.get(4), before = bySlot.get(3);
+  if (rest && before && rest.difficulty > before.difficulty) {
+    out.push(`${rest.id}: 휴식 칸인데 난이도 ${rest.difficulty.toFixed(1)} 가`
+      + ` 직전 칸 ${before.difficulty.toFixed(1)} 보다 높다`);
   }
+
+  // 8번: 도전(7번)보다 성공 폭이 넓어야 한다
+  const last = bySlot.get(8), hard = bySlot.get(7);
+  if (last?.window !== undefined && hard?.window !== undefined && last.window < hard.window) {
+    out.push(`${last.id}: 마무리 칸인데 성공 폭 ${last.window.toFixed(2)}° 가`
+      + ` 도전 칸 ${hard.window.toFixed(2)}° 보다 좁다 (§7.2)`);
+  }
+
   return out;
 }

@@ -206,21 +206,38 @@ describe('구간 나누기', () => {
   });
 });
 
-describe('난이도 곡선 경고 — §8.5', () => {
-  it('휴식 칸(4, 8)이 직전 칸보다 어려우면 경고', () => {
+describe('곡선 경고 — §8.5, §7.2', () => {
+  it('4번 휴식 칸이 3번보다 어려우면 경고 (난이도 기준)', () => {
     const w = curveWarnings([
       { id: 'a', slot: 3, difficulty: 5 },
       { id: 'b', slot: 4, difficulty: 6 },
-      { id: 'c', slot: 5, difficulty: 7 },
     ]);
     expect(w.length).toBe(1);
-    expect(w[0]).toContain('b');
+    expect(w[0]).toContain('휴식');
   });
 
-  it('휴식 칸이 더 쉬우면 경고 없음', () => {
+  it('4번이 더 쉬우면 경고 없음', () => {
     expect(curveWarnings([
       { id: 'a', slot: 3, difficulty: 5 },
       { id: 'b', slot: 4, difficulty: 2 },
+    ])).toEqual([]);
+  });
+
+  it('8번 마무리 칸은 **폭**으로 본다 — 7번보다 좁으면 경고', () => {
+    // §7.2: "도전보다 폭은 넓게". 난이도로 비교하면 마무리가 늘 걸린다 —
+    // 긴 맵을 쓰므로 §8.6 의 G 항 때문에 점수가 오르는 것뿐이다.
+    const w = curveWarnings([
+      { id: 'g', slot: 7, difficulty: 4, window: 6 },
+      { id: 'h', slot: 8, difficulty: 5, window: 5 },
+    ]);
+    expect(w.length).toBe(1);
+    expect(w[0]).toContain('마무리');
+  });
+
+  it('8번이 7번보다 난이도가 높아도 폭이 넓으면 경고 없음', () => {
+    expect(curveWarnings([
+      { id: 'g', slot: 7, difficulty: 4, window: 5.5 },
+      { id: 'h', slot: 8, difficulty: 5.5, window: 6 },
     ])).toEqual([]);
   });
 });
