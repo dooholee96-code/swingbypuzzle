@@ -13,6 +13,7 @@
     "bench": "tsx tools/bench.ts",
     "solve": "tsx tools/solve.ts",
     "validate": "tsx tools/validate.ts",
+    "register": "tsx tools/register.ts",
     "gen": "tsx tools/generate.ts",
     "build-chapter": "tsx tools/build-chapter.ts",
     "check": "tsc --noEmit && node tools/check-core.mjs && node tools/check-colors.mjs"
