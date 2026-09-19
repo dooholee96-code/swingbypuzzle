@@ -221,7 +221,7 @@
       "required": [
         {
           "type": "planet",
-          "count": 2
+          "count": 1
         },
         {
           "type": "orbit",
@@ -242,6 +242,11 @@
         "maxFraction": 0.55
       },
       "optional": [
+        {
+          "type": "planet",
+          "count": 1,
+          "role": "optional"
+        },
         {
           "type": "hole",
           "count": 1,
