@@ -44,7 +44,19 @@ jobs:
       - name: 테스트
         run: npm test
 
+      # chapters.ts 가 src/levels/data/ 와 어긋나면 막는다 (§8.2 ⑤)
+      - name: 등록 목록 확인
+        run: npm run register -- --check
+
+      # 등록된 전 단계가 §8.5 를 통과하는가. 깨진 단계는 올라가지 않는다
+      - name: 단계 검증
+        run: npm run validate
+
       - name: 빌드
+        # 광고 퍼블리셔 ID 는 시크릿으로만 들어간다 (§19).
+        # 비어 있으면 광고 없이 빌드된다 — 그게 정상 상태다 (§14.1).
+        env:
+          VITE_H5_CLIENT: ${{ secrets.VITE_H5_CLIENT }}
         run: npm run build
 
       - uses: actions/configure-pages@v5

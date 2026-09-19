@@ -6,6 +6,15 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import { allIds } from '../src/levels/chapters.js';
+
+/**
+ * §6.2 의 사전 검증 6단계. **이 테스트가 지키는 것은 이 여섯 개다.**
+ *
+ * 등록된 전 단계(§8.5 통과 여부)는 `npm run validate` 가 본다. 여기서 전부
+ * 돌리면 공전 단계마다 24번씩 스캔하느라 테스트가 몇 분씩 걸린다 —
+ * 회귀 테스트는 빨라야 자주 돈다.
+ */
+const VERIFIED = ['1-1', '1-4', '2-1', '3-1', '4-1', '5-1'];
 import { loadLevel } from '../tools/levels-fs.js';
 import {
   type LevelMetrics, type Report,
@@ -22,7 +31,7 @@ const L = (id: string): Level => loadLevel(id);
 const M = new Map<string, LevelMetrics>();
 const R = new Map<string, Report>();
 beforeAll(() => {
-  for (const id of allIds()) {
+  for (const id of VERIFIED) {
     const m = computeMetrics(L(id));
     M.set(id, m);
     R.set(id, checkLevel(L(id), m));
@@ -81,18 +90,18 @@ describe('발사 지점 가속도 — §6.2 결론의 표', () => {
 
 describe('필수 규칙 — §8.5', () => {
   it('사전 검증 6단계가 전부 통과한다', () => {
-    for (const id of allIds()) {
+    for (const id of VERIFIED) {
       const r = R.get(id)!;
       expect(r.failures, `${id}: ${r.failures.join(' / ')}`).toEqual([]);
     }
   });
 
   it('규칙 8 — 돔 표면이 어느 판정 안에도 들어가지 않는다', () => {
-    for (const id of allIds()) expect(met(id).dome_blocked, id).toEqual([]);
+    for (const id of VERIFIED) expect(met(id).dome_blocked, id).toEqual([]);
   });
 
   it('고정 중력원은 모두 essential, 공전 행성은 관문이라 비필수 (§8.5)', () => {
-    for (const id of allIds()) {
+    for (const id of VERIFIED) {
       for (const e of met(id).essential) {
         if (e.role === 'required') expect(e.essential, `${id} ${e.kind}[${e.index}]`).toBe(true);
       }
@@ -106,7 +115,7 @@ describe('필수 규칙 — §8.5', () => {
   });
 
   it('비행 시간과 clearance 가 규칙 4·5 안이다', () => {
-    for (const id of allIds()) {
+    for (const id of VERIFIED) {
       expect(met(id).flight_time, id).toBeLessThanOrEqual(MAX_FLIGHT_TIME);
       expect(met(id).clearance, id).toBeGreaterThanOrEqual(MIN_CLEARANCE);
     }
@@ -118,6 +127,12 @@ describe('필수 규칙 — §8.5', () => {
     const without: Level = { ...lv, planets: [] };
     const r = checkLevel(without);
     expect(r.failures.some((f) => f.startsWith('규칙7'))).toBe(true);
+  });
+});
+
+describe('등록 목록', () => {
+  it('사전 검증 6단계가 모두 등록돼 있다', () => {
+    for (const id of VERIFIED) expect(allIds(), id).toContain(id);
   });
 });
 
