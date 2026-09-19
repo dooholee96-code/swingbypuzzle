@@ -10,8 +10,8 @@
     "y": 990
   },
   "goal": {
-    "x": 405,
-    "y": 215,
+    "x": 425,
+    "y": 205,
     "r": 24
   },
   "planets": [
@@ -64,23 +64,23 @@
     "slot": 7,
     "role": "도전",
     "solution": {
-      "angle": -127,
+      "angle": -127.5,
       "launch_step": 0
     },
     "source": "generated",
     "updated": "2026-09-19",
     "metrics": {
-      "main_window": 6,
-      "flight_time": 5.05,
-      "clearance": 15.1,
-      "difficulty": 4.18,
+      "main_window": 5,
+      "flight_time": 5.15,
+      "clearance": 15.65,
+      "difficulty": 4.72,
       "timing_fraction": 0.42
     }
   },
   "rocks": [
     {
-      "x": 400,
-      "y": 315,
+      "x": 425,
+      "y": 280,
       "r": 16,
       "seed": 1
     },
