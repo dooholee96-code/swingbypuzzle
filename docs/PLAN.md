@@ -988,7 +988,7 @@ v4.0까지는 우주선 근처(`dp(90)`)를 눌러야 조준이 시작됐다. �
 
 ## 13. UI와 문구
 
-모든 화면은 안전 영역을 반영한다(CSS `env(safe-area-inset-*)`, `index.html`에 `viewport-fit=cover`). 폰트는 시스템 한글 폰트, 숫자·로고만 `Oxanium`(한글 폴백 필수). 색·글꼴·버튼 스타일은 `src/ui/styles.css`의 `:root` 변수에 모은다(§12.6).
+모든 화면은 안전 영역을 반영한다(CSS `env(safe-area-inset-*)`, `index.html`에 `viewport-fit=cover`). 폰트는 시스템 한글 폰트, 숫자·로고만 `Oxanium`(한글 폴백 필수, 저장소에 실은 라틴 서브셋 — §15.1). 색·글꼴·버튼 스타일은 `src/ui/styles.css`의 `:root` 변수에 모은다(§12.6).
 
 ### 13.1 타이틀
 
@@ -1200,7 +1200,10 @@ v4의 Godot 익스포트 자리다. Capacitor는 웹 자산을 WebView로 감싸
 - 캔버스는 하나. 요소마다 DOM이나 오프스크린 캔버스를 만들지 않는다.
 - `devicePixelRatio` 상한 2.5(§10.0).
 - 매 프레임 객체 할당 최소화: 예측선·궤적 점 배열은 미리 잡아 재사용한다.
-- 폰트는 `index.html`에서 `preconnect` + `display=swap`. 첫 프레임이 폰트를 기다리지 않게 한다.
+- **폰트는 저장소에 싣는다.** `src/ui/fonts/oxanium-latin.woff2`(라틴 서브셋 14KB, OFL 1.1)를
+  `@font-face`로 선언하고 `font-display:swap`을 준다. 구글 폰트 CDN에서 받아오지 않는다 —
+  첫 화면에 외부 요청이 없어야 오프라인(§15.1)에서 같고, 사용자 IP가 제3자에게 가지 않아
+  개인정보처리방침(§15.5)이 단순해진다. 한글은 언제나 시스템 폰트다.
 - 목표: 중급 Android 기기에서 60fps, 저사양 기기에서 발광 "낮음" 설정 시 50fps 이상.
 
 ### 15.5 출시 준비물 (`store/` 폴더)
