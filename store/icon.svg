@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- 스윙바이 아이콘 (§15.5). 벡터 선화 우주선과 휘어진 궤도. -->
+  <rect width="512" height="512" fill="#000000"/>
+  <!-- 행성과 중력 범위 -->
+  <circle cx="300" cy="286" r="150" fill="none" stroke="#4FC3F7" stroke-width="7"
+          stroke-dasharray="16 22" opacity="0.65"/>
+  <polygon points="300,231 347,258 347,314 300,341 253,314 253,258"
+           fill="none" stroke="#E6EDF5" stroke-width="10"/>
+  <!-- 스윙바이 궤도 -->
+  <path d="M110 452 C 150 330, 300 420, 330 270 C 348 178, 270 130, 196 110"
+        fill="none" stroke="#FFD54F" stroke-width="13" stroke-linecap="round"/>
+  <!-- 우주선 -->
+  <g transform="translate(196 110) rotate(-160)">
+    <path d="M0,-34 L22,26 L0,12 L-22,26 Z" fill="#000000"
+          stroke="#E6EDF5" stroke-width="10" stroke-linejoin="round"/>
+  </g>
+</svg>

@@ -19,6 +19,7 @@ import { Hud } from './ui/hud.js';
 import { HintSheet } from './ui/hints.js';
 import { Screens } from './ui/screens.js';
 import { Save } from './save/save.js';
+import { Audio } from './audio/sfx.js';
 import { type AdProvider, NoAdProvider } from './platform/ads.js';
 import { detect, pickAdProvider } from './platform/capabilities.js';
 import {
@@ -38,6 +39,7 @@ const aim = new AimInput();
 const field = new FieldRenderer();
 const hud = new Hud();
 const save = new Save();
+const sfx = new Audio();
 
 let cssW = 0, cssH = 0, dpr = 1;
 let mini: MiniRect | null = null;
@@ -47,6 +49,7 @@ let last = performance.now();
 let t = 0;
 let demo = false;                  // 타이틀 데모가 도는 중인가
 let demoIdle = 0;
+let ended = false;               // 이번 비행의 끝 소리를 이미 냈는가
 let paused = false;                // 힌트 시트가 열려 있으면 단계 시계를 멈춘다 (§13.5)
 let ads: AdProvider = new NoAdProvider();
 const started = performance.now();
@@ -136,6 +139,12 @@ let basePreview = 1.8;
 function applySettings(): void {
   field.reduceMotion = save.data.settings.reduce_motion;
   setGlow(save.data.settings.glow !== 'low');
+  sfx.enabled = save.data.settings.sfx;
+}
+
+// 첫 사용자 입력에서 오디오를 연다 (브라우저 자동재생 정책, §17 M11)
+for (const ev of ['pointerdown', 'keydown'] as const) {
+  addEventListener(ev, () => sfx.unlock(), { once: false, passive: true });
 }
 
 function resize(): void {
@@ -223,11 +232,21 @@ canvas.addEventListener('pointermove', (e) => {
 
 function endDrag(): void {
   if (dragMode === 'aim') {
-    if (aim.shouldLaunch()) { session.launch(); panning = false; }
-    else session.cancelAim();
+    if (aim.shouldLaunch()) {
+      session.launch();
+      panning = false;
+      sfx.play('launch');
+      buzz(20);                              // §15.3 발사 시 가벼운 충격
+    } else session.cancelAim();
     aim.finish();
   }
   dragMode = null;
+}
+
+/** 진동. 지원하지 않으면 조용히 건너뛴다 — iOS 사파리에는 없다 (§15.3). */
+function buzz(ms: number | number[]): void {
+  if (!save.data.settings.haptics || !cap.canVibrate) return;
+  try { navigator.vibrate(ms); } catch { /* 무시 */ }
 }
 canvas.addEventListener('pointerup', endDrag);
 canvas.addEventListener('pointercancel', () => {
@@ -258,6 +277,7 @@ history.pushState({ depth: 1 }, '');
 // ── 생명주기 ────────────────────────────────────────────────────────────
 addEventListener('visibilitychange', () => {
   session.pauseReset();
+  sfx.setMuted(document.hidden);
   if (document.hidden) save.flush();
 });
 addEventListener('pagehide', () => save.flush());
@@ -327,6 +347,14 @@ function frame(now: number): void {
     const { x, y, vx, vy } = session.sim.ship;
     cam.follow(session.level, x, y, vx, vy, dt);
   }
+  // 비행이 끝난 순간 한 번만 소리와 진동
+  if (session.state === 'ending' && !ended) {
+    ended = true;
+    if (session.outcome === 'win') { sfx.play('arrive'); buzz([25, 60, 25]); }
+    else { sfx.play('explode'); buzz(60); }
+  }
+  if (session.state !== 'ending') ended = false;
+
   if (session.state === 'ending' && session.endProgress() >= 1 && hud.result.hidden) {
     save.record(session.level.id, session.outcome, session.flightSeconds());
     if (session.outcome === 'win') saveAdState(afterClear(adState()));
@@ -376,6 +404,15 @@ void pickAdProvider(cap, {
 if (cap.prefersReducedMotion && !save.data.settings.reduce_motion_set) {
   save.data.settings.reduce_motion = true;
   applySettings();
+}
+
+// 서비스 워커 — 재방문 시 오프라인 동작 (§15.1). 개발 서버에서는 걸지 않는다.
+if (!import.meta.env.DEV && 'serviceWorker' in navigator) {
+  addEventListener('load', () => {
+    navigator.serviceWorker.register(
+      new URL('sw.js', location.href).pathname,
+    ).catch(() => { /* 실패해도 게임은 그대로 돈다 */ });
+  });
 }
 
 resize();
