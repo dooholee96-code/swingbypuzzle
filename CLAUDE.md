@@ -92,12 +92,18 @@ npm run gen -- --recipe recipes/ch1.json --slot 2 --count 10   후보 생성 (§
 
 ## 웹 배포
 
-기본 브랜치에 푸시하면 `.github/workflows/pages.yml` 이
+`main` 에 푸시하면 `.github/workflows/pages.yml` 이
 검사 → 테스트 → 빌드 → GitHub Pages 배포를 한다.
 **회귀 테스트가 배포 관문이다.** 깨진 물리는 올라가지 않는다.
 
-처음 한 번: 저장소 Settings → Pages → Source 를 **"GitHub Actions"** 로.
+Settings → Pages → Source 는 **"GitHub Actions"** 로 되어 있다 (확인함).
 주소: `https://dooholee96-code.github.io/swingbypuzzle/`
+
+**기본 브랜치가 아직 `claude/kind-wozniak-x4heoi` 다.** 저장소가 그 브랜치
+하나로 시작했고, 기본 브랜치 변경은 저장소 Settings 에서만 된다. 그동안
+워크플로가 기본 브랜치와 `main` 양쪽을 받는다. Settings → General →
+Default branch 를 `main` 으로 바꾸고 나면 워크플로의 `|| ...` 와 이 문단을
+지우고, 옛 브랜치를 지운다.
 
 ## 폴더
 

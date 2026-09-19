@@ -23,8 +23,17 @@ concurrency:
 
 jobs:
   build:
-    # 기본 브랜치에서만 배포한다. 브랜치 이름을 적어 두면 나중에 바꿀 때 잊는다.
-    if: github.ref_name == github.event.repository.default_branch
+    # 기본 브랜치에서, 그리고 main 에서 배포한다.
+    #
+    # 원래는 기본 브랜치 하나만 봤다 — 이름을 적어 두면 나중에 바꿀 때 잊어서다.
+    # 그런데 이 저장소는 Claude Code 가 만든 작업 브랜치가 기본 브랜치인 채로
+    # 시작했고, 기본 브랜치 변경은 저장소 Settings 에서만 된다. 옮겨 가는 동안
+    # 양쪽 다 받아 배포가 끊기지 않게 한다.
+    #
+    # 기본 브랜치를 main 으로 바꾸고 나면 아래 `|| ...` 를 지운다.
+    if: >-
+      github.ref_name == github.event.repository.default_branch
+      || github.ref_name == 'main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
