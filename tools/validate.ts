@@ -1,25 +1,32 @@
 // 전체 검증. docs/PLAN.md §16.3
 //
-//   npm run validate           chapters.ts 에 등록된 전 단계
-//   npm run validate 1-1       한 단계만
-//   npm run validate 2         2장 전체
-//   npm run validate -- --write   통과한 단계의 meta.metrics 를 파일에 기록
+//   npm run validate            chapters.ts 에 등록된 전 단계
+//   npm run validate 1-1        한 단계만
+//   npm run validate 2          2장 전체
+//   npm run validate -- --write 통과한 단계의 meta.metrics 를 파일에 기록
 //
 // 실패가 하나라도 있으면 종료 코드 1. 커밋 전에 반드시 실행한다 (§0.4).
+// 공전 단계는 24번씩 스캔해야 해서 스레드에 나눠 돌린다.
 
 import { writeFileSync } from 'node:fs';
+import { cpus } from 'node:os';
+import { join } from 'node:path';
+import { Worker } from 'node:worker_threads';
 
 import { allIds, idsOf } from '../src/levels/chapters.js';
-import { LevelError } from '../src/levels/loader.js';
-import { checkLevel, computeMetrics, curveWarnings, metaMetrics } from '../src/tools-shared/metrics.js';
-import type { Level } from '../src/core/types.js';
+import { curveWarnings, metaMetrics } from '../src/tools-shared/metrics.js';
+import { ROOT } from './gen-run.js';
 import { DATA_DIR, loadLevel } from './levels-fs.js';
+import type { VDone, VJob } from './validate-worker.js';
 
-function row(id: string, m: ReturnType<typeof computeMetrics>, ok: boolean): string {
+type Row = VDone | { id: string; error: string };
+
+function row(r: VDone, ok: boolean): string {
+  const m = r.metrics;
   const t = m.timing_fraction === undefined ? '    —' : m.timing_fraction.toFixed(2).padStart(5);
   return [
-    (ok ? '  ✓' : '  ✗') + ' ' + id.padEnd(5),
-    m.main_window.toFixed(2).padStart(6) + '°',
+    (ok ? '  ✓' : '  ✗') + ' ' + r.id.padEnd(5),
+    m.main_window_at_solution.toFixed(2).padStart(6) + '°',
     m.flight_time.toFixed(2).padStart(6) + '초',
     m.clearance.toFixed(2).padStart(7),
     t,
@@ -27,44 +34,59 @@ function row(id: string, m: ReturnType<typeof computeMetrics>, ok: boolean): str
   ].join(' ');
 }
 
-function main(): number {
+async function run(ids: string[]): Promise<Row[]> {
+  const threads = Math.max(1, Math.min(cpus().length, 8, ids.length));
+  const per = Math.ceil(ids.length / threads);
+  const chunks = Array.from({ length: threads }, (_, k) => ids.slice(k * per, (k + 1) * per))
+    .filter((c) => c.length);
+
+  const results = await Promise.all(chunks.map((chunk) => new Promise<Row[]>((ok, no) => {
+    const w = new Worker(join(ROOT, 'tools/validate-worker-boot.mjs'),
+      { workerData: { ids: chunk } satisfies VJob });
+    let got: Row[] = [];
+    w.on('message', (m: Row[]) => { got = m; });
+    w.on('error', no);
+    w.on('exit', () => ok(got));
+  })));
+
+  const byId = new Map<string, Row>();
+  for (const list of results) for (const r of list) byId.set(r.id, r);
+  return ids.map((id) => byId.get(id) ?? { id, error: '워커가 결과를 내지 않았습니다' });
+}
+
+async function main(): Promise<number> {
   const args = process.argv.slice(2);
   const write = args.includes('--write');
   const picks = args.filter((a) => !a.startsWith('-'));
 
-  let ids: string[];
-  if (!picks.length) ids = allIds();
-  else ids = picks.flatMap((p) => (/^\d+$/.test(p) ? idsOf(Number(p)) : [p]));
+  const ids = !picks.length ? allIds()
+    : picks.flatMap((p) => (/^\d+$/.test(p) ? idsOf(Number(p)) : [p]));
+
+  if (!ids.length) { console.log('  검증할 단계가 없습니다.'); return 0; }
+
+  const started = Date.now();
+  const rows = await run(ids);
 
   console.log('  단계    성공 폭   비행시간   clearance  timing  난이도');
   console.log('  ' + '─'.repeat(58));
 
   let failed = 0;
-  const curve: { id: string; slot: number; difficulty: number; chapter: number }[] = [];
   const notes: string[] = [];
+  const curve: { id: string; slot: number; difficulty: number; chapter: number }[] = [];
 
-  for (const id of ids) {
-    let L: Level;
-    try {
-      L = loadLevel(id);
-    } catch (e) {
-      failed++;
-      for (const m of (e as LevelError).errors ?? [String(e)]) console.log(`  ✗ ${id}  ${m}`);
-      continue;
-    }
-
-    const r = checkLevel(L);
+  for (const r of rows) {
+    if ('error' in r) { failed++; console.log(`  ✗ ${r.id}  ${r.error}`); continue; }
     const ok = r.failures.length === 0;
     if (!ok) failed++;
-    console.log(row(id, r.metrics, ok));
-    for (const f of r.failures) notes.push(`  ✗ ${id}: ${f}`);
-    for (const w of r.warnings) notes.push(`  ! ${id}: ${w}`);
-
-    curve.push({ id, slot: L.meta.slot, chapter: L.meta.chapter, difficulty: r.metrics.difficulty });
+    console.log(row(r, ok));
+    for (const f of r.failures) notes.push(`  ✗ ${r.id}: ${f}`);
+    for (const w of r.warnings) notes.push(`  ! ${r.id}: ${w}`);
+    curve.push({ id: r.id, slot: r.slot, chapter: r.chapter, difficulty: r.metrics.difficulty });
 
     if (write && ok) {
+      const L = loadLevel(r.id);
       const next = { ...L, meta: { ...L.meta, metrics: metaMetrics(r.metrics) } };
-      writeFileSync(`${DATA_DIR}/${id}.json`, JSON.stringify(next, null, 2) + '\n');
+      writeFileSync(`${DATA_DIR}/${r.id}.json`, JSON.stringify(next, null, 2) + '\n');
     }
   }
 
@@ -73,18 +95,13 @@ function main(): number {
     for (const w of curveWarnings(curve.filter((c) => c.chapter === ch))) notes.push(`  ! ${w}`);
   }
 
-  if (notes.length) {
-    console.log('');
-    for (const n of notes) console.log(n);
-  }
+  if (notes.length) { console.log(''); for (const n of notes) console.log(n); }
 
+  const secs = ((Date.now() - started) / 1000).toFixed(1);
   console.log('');
-  if (failed) {
-    console.log(`  ${ids.length}단계 중 ${failed}단계 실패.`);
-    return 1;
-  }
-  console.log(`  ${ids.length}단계 전부 통과.${write ? ' meta.metrics 기록함.' : ''}`);
+  if (failed) { console.log(`  ${ids.length}단계 중 ${failed}단계 실패. (${secs}초)`); return 1; }
+  console.log(`  ${ids.length}단계 전부 통과.${write ? ' meta.metrics 기록함.' : ''} (${secs}초)`);
   return 0;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) process.exit(main());
+main().then((c) => process.exit(c), (e: unknown) => { console.error(e); process.exit(1); });
