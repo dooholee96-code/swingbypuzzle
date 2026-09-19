@@ -20,6 +20,8 @@ type Pt = [number, number];
 
 export class FieldRenderer {
   reduceMotion = false;
+  /** 방향 표시 힌트의 호 (§14.3). 월드각 [시작, 끝]. 없으면 null */
+  directionArc: [number, number] | null = null;
 
   private levelId = '';
   private stars: number[] = [];          // x, y, 크기
@@ -262,6 +264,23 @@ export class FieldRenderer {
         [x + Math.cos(a) * (DOME_DRAW_R - 4), y + Math.sin(a) * (DOME_DRAW_R - 4)],
         [x + Math.cos(a) * (DOME_DRAW_R + 9), y + Math.sin(a) * (DOME_DRAW_R + 9)]),
         C.gravity, { alpha: aiming ? 0.8 : 0.4, glow: false });
+    }
+
+    // 방향 표시 힌트 (§14.3). 성공하는 발사 방향을 표면 바깥에 쐐기로 얹는다.
+    //
+    // 호만 그리면 안 보인다 — 성공 폭이 6~9° 라 반경 31 에서 길이가 3유닛쯤이다.
+    // 바깥으로 벌어지는 쐐기로 그려야 "이쪽으로 쏘라"가 읽힌다.
+    if (this.directionArc) {
+      const a0 = this.directionArc[0] * Math.PI / 180;
+      const a1 = this.directionArc[1] * Math.PI / 180;
+      const r0 = DOME_DRAW_R + 4, r1 = DOME_DRAW_R + 30;
+      const al = aiming ? 0.95 : 0.55;
+      stroke(ctx, k, arc(x, y, r1, a0, a1), C.win, { alpha: al });
+      for (const a of [a0, a1]) {
+        stroke(ctx, k, line(
+          [x + Math.cos(a) * r0, y + Math.sin(a) * r0],
+          [x + Math.cos(a) * r1, y + Math.sin(a) * r1]), C.win, { alpha: al });
+      }
     }
   }
 

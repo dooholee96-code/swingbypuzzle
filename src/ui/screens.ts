@@ -27,7 +27,7 @@ export interface ScreenDeps {
   levelName(id: string): string;
   settings: {
     sfx: boolean; haptics: boolean;
-    glow: 'normal' | 'low'; reduce_motion: boolean;
+    glow: 'normal' | 'low'; reduce_motion: boolean; reduce_motion_set?: boolean;
   };
   onStart(): void;                 // 타이틀 → 이어서 하기
   onPick(id: string): void;
@@ -195,6 +195,8 @@ export class Screens {
         const k = b.dataset['set']!, v = b.dataset['v']!;
         const st = this.d.settings as unknown as Record<string, unknown>;
         st[k] = k === 'glow' ? v : v === '1';
+        // 직접 건드린 뒤로는 OS 의 prefers-reduced-motion 을 따르지 않는다 (§12.4)
+        if (k === 'reduce_motion') st['reduce_motion_set'] = true;
         this.d.onSettingChange();
         this.showSettings();
       });

@@ -35,6 +35,7 @@ export class Hud {
   onRetry: () => void = () => {};
   onNext: () => void = () => {};
   onOpenPicker: () => void = () => {};
+  onHints: () => void = () => {};
 
   private chapter = 1;
 
@@ -56,7 +57,10 @@ export class Hud {
     this.hint.textContent = s.firstTry && s.state === 'ready' ? (s.level.hint ?? '') : '';
   }
 
-  showResult(s: Session, opts: { chapterLast?: boolean; last?: boolean } = {}): void {
+  showResult(
+    s: Session,
+    opts: { chapterLast?: boolean; last?: boolean; canHint?: boolean } = {},
+  ): void {
     if (!this.result.hidden) return;
     const [title, tip] = RESULT[s.outcome as Outcome] ?? ['비행이 끝났어요', ''];
     const win = s.outcome === 'win';
@@ -72,6 +76,7 @@ export class Hud {
           ? (nextLabel ? `<button class="btn primary" data-a="next" type="button">${nextLabel}</button>` : '') +
             '<button class="btn" data-a="retry" type="button">다시 하기</button>'
           : '<button class="btn primary" data-a="retry" type="button">다시 시도</button>'}
+        ${!win && opts.canHint ? '<button class="btn" data-a="hint" type="button">힌트 보기</button>' : ''}
         <button class="btn" data-a="pick" type="button">단계 선택</button>
       </div>
       ${closing ? `<p class="tapnote">${closing}</p>` : ''}
@@ -84,6 +89,7 @@ export class Hud {
         const a = b.dataset['a'];
         if (a === 'next') this.onNext();
         else if (a === 'pick') this.onOpenPicker();
+        else if (a === 'hint') { this.hideResult(); this.onHints(); }
         else this.onRetry();
       });
     }

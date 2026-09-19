@@ -14,9 +14,17 @@ import { DOME_DRAW_R, FieldRenderer } from './render/field.js';
 import { drawMinimap, miniRect } from './render/minimap.js';
 import type { MiniRect } from './render/minimap.js';
 import { setGlow } from './render/draw.js';
+import { C } from './render/palette.js';
 import { Hud } from './ui/hud.js';
+import { HintSheet } from './ui/hints.js';
 import { Screens } from './ui/screens.js';
 import { Save } from './save/save.js';
+import { type AdProvider, NoAdProvider } from './platform/ads.js';
+import { detect, pickAdProvider } from './platform/capabilities.js';
+import {
+  afterClear, afterInterstitial, afterRewarded, shouldShowInterstitial,
+} from './monetization/ad-policy.js';
+import { type HintKind, directionArc, previewSeconds } from './monetization/hints.js';
 
 const MAX_DPR = 2.5;               // §15.3
 const DEMO_LEVEL = '1-1';          // §13.1 타이틀 뒤에서 도는 데모
@@ -39,6 +47,12 @@ let last = performance.now();
 let t = 0;
 let demo = false;                  // 타이틀 데모가 도는 중인가
 let demoIdle = 0;
+let paused = false;                // 힌트 시트가 열려 있으면 단계 시계를 멈춘다 (§13.5)
+let ads: AdProvider = new NoAdProvider();
+const started = performance.now();
+
+/** 앱 실행 후 흐른 시각(초). 광고 규칙이 쓰는 유일한 시계다 (§14.4) */
+const nowSeconds = (): number => (performance.now() - started) / 1000;
 
 save.load();
 applySettings();
@@ -57,6 +71,67 @@ const screens = new Screens({
   onPick: (id) => startPlay(id),
   onSettingChange: () => { applySettings(); save.touch(); },
 });
+
+const cap = detect();
+const hints = new HintSheet({
+  isRewardedReady: () => ads.isRewardedReady(),
+  showRewarded: (p) => ads.showRewarded(p),
+} as AdProvider, {
+  state: () => {
+    const l = save.level(session.level.id);
+    return { fails: l.fails, got: { ...l.hints }, freeUsed: save.data.ads.free_hint_used };
+  },
+  grant: (kind: HintKind) => {
+    if (kind === 'skip') return;
+    const l = save.level(session.level.id);
+    const wasFree = !save.data.ads.free_hint_used;
+    l.hints[kind] = true;
+    if (wasFree) save.data.ads.free_hint_used = true;
+    else save.data.ads = { ...save.data.ads, ...afterRewarded(adState(), nowSeconds()) as object };
+    save.touch();
+    applyHints();
+  },
+  skip: () => {
+    const l = save.level(session.level.id);
+    l.skipped = true;
+    save.data.ads = { ...save.data.ads, last_rewarded_at: nowSeconds() };
+    save.touch();
+    hud.hideResult();
+    hud.onNext();
+  },
+  setPaused: (on) => { paused = on; session.pauseReset(); },
+});
+
+function adState(): { clearsSinceInterstitial: number;
+  lastInterstitialAt: number | null; lastRewardedAt: number | null } {
+  const a = save.data.ads;
+  return {
+    clearsSinceInterstitial: a.clears_since_interstitial,
+    lastInterstitialAt: a.last_interstitial_at,
+    lastRewardedAt: a.last_rewarded_at,
+  };
+}
+function saveAdState(next: ReturnType<typeof adState>): void {
+  save.data.ads.clears_since_interstitial = next.clearsSinceInterstitial;
+  save.data.ads.last_interstitial_at = next.lastInterstitialAt;
+  save.data.ads.last_rewarded_at = next.lastRewardedAt;
+  save.touch();
+}
+
+/** 받은 힌트를 화면에 반영한다 (§14.3). */
+function applyHints(): void {
+  const l = save.level(session.level.id);
+  field.directionArc = l.hints.direction
+    ? directionArc(session.level.meta.solution.angle,
+      session.level.meta.metrics?.main_window ?? 6)
+    : null;
+  const want = previewSeconds(basePreview, l.hints.preview);
+  if (session.level.preview !== want) {
+    session.level = { ...session.level, preview: want };
+  }
+  (document.querySelector('#hintbtn .dot') as HTMLElement).hidden = !hints.hasAny();
+}
+let basePreview = 1.8;
 
 function applySettings(): void {
   field.reduceMotion = save.data.settings.reduce_motion;
@@ -83,9 +158,12 @@ function snapToStart(): void {
 
 function loadInto(id: string): void {
   session.setup(loadLevel(id));
+  basePreview = session.level.preview;
   field.rebuild(session.level);
   hud.hideResult();
+  hints.close();
   panning = false;
+  applyHints();
   resize();
   snapToStart();
 }
@@ -120,7 +198,7 @@ function pos(e: PointerEvent): [number, number] {
 }
 
 canvas.addEventListener('pointerdown', (e) => {
-  if (demo || screens.overlayOpen || !session.level) return;
+  if (demo || screens.overlayOpen || hints.open || !session.level) return;
   if (session.state !== 'ready' && session.state !== 'aiming') return;
   const [x, y] = pos(e);
   canvas.setPointerCapture(e.pointerId);
@@ -189,16 +267,36 @@ hud.onRetry = () => {
   session.reset(); aim.finish(); hud.hideResult(); panning = false; snapToStart();
 };
 hud.onOpenPicker = () => { hud.hideResult(); screens.showSelect(); };
-hud.onNext = () => {
+hud.onNext = () => { void goNext(); };
+hud.onHints = () => hints.show();
+hud.stage.addEventListener('click', () => hud.onOpenPicker());
+document.getElementById('hintbtn')!.addEventListener('click', () => hints.show());
+
+/**
+ * 다음 단계로. **전면 광고는 여기서만 검토한다** (§14.4).
+ * 실패 후 재시도·단계 선택·앱 복귀에서는 부르지 않는다.
+ */
+async function goNext(): Promise<void> {
   const p = {
     cleared: (id: string) => save.cleared(id),
     skipped: (id: string) => save.level(id).skipped,
   };
   const next = nextLevel(session.level.id, p);
-  if (next) startPlay(next);
-  else screens.showSelect();
-};
-hud.stage.addEventListener('click', () => hud.onOpenPicker());
+  if (!next) { screens.showSelect(); return; }
+
+  const L = loadLevel(next);
+  const seen = save.data.seen_intros;
+  const showsIntro = L.meta.intro !== undefined && !seen.includes(L.meta.intro);
+  const d = shouldShowInterstitial({
+    chapter: L.meta.chapter, showsIntro, now: nowSeconds(), ads: adState(),
+  });
+  if (d.show && ads.isInterstitialReady()) {
+    const r = await ads.showInterstitial();
+    // 광고가 준비 안 됐거나 실패하면 기다리지 않고 넘어간다 (§14.4)
+    if (r === 'shown') saveAdState(afterInterstitial(adState(), nowSeconds()));
+  }
+  startPlay(next);
+}
 
 // ── 루프 ────────────────────────────────────────────────────────────────
 function frame(now: number): void {
@@ -222,7 +320,7 @@ function frame(now: number): void {
     return;
   }
 
-  if (screens.overlayOpen) { draw(null); return; }
+  if (screens.overlayOpen || paused) { draw(null); return; }
 
   session.advance(dt);
   if (session.state === 'flying') {
@@ -231,6 +329,7 @@ function frame(now: number): void {
   }
   if (session.state === 'ending' && session.endProgress() >= 1 && hud.result.hidden) {
     save.record(session.level.id, session.outcome, session.flightSeconds());
+    if (session.outcome === 'win') saveAdState(afterClear(adState()));
     const p = {
       cleared: (id: string) => save.cleared(id),
       skipped: (id: string) => save.level(id).skipped,
@@ -238,6 +337,7 @@ function frame(now: number): void {
     hud.showResult(session, {
       chapterLast: isChapterLast(session.level.id),
       last: nextLevel(session.level.id, p) === null,
+      canHint: save.level(session.level.id).fails >= 2,
     });
   }
 
@@ -248,22 +348,34 @@ function frame(now: number): void {
 
 function draw(preview: { points: number[]; outcome: string } | null): void {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.fillStyle = '#000';
+  ctx.fillStyle = C.bg;
   ctx.fillRect(0, 0, cssW, cssH);
   ctx.save();
   ctx.scale(cam.scale, cam.scale);
   ctx.translate(-cam.x, -cam.y);
   field.draw(ctx, cam, session, t, preview);
   ctx.restore();
-  if (!demo && !screens.overlayOpen && mini) drawMinimap(ctx, mini, cam, session);
+  if (!demo && !screens.overlayOpen && !hints.open && mini) drawMinimap(ctx, mini, cam, session);
 }
 
 // HUD 는 플레이 중에만 보인다
 const hudEls = [document.querySelector('.hud.top'), hud.hint, hud.angle] as HTMLElement[];
 function syncHudVisibility(): void {
-  const show = !demo && !screens.overlayOpen;
+  const show = !demo && !screens.overlayOpen && !hints.open;
   for (const el of hudEls) if (el) el.style.visibility = show ? '' : 'hidden';
   requestAnimationFrame(syncHudVisibility);
+}
+
+void pickAdProvider(cap, {
+  pause: () => { paused = true; session.pauseReset(); },
+  resume: () => { paused = false; },
+}).then((p) => { ads = p; });
+
+// OS 가 모션 줄이기를 켰으면 기본값으로 따른다 (§12.4).
+// 사용자가 설정에서 직접 바꾼 적이 있으면 그 값이 이긴다.
+if (cap.prefersReducedMotion && !save.data.settings.reduce_motion_set) {
+  save.data.settings.reduce_motion = true;
+  applySettings();
 }
 
 resize();

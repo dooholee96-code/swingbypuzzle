@@ -16,7 +16,12 @@ export interface SaveData {
   version: number;
   levels: Record<string, LevelSave>;
   seen_intros: string[];
-  settings: { sfx: boolean; haptics: boolean; glow: 'normal' | 'low'; reduce_motion: boolean };
+  settings: {
+    sfx: boolean; haptics: boolean; glow: 'normal' | 'low'; reduce_motion: boolean;
+    /** 사용자가 모션 줄이기를 직접 건드린 적이 있는가.
+     *  없으면 OS 의 prefers-reduced-motion 을 따른다 (§12.4) */
+    reduce_motion_set: boolean;
+  };
   ads: {
     free_hint_used: boolean; clears_since_interstitial: number;
     last_interstitial_at: number | null; last_rewarded_at: number | null;
@@ -27,7 +32,10 @@ const defaults = (): SaveData => ({
   version: VERSION,
   levels: {},
   seen_intros: [],
-  settings: { sfx: true, haptics: true, glow: 'normal', reduce_motion: false },
+  settings: {
+    sfx: true, haptics: true, glow: 'normal',
+    reduce_motion: false, reduce_motion_set: false,
+  },
   ads: {
     free_hint_used: false, clears_since_interstitial: 0,
     last_interstitial_at: null, last_rewarded_at: null,
@@ -82,10 +90,19 @@ export class Save {
   }
 }
 
-/** 저장된 값이 기본 구조의 새 키를 잃지 않도록 한 겹씩 덮어쓴다. */
+/**
+ * 저장된 값이 기본 구조의 새 키를 잃지 않도록 한 겹씩 덮어쓴다.
+ *
+ * **배열은 통째로 갈아 끼운다.** 객체처럼 한 겹씩 합치면 `['planet']` 이
+ * `{0:'planet'}` 이 되어 `.includes` 가 사라진다 — seen_intros 가 비어 있지
+ * 않은 저장 데이터를 읽으면 소개 카드 판정에서 터졌다(M9 에서 발견).
+ */
 function merge(base: unknown, over: unknown): unknown {
   if (typeof base !== 'object' || base === null) return over;
   if (typeof over !== 'object' || over === null) return base;
+  if (Array.isArray(base) || Array.isArray(over)) {
+    return Array.isArray(over) ? over : base;
+  }
   const out: Record<string, unknown> = { ...(base as Record<string, unknown>) };
   for (const [k, v] of Object.entries(over as Record<string, unknown>)) {
     out[k] = k in out ? merge(out[k], v) : v;

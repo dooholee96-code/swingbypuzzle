@@ -1,10 +1,11 @@
 // 잠금 해제. docs/PLAN.md §13.2
-import { describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   isChapterLast, isChapterUnlocked, isUnlocked, nextLevel, resumeLevel,
 } from '../src/levels/progress.js';
 import { allIds } from '../src/levels/chapters.js';
 import type { Progress } from '../src/levels/progress.js';
+import { Save } from '../src/save/save.js';
 
 const P = (cleared: string[] = [], skipped: string[] = []): Progress => ({
   cleared: (id) => cleared.includes(id),
@@ -65,5 +66,41 @@ describe('다음 단계와 이어 하기', () => {
     expect(isChapterLast('1-4')).toBe(true);
     expect(isChapterLast('1-1')).toBe(false);
     expect(isChapterLast('2-1')).toBe(true);
+  });
+});
+
+describe('저장 데이터 합치기 (§15.3)', () => {
+  // 테스트는 node 환경이라 localStorage 가 없다. Save 가 쓰는 두 함수만 흉내 낸다.
+  const store = new Map<string, string>();
+  beforeAll(() => {
+    (globalThis as { localStorage?: unknown }).localStorage = {
+      getItem: (k: string) => store.get(k) ?? null,
+      setItem: (k: string, v: string) => { store.set(k, v); },
+    };
+  });
+  afterAll(() => { delete (globalThis as { localStorage?: unknown }).localStorage; });
+
+  it('배열은 통째로 갈아 끼운다 — 객체로 바뀌면 안 된다', () => {
+    // M9 에서 발견한 버그. seen_intros 가 {0:'planet'} 이 되어 .includes 가 사라졌다.
+    const s = new Save();
+    localStorage.setItem('swingby.save.v1', JSON.stringify({
+      version: 1, levels: {}, seen_intros: ['planet', 'hole'],
+      settings: {}, ads: {},
+    }));
+    s.load();
+    expect(Array.isArray(s.data.seen_intros)).toBe(true);
+    expect(s.data.seen_intros).toEqual(['planet', 'hole']);
+    expect(s.data.seen_intros.includes('planet')).toBe(true);
+  });
+
+  it('없던 키는 기본값이 남는다', () => {
+    const s = new Save();
+    localStorage.setItem('swingby.save.v1', JSON.stringify({
+      version: 1, levels: {}, seen_intros: [], settings: { sfx: false }, ads: {},
+    }));
+    s.load();
+    expect(s.data.settings.sfx).toBe(false);
+    expect(s.data.settings.glow).toBe('normal');       // 기본값 유지
+    expect(s.data.ads.free_hint_used).toBe(false);
   });
 });

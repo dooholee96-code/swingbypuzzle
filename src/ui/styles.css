@@ -3,6 +3,11 @@
 :root{
   --bg:#000; --line:#E6EDF5; --dim:rgba(230,237,245,.30);
   --gravity:#4FC3F7; --hole:#B388FF; --danger:#FF5252; --goal:#FFD54F;
+  /* 덮개·테두리·눌림 표시. 이것도 테마가 바꿀 수 있어야 하므로 토큰이다 (§12.6) */
+  --scrim:rgba(0,0,0,.55); --scrim-strong:rgba(0,0,0,.66); --scrim-full:rgba(0,0,0,.94);
+  --edge:rgba(230,237,245,.12); --press:rgba(230,237,245,.14);
+  --press-soft:rgba(230,237,245,.10); --rock:rgba(230,237,245,.35);
+  --mini-bg:rgba(0,0,0,.62); --sel:rgba(79,195,247,.16); --goal-glow:rgba(255,213,79,.5);
   --ko:'Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',system-ui,sans-serif;
   --num:'Oxanium','Apple SD Gothic Neo','Noto Sans KR',system-ui,sans-serif;
 }
@@ -19,26 +24,26 @@ canvas{display:block;width:100%;height:100%;touch-action:none;background:var(--b
 .hud .grow{flex:1}
 /* §13.3 최소 44×44 터치 영역 */
 .btn{pointer-events:auto;min-width:44px;min-height:44px;padding:8px 13px;
-     background:rgba(0,0,0,.55);border:1px solid var(--dim);color:var(--line);
+     background:var(--scrim);border:1px solid var(--dim);color:var(--line);
      border-radius:3px;font:600 13px/1.2 var(--ko);cursor:pointer;
      display:inline-flex;align-items:center;justify-content:center}
-.btn:active{background:rgba(230,237,245,.14)}
+.btn:active{background:var(--press)}
 .btn:focus-visible{outline:2px solid var(--goal);outline-offset:2px}
 .btn.primary{border-color:var(--goal);color:var(--goal)}
-.stage{font:600 13px/1.5 var(--ko);background:rgba(0,0,0,.55);
+.stage{font:600 13px/1.5 var(--ko);background:var(--scrim);
        border:1px solid var(--dim);border-radius:3px;padding:9px 12px;
        pointer-events:auto;cursor:pointer}
 
 #angle{position:absolute;left:0;right:0;bottom:calc(20px + env(safe-area-inset-bottom,0px));
        text-align:center;font:600 19px/1 var(--num);letter-spacing:.06em;
-       color:var(--goal);text-shadow:0 0 12px rgba(255,213,79,.5);pointer-events:none}
+       color:var(--goal);text-shadow:0 0 12px var(--goal-glow);pointer-events:none}
 #hint{position:absolute;left:14px;right:14px;bottom:calc(58px + env(safe-area-inset-bottom,0px));
       text-align:center;font:400 13px/1.55 var(--ko);color:var(--dim);pointer-events:none}
 
 /* §13.4 결과는 반투명. 뒤의 궤적이 보여야 한다. */
 .sheet{position:absolute;inset:0;display:flex;flex-direction:column;
        align-items:center;justify-content:center;gap:9px;padding:24px;
-       background:rgba(0,0,0,.66);text-align:center}
+       background:var(--scrim-strong);text-align:center}
 .sheet[hidden]{display:none}
 .sheet h2{margin:0;font:600 25px/1.3 var(--ko);text-wrap:balance}
 .sheet p{margin:0;font:400 14px/1.6 var(--ko);color:var(--dim);max-width:30ch;text-wrap:balance}
@@ -51,7 +56,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none;background:var(--b
 .screen{position:absolute;inset:0;display:flex;flex-direction:column;
         padding:calc(20px + env(safe-area-inset-top,0px)) 16px
                 calc(20px + env(safe-area-inset-bottom,0px));
-        gap:16px;overflow-y:auto;background:rgba(0,0,0,.94)}
+        gap:16px;overflow-y:auto;background:var(--scrim-full)}
 .screen[hidden]{display:none}
 .screen h1{margin:0;font:600 34px/1.1 var(--num);letter-spacing:.2em;text-align:center}
 .screen h2{margin:0;font:600 17px/1.3 var(--ko);text-align:center}
@@ -60,7 +65,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none;background:var(--b
 .screen .spacer{flex:1}
 
 /* 타이틀 뒤에서 도는 데모가 비치도록 배경을 옅게 */
-#title{background:rgba(0,0,0,.55);justify-content:center;gap:24px}
+#title{background:var(--scrim);justify-content:center;gap:24px}
 #title .logo{text-align:center}
 #title .logo .ko{display:block;margin-top:6px;font:400 13px/1 var(--ko);
                  letter-spacing:.3em;color:var(--dim)}
@@ -76,16 +81,16 @@ canvas{display:block;width:100%;height:100%;touch-action:none;background:var(--b
 /* §13.6 설정 */
 .rows{max-width:420px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:2px}
 .row2{display:flex;align-items:center;gap:12px;padding:13px 4px;
-      border-bottom:1px solid rgba(230,237,245,.12)}
+      border-bottom:1px solid var(--edge)}
 .row2 .label{flex:1;font:400 14px/1.3 var(--ko)}
 .row2 .val{font:600 12px/1 var(--num);color:var(--dim)}
 .seg{display:flex;border:1px solid var(--dim);border-radius:3px;overflow:hidden}
 .seg button{min-height:34px;padding:6px 12px;border:0;background:transparent;
             color:var(--dim);font:600 12px/1 var(--ko);cursor:pointer}
-.seg button[aria-pressed="true"]{background:rgba(79,195,247,.16);color:var(--gravity)}
+.seg button[aria-pressed="true"]{background:var(--sel);color:var(--gravity)}
 .card{text-align:left;padding:13px;background:transparent;border:1px solid var(--dim);
       border-radius:3px;color:var(--line);cursor:pointer;display:flex;flex-direction:column;gap:3px}
-.card:active{background:rgba(230,237,245,.1)}
+.card:active{background:var(--press-soft)}
 .card .id{font:600 12px/1 var(--num);letter-spacing:.1em;color:var(--gravity)}
 .card .nm{font:600 15px/1.3 var(--ko)}
 .card .st{font:400 11px/1.4 var(--ko);color:var(--dim)}
@@ -94,3 +99,17 @@ canvas{display:block;width:100%;height:100%;touch-action:none;background:var(--b
 .card .st.lock{color:var(--dim)}
 
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* 힌트 시트 (§13.5) */
+#hints .hintrow{display:flex;align-items:center;justify-content:space-between;
+  gap:12px;padding:10px 0;border-bottom:1px solid var(--edge)}
+#hints .hintrow b{font-weight:600}
+#hints .hintrow p{margin:2px 0 0;font-size:13px}
+#hintbtn{position:relative}
+#hintbtn .dot{position:absolute;top:5px;right:5px;width:6px;height:6px;
+  border-radius:50%;background:var(--goal)}
+
+/* 가짜 광고 판 (§14.2). 실제 광고가 아님을 분명히 적는다 */
+#mockad{position:fixed;inset:0;z-index:99;display:grid;place-items:center;
+  background:var(--scrim);text-align:center}
+#mockad p{margin:4px 0}

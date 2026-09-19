@@ -14,7 +14,8 @@
     "solve": "tsx tools/solve.ts",
     "validate": "tsx tools/validate.ts",
     "gen": "tsx tools/generate.ts",
-    "check": "tsc --noEmit && node tools/check-core.mjs"
+    "build-chapter": "tsx tools/build-chapter.ts",
+    "check": "tsc --noEmit && node tools/check-core.mjs && node tools/check-colors.mjs"
   },
   "devDependencies": {
     "@types/node": "^26.6.1",

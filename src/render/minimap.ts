@@ -35,7 +35,7 @@ export function drawMinimap(
     ctx.beginPath(); ctx.arc(px, py, rad, 0, Math.PI * 2); ctx.fill();
   };
 
-  ctx.fillStyle = 'rgba(0,0,0,.62)';
+  ctx.fillStyle = C.miniBg;
   ctx.fillRect(r.x, r.y, r.w, r.h);
   ctx.strokeStyle = C.line;
   ctx.globalAlpha = 0.3;
@@ -43,7 +43,7 @@ export function drawMinimap(
   ctx.strokeRect(r.x + 0.5, r.y + 0.5, r.w - 1, r.h - 1);
   ctx.globalAlpha = 1;
 
-  for (const a of L.rocks ?? []) dot(a.x, a.y, 'rgba(230,237,245,.35)', 1.2);
+  for (const a of L.rocks ?? []) dot(a.x, a.y, C.rock, 1.2);
 
   for (const b of gravs(L)) {
     const [bx, by] = bodyPos(b, t);
