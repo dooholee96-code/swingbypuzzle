@@ -234,12 +234,12 @@
         "rocksMax": 8
       },
       "window": {
-        "min": 4,
-        "max": 8
+        "min": 6,
+        "max": 11
       },
       "timing": {
-        "minFraction": 0.2,
-        "maxFraction": 0.4
+        "minFraction": 0.25,
+        "maxFraction": 0.55
       },
       "optional": [
         {

@@ -45,6 +45,7 @@
     "chapter": 1,
     "slot": 8,
     "role": "마무리",
+    "intro": "wide",
     "solution": {
       "angle": -128,
       "launch_step": 0

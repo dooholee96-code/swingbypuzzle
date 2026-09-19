@@ -17,6 +17,7 @@ import { setGlow } from './render/draw.js';
 import { C } from './render/palette.js';
 import { Hud } from './ui/hud.js';
 import { HintSheet } from './ui/hints.js';
+import { seenKey } from './ui/intro.js';
 import { Screens } from './ui/screens.js';
 import { Save } from './save/save.js';
 import { Audio } from './audio/sfx.js';
@@ -308,7 +309,7 @@ async function goNext(): Promise<void> {
 
   const L = loadLevel(next);
   const seen = save.data.seen_intros;
-  const showsIntro = L.meta.intro !== undefined && !seen.includes(L.meta.intro);
+  const showsIntro = L.meta.intro !== undefined && !seen.includes(seenKey(L.id, L.meta.intro));
   const d = shouldShowInterstitial({
     chapter: L.meta.chapter, showsIntro, now: nowSeconds(), ads: adState(),
   });

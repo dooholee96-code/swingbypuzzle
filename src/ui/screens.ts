@@ -8,7 +8,7 @@
 import { CHAPTERS, allIds } from '../levels/chapters.js';
 import { chapterOf, isChapterUnlocked, isUnlocked } from '../levels/progress.js';
 import type { Progress } from '../levels/progress.js';
-import { introFor } from './intro.js';
+import { introFor, seenKey } from './intro.js';
 import type { IntroKey } from './intro.js';
 import type { Level } from '../core/types.js';
 
@@ -136,9 +136,11 @@ export class Screens {
   /** meta.intro 가 있고 아직 안 본 단계면 카드를 띄운다. 띄웠으면 true. */
   maybeShowIntro(L: Level, seen: string[], onSeen: (key: string) => void): boolean {
     const key = L.meta.intro;
-    if (!key || seen.includes(key)) return false;
+    if (!key) return false;
+    const mark = seenKey(L.id, key);
+    if (seen.includes(mark)) return false;
     this.showIntroCard(L.id, key);
-    onSeen(key);
+    onSeen(mark);
     return true;
   }
 

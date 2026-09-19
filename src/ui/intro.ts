@@ -21,3 +21,15 @@ export function introFor(levelId: string, key: IntroKey): { title: string; body:
   const base = INTRO[key];
   return { title: base.title, body: base.body + (EXTRA[levelId] ?? '') };
 }
+
+/**
+ * "이미 본 카드" 를 기록할 키. 보통은 요소 키 그대로다.
+ *
+ * 넓은 맵 카드만 두 번 뜬다 — 1-8(세로로 긴 맵)과 5-1(가로로도 넓은 맵).
+ * §7.4 가 5-1 에 한 줄을 덧붙이라고 한 것은 그 한 줄을 보여주라는 뜻이므로,
+ * 덧붙일 말이 있는 단계는 따로 센다. 같은 키로 세면 1-8 을 본 사람에게
+ * 5-1 의 "이제 가로로도 넓어요." 가 영영 안 뜬다.
+ */
+export function seenKey(levelId: string, key: IntroKey): string {
+  return EXTRA[levelId] ? `${key}@${levelId}` : key;
+}
