@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vitest';
 import { AD_POLICY } from '../src/monetization/ad-policy-config.js';
 import {
   type AdState, type InterstitialInput,
-  afterClear, afterInterstitial, afterRewarded, shouldShowInterstitial,
+  afterClear, afterInterstitial, afterRewarded, forNewSession, shouldShowInterstitial,
 } from '../src/monetization/ad-policy.js';
 
 /** 여섯 조건을 모두 만족하는 기준 입력. 테스트마다 한 가지만 어긋뜨린다. */
@@ -129,5 +129,22 @@ describe('상태 갱신', () => {
     const ads = afterRewarded({ ...base, clearsSinceInterstitial: 5 }, 1000);
     const d = shouldShowInterstitial({ chapter: 3, showsIntro: false, now: 1010, ads });
     expect(d).toEqual({ show: false, veto: 'after-rewarded' });
+  });
+});
+
+describe('실행이 바뀔 때 (§14.4 의 시계는 실행마다 0 에서 시작한다)', () => {
+  it('지난 실행의 시각을 버리고 클리어 수는 남긴다', () => {
+    expect(forNewSession({ clearsSinceInterstitial: 4, lastInterstitialAt: 900, lastRewardedAt: 950 }))
+      .toEqual({ clearsSinceInterstitial: 4, lastInterstitialAt: null, lastRewardedAt: null });
+  });
+
+  it('지난번에 오래 놀았다고 이번 실행의 광고가 늦어지지 않는다', () => {
+    // 지난 실행 15분째(900초)에 전면 광고를 봤다. 이번 실행은 200초째.
+    const stale = { clearsSinceInterstitial: 5, lastInterstitialAt: 900, lastRewardedAt: null };
+    const now = 200;
+    expect(shouldShowInterstitial({ chapter: 3, showsIntro: false, now, ads: stale }))
+      .toEqual({ show: false, veto: 'since-interstitial' });            // 버리지 않으면 막힌다
+    expect(shouldShowInterstitial({ chapter: 3, showsIntro: false, now, ads: forNewSession(stale) }))
+      .toEqual({ show: true });
   });
 });

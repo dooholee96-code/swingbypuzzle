@@ -24,7 +24,7 @@ import { Audio } from './audio/sfx.js';
 import { type AdProvider, NoAdProvider } from './platform/ads.js';
 import { detect, pickAdProvider } from './platform/capabilities.js';
 import {
-  afterClear, afterInterstitial, afterRewarded, shouldShowInterstitial,
+  afterClear, afterInterstitial, afterRewarded, forNewSession, shouldShowInterstitial,
 } from './monetization/ad-policy.js';
 import { type HintKind, directionArc, previewSeconds } from './monetization/hints.js';
 
@@ -46,6 +46,7 @@ let cssW = 0, cssH = 0, dpr = 1;
 let mini: MiniRect | null = null;
 let panning = false;
 let dragMode: 'aim' | 'mini' | null = null;
+let dragPointer = -1;              // 조준·미니맵을 잡고 있는 손가락
 let last = performance.now();
 let t = 0;
 let demo = false;                  // 타이틀 데모가 도는 중인가
@@ -59,6 +60,8 @@ const started = performance.now();
 const nowSeconds = (): number => (performance.now() - started) / 1000;
 
 save.load();
+// 광고 규칙의 시각은 "이번 실행 후 흐른 초"라 지난 실행의 값과 비교할 수 없다 (§14.4)
+saveAdState(forNewSession(adState()));
 applySettings();
 
 const screens = new Screens({
@@ -93,15 +96,16 @@ const hints = new HintSheet({
     const wasFree = !save.data.ads.free_hint_used;
     l.hints[kind] = true;
     if (wasFree) save.data.ads.free_hint_used = true;
-    else save.data.ads = { ...save.data.ads, ...afterRewarded(adState(), nowSeconds()) as object };
+    // afterRewarded 는 camelCase 를 돌려준다. 저장 구조(snake_case)에 그대로 펼치면
+    // last_rewarded_at 이 갱신되지 않아 조건 5(보상형 뒤 90초)가 한 번도 걸리지 않았다.
+    else saveAdState(afterRewarded(adState(), nowSeconds()));
     save.touch();
     applyHints();
   },
   skip: () => {
     const l = save.level(session.level.id);
     l.skipped = true;
-    save.data.ads = { ...save.data.ads, last_rewarded_at: nowSeconds() };
-    save.touch();
+    saveAdState(afterRewarded(adState(), nowSeconds()));   // 건너뛰기는 언제나 보상형이다
     hud.hideResult();
     hud.onNext();
   },
@@ -150,12 +154,23 @@ for (const ev of ['pointerdown', 'keydown'] as const) {
   addEventListener(ev, () => sfx.unlock(), { once: false, passive: true });
 }
 
+let canvasLeft = 0, canvasTop = 0;
+
+/**
+ * 캔버스 크기를 창에 맞춘다.
+ *
+ * `canvas.width` 에 값을 넣으면 **같은 값이어도** 뒷버퍼를 새로 잡고 내용을 지운다.
+ * 전에는 단계를 열 때마다, 타이틀 데모가 한 바퀴 돌 때마다 이걸 불렀다.
+ * 크기가 실제로 바뀔 때만 건드린다.
+ */
 function resize(): void {
   const r = canvas.getBoundingClientRect();
   cssW = r.width; cssH = r.height;
+  canvasLeft = r.left; canvasTop = r.top;
   dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR);
-  canvas.width = Math.round(cssW * dpr);
-  canvas.height = Math.round(cssH * dpr);
+  const w = Math.round(cssW * dpr), h = Math.round(cssH * dpr);
+  if (canvas.width !== w) canvas.width = w;
+  if (canvas.height !== h) canvas.height = h;
   cam.layout(cssW, cssH);
   if (session.level) {
     cam.clamp(session.level);
@@ -180,15 +195,24 @@ function loadInto(id: string): void {
   snapToStart();
 }
 
-/** 타이틀 뒤에서 1-1 의 정답을 반복 재생한다 (§13.1). */
+/** 타이틀로 들어간다. 뒤에서 1-1 의 정답을 반복 재생한다 (§13.1). */
 function startDemo(): void {
+  replayDemo();
+  screens.showTitle();
+}
+
+/**
+ * 데모 비행만 다시 쏜다. **화면은 건드리지 않는다.**
+ *
+ * 전에는 반복할 때마다 startDemo() 를 불러 타이틀을 새로 그렸다. 그러면 타이틀에서
+ * 연 설정 화면이 데모 한 바퀴(약 5초)마다 저절로 닫혔다.
+ */
+function replayDemo(): void {
   demo = true;
   demoIdle = 0;
   loadInto(DEMO_LEVEL);
-  const sol = session.level.meta.solution;
-  session.setAngle(sol.angle);
+  session.setAngle(session.level.meta.solution.angle);
   session.launch();
-  screens.showTitle();
 }
 
 function startPlay(id: string): void {
@@ -204,16 +228,21 @@ function startPlay(id: string): void {
 }
 
 // ── 입력 (§10) ──────────────────────────────────────────────────────────
+/** 캔버스 좌표. 위치는 resize() 가 잡아 둔 값을 쓴다 — getBoundingClientRect 는
+ *  레이아웃을 강제하므로 초당 수십 번 오는 pointermove 에서 부르지 않는다. */
 function pos(e: PointerEvent): [number, number] {
-  const r = canvas.getBoundingClientRect();
-  return [e.clientX - r.left, e.clientY - r.top];
+  return [e.clientX - canvasLeft, e.clientY - canvasTop];
 }
 
 canvas.addEventListener('pointerdown', (e) => {
+  // 두 번째 손가락이 조준을 처음부터 다시 시작하거나, 그 손가락을 떼는 순간
+  // 발사되지 않게 한다. 조준은 한 손가락이다.
+  if (!e.isPrimary || dragMode) return;
   if (demo || screens.overlayOpen || hints.open || !session.level) return;
   if (session.state !== 'ready' && session.state !== 'aiming') return;
   const [x, y] = pos(e);
   canvas.setPointerCapture(e.pointerId);
+  dragPointer = e.pointerId;
   // §10.1 규칙 1: 미니맵 영역이 먼저
   if (mini && x >= mini.x && x <= mini.x + mini.w && y >= mini.y && y <= mini.y + mini.h) {
     dragMode = 'mini';
@@ -227,7 +256,7 @@ canvas.addEventListener('pointerdown', (e) => {
 });
 
 canvas.addEventListener('pointermove', (e) => {
-  if (!dragMode) return;
+  if (!dragMode || e.pointerId !== dragPointer) return;
   const [x, y] = pos(e);
   if (dragMode === 'aim') updateAim(x, y);
   else moveCamTo(x, y);
@@ -244,6 +273,7 @@ function endDrag(): void {
     aim.finish();
   }
   dragMode = null;
+  dragPointer = -1;
 }
 
 /** 진동. 지원하지 않으면 조용히 건너뛴다 — iOS 사파리에는 없다 (§15.3). */
@@ -251,9 +281,12 @@ function buzz(ms: number | number[]): void {
   if (!save.data.settings.haptics || !cap.canVibrate) return;
   try { navigator.vibrate(ms); } catch { /* 무시 */ }
 }
-canvas.addEventListener('pointerup', endDrag);
-canvas.addEventListener('pointercancel', () => {
-  session.cancelAim(); aim.finish(); dragMode = null;
+canvas.addEventListener('pointerup', (e) => {
+  if (e.pointerId === dragPointer) endDrag();
+});
+canvas.addEventListener('pointercancel', (e) => {
+  if (e.pointerId !== dragPointer) return;
+  session.cancelAim(); aim.finish(); dragMode = null; dragPointer = -1;
 });
 
 function updateAim(x: number, y: number): void {
@@ -326,6 +359,7 @@ function frame(now: number): void {
   requestAnimationFrame(frame);
   const dt = Math.min((now - last) / 1000, 0.1);
   last = now;
+  syncHudVisibility();
   if (!session.level) return;
   t += dt;
 
@@ -337,7 +371,7 @@ function frame(now: number): void {
       cam.follow(session.level, x, y, vx, vy, dt);
     } else if (session.state === 'ending') {
       demoIdle += dt;
-      if (demoIdle > DEMO_PAUSE) startDemo();
+      if (demoIdle > DEMO_PAUSE) replayDemo();
     }
     draw(null);
     return;
@@ -389,12 +423,15 @@ function draw(preview: { points: number[]; outcome: string } | null): void {
   if (!demo && !screens.overlayOpen && !hints.open && mini) drawMinimap(ctx, mini, cam, session);
 }
 
-// HUD 는 플레이 중에만 보인다
+// HUD 는 플레이 중에만 보인다.
+// 전에는 따로 도는 두 번째 rAF 루프가 매 프레임 스타일을 썼다. 바뀔 때만 쓴다.
 const hudEls = [document.querySelector('.hud.top'), hud.hint, hud.angle] as HTMLElement[];
+let hudShown: boolean | null = null;
 function syncHudVisibility(): void {
   const show = !demo && !screens.overlayOpen && !hints.open;
+  if (show === hudShown) return;
+  hudShown = show;
   for (const el of hudEls) if (el) el.style.visibility = show ? '' : 'hidden';
-  requestAnimationFrame(syncHudVisibility);
 }
 
 void pickAdProvider(cap, {
@@ -421,4 +458,3 @@ if (!import.meta.env.DEV && 'serviceWorker' in navigator) {
 resize();
 startDemo();
 requestAnimationFrame(frame);
-requestAnimationFrame(syncHudVisibility);

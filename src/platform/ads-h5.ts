@@ -60,8 +60,9 @@ export class H5AdProvider implements AdProvider {
 
   async init(): Promise<void> {
     if (!this.client) return;              // 설정이 없으면 광고 없음으로 둔다
+    installShim(this.w);
     const loaded = await loadScript(this.client, this.test);
-    if (!loaded || typeof this.w.adConfig !== 'function') return;
+    if (!loaded) return;
 
     await new Promise<void>((done) => {
       const t = setTimeout(done, LOAD_TIMEOUT);
@@ -114,6 +115,22 @@ export class H5AdProvider implements AdProvider {
     this.hooks.resume();
     return result;
   }
+}
+
+/**
+ * Ad Placement API 의 진입점을 만든다. **스크립트보다 먼저** 있어야 한다.
+ *
+ * adsbygoogle.js 는 `adBreak`·`adConfig` 를 전역에 만들어 주지 않는다. 구글이
+ * 안내하는 설치법은 페이지가 직접 두 함수를 `adsbygoogle.push` 로 만들어 두는
+ * 것이고, 스크립트는 그 큐를 읽는다. 전에는 이걸 빠뜨리고 스크립트가 뜬 뒤
+ * `typeof adConfig !== 'function'` 이면 포기했다 — 승인이 나도 광고가 한 번도
+ * 뜨지 않고 조용히 "광고 없음"으로 동작했을 것이다.
+ */
+function installShim(w: AdWindow): void {
+  w.adsbygoogle = w.adsbygoogle ?? [];
+  const push = (o: unknown): void => { w.adsbygoogle!.push(o); };
+  w.adBreak ??= push as AdBreakFn;
+  w.adConfig ??= push as AdConfigFn;
 }
 
 /** 스크립트를 한 번만 넣는다. 차단기가 막으면 false. */

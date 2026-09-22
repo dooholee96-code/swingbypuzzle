@@ -36,8 +36,8 @@ self.addEventListener('fetch', (e) => {
     e.respondWith((async () => {
       try {
         const res = await fetch(req);
-        const c = await caches.open(CACHE);
-        c.put('./index.html', res.clone());
+        // 404·500 을 받아 두면 오프라인에서 그 오류 페이지가 게임 대신 뜬다
+        if (res.ok) (await caches.open(CACHE)).put('./index.html', res.clone());
         return res;
       } catch {
         return (await caches.match('./index.html')) ?? Response.error();

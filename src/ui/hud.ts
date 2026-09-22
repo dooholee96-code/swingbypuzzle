@@ -18,6 +18,11 @@ export const RESULT: Record<Outcome, [string, string]> = {
   drift: ['30초 안에 도착하지 못했어요', '행성 주위를 맴돌지 않게 각도를 바꿔 보세요'],
 };
 
+/** 다를 때만 쓴다. */
+function set(el: HTMLElement, text: string): void {
+  if (el.textContent !== text) el.textContent = text;
+}
+
 const $ = (id: string): HTMLElement => {
   const el = document.getElementById(id);
   if (!el) throw new Error(`#${id} 를 찾을 수 없습니다`);
@@ -49,12 +54,17 @@ export class Hud {
     });
   }
 
+  /**
+   * 매 프레임 부른다. **글자가 바뀔 때만 DOM 에 쓴다** — textContent 는 같은 값을
+   * 넣어도 글자 노드를 갈아 끼우고 레이아웃을 다시 잡게 한다. 전에는 초당 60번씩
+   * 세 곳을 새로 썼다.
+   */
   refresh(s: Session): void {
-    this.stage.textContent = `${s.level.id} ${s.level.name}`;
-    this.angle.textContent = s.state === 'aiming' && s.aimFar
-      ? `각도 ${toUi(s.angle).toFixed(1)}°` : '';
+    set(this.stage, `${s.level.id} ${s.level.name}`);
+    set(this.angle, s.state === 'aiming' && s.aimFar
+      ? `각도 ${toUi(s.angle).toFixed(1)}°` : '');
     // 첫 시도의 ready 상태에서만 레벨 hint (§13.3)
-    this.hint.textContent = s.firstTry && s.state === 'ready' ? (s.level.hint ?? '') : '';
+    set(this.hint, s.firstTry && s.state === 'ready' ? (s.level.hint ?? '') : '');
   }
 
   showResult(

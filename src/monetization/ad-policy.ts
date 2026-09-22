@@ -83,3 +83,17 @@ export function afterRewarded(ads: AdState, now: number): AdState {
 export function afterClear(ads: AdState): AdState {
   return { ...ads, clearsSinceInterstitial: ads.clearsSinceInterstitial + 1 };
 }
+
+/**
+ * 앱을 새로 켰을 때의 상태. **두 시각을 버린다.**
+ *
+ * 시각은 "앱 실행 후 흐른 초"라서 실행이 바뀌면 비교할 수 없다. 저장된 채로 두면
+ * 지난번에 15분 놀다 광고를 본 사람(last = 900)은 이번 실행의 첫 18분 동안
+ * 조건 3 에 계속 걸린다 — 지난번에 오래 놀수록 이번에 광고가 늦게 나온다.
+ * 실행 직후는 조건 4(120초)가 따로 지킨다.
+ *
+ * 클리어 수는 횟수라 실행을 넘어도 뜻이 같으므로 남긴다.
+ */
+export function forNewSession(ads: AdState): AdState {
+  return { ...ads, lastInterstitialAt: null, lastRewardedAt: null };
+}
