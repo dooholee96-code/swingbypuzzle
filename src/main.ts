@@ -27,6 +27,10 @@ import {
   afterClear, afterInterstitial, afterRewarded, forNewSession, shouldShowInterstitial,
 } from './monetization/ad-policy.js';
 import { type HintKind, directionArc, previewSeconds } from './monetization/hints.js';
+import {
+  HTML_LANG, LANG_NAME, type Key, detectLang, isLangSetting, resolveLang, setLang, t,
+} from './i18n/index.js';
+import { levelName } from './i18n/levels.js';
 
 const MAX_DPR = 2.5;               // §15.3
 const DEMO_LEVEL = '1-1';          // §13.1 타이틀 뒤에서 도는 데모
@@ -48,7 +52,7 @@ let panning = false;
 let dragMode: 'aim' | 'mini' | null = null;
 let dragPointer = -1;              // 조준·미니맵을 잡고 있는 손가락
 let last = performance.now();
-let t = 0;
+let elapsed = 0;                   // 연출용 시계(초). 물리 시계와 따로 간다
 let demo = false;                  // 타이틀 데모가 도는 중인가
 let demoIdle = 0;
 let ended = false;               // 이번 비행의 끝 소리를 이미 냈는가
@@ -69,8 +73,9 @@ const screens = new Screens({
     cleared: (id) => save.cleared(id),
     skipped: (id) => save.level(id).skipped,
   },
-  levelName: (id) => loadLevel(id).name,
+  levelName: (id) => levelName(loadLevel(id)),
   settings: save.data.settings,
+  autoLangName: () => LANG_NAME[detectLang(browserLangs())],
   onStart: () => startPlay(resumeLevel({
     cleared: (id) => save.cleared(id),
     skipped: (id) => save.level(id).skipped,
@@ -147,6 +152,28 @@ function applySettings(): void {
   field.reduceMotion = save.data.settings.reduce_motion;
   setGlow(save.data.settings.glow !== 'low');
   sfx.enabled = save.data.settings.sfx;
+  applyLang();
+}
+
+function browserLangs(): readonly string[] {
+  return navigator.languages?.length ? navigator.languages : [navigator.language ?? 'en'];
+}
+
+/**
+ * 화면 언어를 정한다. <html lang> 도 바꾼다 — 브라우저가 한자 글꼴을 고르는
+ * 근거이고, styles.css 의 언어별 글꼴(--text)도 이걸 본다.
+ * 이미 그려진 화면은 다음에 그릴 때 바뀐다. 설정 화면은 스스로 다시 그린다.
+ */
+function applyLang(): void {
+  const st = save.data.settings;
+  if (!isLangSetting(st.lang)) st.lang = 'auto';     // 손상된 저장값
+  const l = resolveLang(st.lang, browserLangs());
+  setLang(l);
+  document.documentElement.lang = HTML_LANG[l];
+  document.title = t('doc.title');
+  for (const el of document.querySelectorAll<HTMLElement>('[data-i18n]')) {
+    el.textContent = t(el.dataset['i18n'] as Key);
+  }
 }
 
 // 첫 사용자 입력에서 오디오를 연다 (브라우저 자동재생 정책, §17 M11)
@@ -361,7 +388,7 @@ function frame(now: number): void {
   last = now;
   syncHudVisibility();
   if (!session.level) return;
-  t += dt;
+  elapsed += dt;
 
   // 타이틀 데모: 끝나면 잠깐 쉬고 다시 쏜다 (§13.1)
   if (demo) {
@@ -418,7 +445,7 @@ function draw(preview: { points: number[]; outcome: string } | null): void {
   ctx.save();
   ctx.scale(cam.scale, cam.scale);
   ctx.translate(-cam.x, -cam.y);
-  field.draw(ctx, cam, session, t, preview);
+  field.draw(ctx, cam, session, elapsed, preview);
   ctx.restore();
   if (!demo && !screens.overlayOpen && !hints.open && mini) drawMinimap(ctx, mini, cam, session);
 }

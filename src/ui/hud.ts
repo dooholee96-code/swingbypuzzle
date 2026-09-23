@@ -1,21 +1,23 @@
 // HUD 와 결과·단계 선택. docs/PLAN.md §13
 //
-// 문구는 §13 의 것을 그대로 쓴다 (§0.6).
+// 문구는 i18n 사전에서 꺼낸다. 한국어는 §13 의 것 그대로다 (§0.6).
 
 import { toUi } from '../core/angle.js';
 import type { Outcome } from '../core/types.js';
 import type { Session } from '../game/session.js';
+import { type Key, t } from '../i18n/index.js';
+import { levelHint, levelName } from '../i18n/levels.js';
 
-/** §13.4 결과 화면 문구 */
-export const RESULT: Record<Outcome, [string, string]> = {
-  win: ['도착했어요', ''],
-  planet: ['행성에 충돌했어요', '조금 더 바깥쪽으로 스쳐 지나가 보세요'],
-  hole: ['블랙홀에 빨려 들어갔어요', '블랙홀 중심에서 거리를 더 두세요'],
-  shot: ['외계인 포격에 맞았어요', '붉은 원 안에 머무는 시간을 줄여 보세요'],
-  ufo: ['외계인 우주선과 충돌했어요', '발사 각도를 조금 바꿔 보세요'],
-  rock: ['소행성에 부딪혔어요', '발사 각도를 조금 바꿔 보세요'],
-  wall: ['맵 경계에 부딪혔어요', '궤도가 덜 꺾였어요. 행성에 조금 더 가까이 지나가 보세요'],
-  drift: ['30초 안에 도착하지 못했어요', '행성 주위를 맴돌지 않게 각도를 바꿔 보세요'],
+/** §13.4 결과 화면 문구의 키. 성공에는 조언이 없다 */
+export const RESULT: Readonly<Record<Outcome, readonly [Key, Key | null]>> = {
+  win: ['result.win', null],
+  planet: ['result.planet', 'result.planet.tip'],
+  hole: ['result.hole', 'result.hole.tip'],
+  shot: ['result.shot', 'result.shot.tip'],
+  ufo: ['result.ufo', 'result.ufo.tip'],
+  rock: ['result.rock', 'result.rock.tip'],
+  wall: ['result.wall', 'result.wall.tip'],
+  drift: ['result.drift', 'result.drift.tip'],
 };
 
 /** 다를 때만 쓴다. */
@@ -31,6 +33,8 @@ const $ = (id: string): HTMLElement => {
 
 export class Hud {
   readonly stage = $('stage');
+  /** 단계 이름 글자. 두 줄에서 자르려고 상자 안에 따로 둔다 */
+  private readonly stageText = this.stage.querySelector<HTMLElement>('.clamp') ?? this.stage;
   readonly angle = $('angle');
   readonly hint = $('hint');
   readonly result = $('result');
@@ -60,11 +64,11 @@ export class Hud {
    * 세 곳을 새로 썼다.
    */
   refresh(s: Session): void {
-    set(this.stage, `${s.level.id} ${s.level.name}`);
+    set(this.stageText, `${s.level.id} ${levelName(s.level)}`);
     set(this.angle, s.state === 'aiming' && s.aimFar
-      ? `각도 ${toUi(s.angle).toFixed(1)}°` : '');
+      ? t('hud.angle', { deg: toUi(s.angle).toFixed(1) }) : '');
     // 첫 시도의 ready 상태에서만 레벨 hint (§13.3)
-    set(this.hint, s.firstTry && s.state === 'ready' ? (s.level.hint ?? '') : '');
+    set(this.hint, s.firstTry && s.state === 'ready' ? (levelHint(s.level) ?? '') : '');
   }
 
   showResult(
@@ -72,28 +76,31 @@ export class Hud {
     opts: { chapterLast?: boolean; last?: boolean; canHint?: boolean } = {},
   ): void {
     if (!this.result.hidden) return;
-    const [title, tip] = RESULT[s.outcome as Outcome] ?? ['비행이 끝났어요', ''];
+    const keys = RESULT[s.outcome as Outcome];
+    const title = keys ? t(keys[0]) : t('result.ended');
+    const tip = keys?.[1] ? t(keys[1]) : '';
     const win = s.outcome === 'win';
     // §13.4: 장의 마지막 단계 성공 시 "다음 장", 준비된 마지막 단계면 안내 문구
-    const nextLabel = opts.last ? null : opts.chapterLast ? '다음 장' : '다음 단계';
-    const closing = win && opts.last ? '준비된 단계를 모두 클리어했어요'
-      : win && opts.chapterLast ? `${s.level.meta.chapter}장을 클리어했어요` : '';
+    const nextLabel = opts.last ? null
+      : t(opts.chapterLast ? 'result.nextChapter' : 'result.nextLevel');
+    const closing = win && opts.last ? t('result.allCleared')
+      : win && opts.chapterLast ? t('result.chapterCleared', { n: s.level.meta.chapter }) : '';
     this.result.className = `sheet ${win ? 'win' : 'lose'}`;
     this.result.innerHTML = `
       <h2></h2><p></p>
       <div class="row">
         ${win
           ? (nextLabel ? `<button class="btn primary" data-a="next" type="button">${nextLabel}</button>` : '') +
-            '<button class="btn" data-a="retry" type="button">다시 하기</button>'
-          : '<button class="btn primary" data-a="retry" type="button">다시 시도</button>'}
-        ${!win && opts.canHint ? '<button class="btn" data-a="hint" type="button">힌트 보기</button>' : ''}
-        <button class="btn" data-a="pick" type="button">단계 선택</button>
+            `<button class="btn" data-a="retry" type="button">${t('result.again')}</button>`
+          : `<button class="btn primary" data-a="retry" type="button">${t('result.retry')}</button>`}
+        ${!win && opts.canHint ? `<button class="btn" data-a="hint" type="button">${t('result.hint')}</button>` : ''}
+        <button class="btn" data-a="pick" type="button">${t('result.pick')}</button>
       </div>
       ${closing ? `<p class="tapnote">${closing}</p>` : ''}
-      ${win ? '' : '<p class="tapnote">화면 아무 곳이나 눌러도 다시 시도해요</p>'}`;
+      ${win ? '' : `<p class="tapnote">${t('result.tapRetry')}</p>`}`;
     this.result.querySelector('h2')!.textContent = title;
     this.result.querySelector('p')!.textContent = win
-      ? `비행 시간 ${s.flightSeconds().toFixed(1)}초 · 시도 ${s.attempts}회` : tip;
+      ? t('result.stats', { sec: s.flightSeconds().toFixed(1), n: s.attempts }) : tip;
     for (const b of this.result.querySelectorAll<HTMLButtonElement>('button')) {
       b.addEventListener('click', () => {
         const a = b.dataset['a'];

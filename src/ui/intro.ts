@@ -2,24 +2,30 @@
 //
 // 장의 첫 단계에 처음 들어갈 때 한 번만 보여준다. 다시 보기는 단계 선택의 ? 버튼.
 
+import { type Key, t } from '../i18n/index.js';
+
 export type IntroKey = 'planet' | 'rock' | 'hole' | 'ufo' | 'orbit' | 'wide';
 
-export const INTRO: Record<IntroKey, { title: string; body: string }> = {
-  planet: { title: '행성', body: '점선 원 안에 들어가면 행성 쪽으로 끌려요. 가까울수록 세게 끌려요.' },
-  rock: { title: '소행성', body: '부딪히면 끝이에요. 중력은 없어요.' },
-  hole: { title: '블랙홀', body: '끌림이 아주 강해요. 가운데에 닿으면 빨려 들어가요.' },
-  ufo: { title: '외계인', body: '붉은 원 안에 들어가면 우주선을 향해 쏴요.' },
-  orbit: { title: '움직이는 행성', body: '정해진 원을 따라 돌아요. 발사할 때를 기다려 보세요.' },
+/** 요소 키 → 제목·본문 문구 키 (§13.2.1) */
+const TEXT: Readonly<Record<IntroKey, readonly [Key, Key]>> = {
+  planet: ['intro.planet', 'intro.planet.body'],
+  rock: ['intro.rock', 'intro.rock.body'],
+  hole: ['intro.hole', 'intro.hole.body'],
+  ufo: ['intro.ufo', 'intro.ufo.body'],
+  orbit: ['intro.orbit', 'intro.orbit.body'],
   // v4.1 에서 빈 곳 드래그 이동을 없앴다(§10.3). 미니맵이 유일한 수단이다.
-  wide: { title: '넓은 맵', body: '한눈에 안 들어와요. 구석의 미니맵을 눌러 항로를 살펴보세요.' },
+  wide: ['intro.wide', 'intro.wide.body'],
 };
 
+export const INTRO_KEYS = Object.keys(TEXT) as IntroKey[];
+
 // §7.4: 5-1 은 같은 "넓은 맵" 카드를 쓰되 문구 끝에 한 줄을 덧붙인다.
-const EXTRA: Record<string, string> = { '5-1': ' 이제 가로로도 넓어요.' };
+const EXTRA: Readonly<Record<string, Key>> = { '5-1': 'intro.wideExtra' };
 
 export function introFor(levelId: string, key: IntroKey): { title: string; body: string } {
-  const base = INTRO[key];
-  return { title: base.title, body: base.body + (EXTRA[levelId] ?? '') };
+  const [title, body] = TEXT[key];
+  const extra = EXTRA[levelId];
+  return { title: t(title), body: t(body) + (extra ? t(extra) : '') };
 }
 
 /**

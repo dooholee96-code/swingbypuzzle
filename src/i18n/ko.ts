@@ -1,0 +1,121 @@
+// 한국어 — 원본이다. docs/PLAN.md §13 의 문구를 그대로 옮겼다 (§0.6).
+//
+// 다른 언어는 이 파일의 키를 그대로 따른다. 키가 하나라도 빠지면 tsc 가 막는다.
+// {n} 같은 자리표시자는 t() 가 채운다 — 언어마다 같은 이름을 써야 한다(테스트가 지킨다).
+
+export const ko = {
+  'doc.title': '스윙바이',
+
+  // §13.1 타이틀
+  'title.sub': '스윙바이',
+  'title.start': '시작하기',
+  'title.settings': '설정',
+
+  // §13.2 단계 선택
+  'picker.title': '단계 선택',
+  'picker.toTitle': '타이틀',
+  'picker.settings': '설정',
+  'picker.introAgain': '이 장의 새 요소 다시 보기',
+  'chapter.label': '{n}장 {name}',
+  'chapter.locked': '{n}장 잠김',
+  'mark.skipped': '↷ 건너뜀',
+  'mark.cleared': '✓ 클리어',
+  'mark.open': '미클리어',
+  'mark.locked': '잠김',
+
+  // §13.3 HUD
+  'hud.levels': '단계',
+  'hud.hint': '힌트',
+  'hud.retry': '다시',
+  'hud.angle': '각도 {deg}°',
+
+  // §13.4 결과
+  'result.win': '도착했어요',
+  'result.planet': '행성에 충돌했어요',
+  'result.planet.tip': '조금 더 바깥쪽으로 스쳐 지나가 보세요',
+  'result.hole': '블랙홀에 빨려 들어갔어요',
+  'result.hole.tip': '블랙홀 중심에서 거리를 더 두세요',
+  'result.shot': '외계인 포격에 맞았어요',
+  'result.shot.tip': '붉은 원 안에 머무는 시간을 줄여 보세요',
+  'result.ufo': '외계인 우주선과 충돌했어요',
+  'result.ufo.tip': '발사 각도를 조금 바꿔 보세요',
+  'result.rock': '소행성에 부딪혔어요',
+  'result.rock.tip': '발사 각도를 조금 바꿔 보세요',
+  'result.wall': '맵 경계에 부딪혔어요',
+  'result.wall.tip': '궤도가 덜 꺾였어요. 행성에 조금 더 가까이 지나가 보세요',
+  'result.drift': '30초 안에 도착하지 못했어요',
+  'result.drift.tip': '행성 주위를 맴돌지 않게 각도를 바꿔 보세요',
+  'result.ended': '비행이 끝났어요',
+  'result.nextChapter': '다음 장',
+  'result.nextLevel': '다음 단계',
+  'result.allCleared': '준비된 단계를 모두 클리어했어요',
+  'result.chapterCleared': '{n}장을 클리어했어요',
+  'result.again': '다시 하기',
+  'result.retry': '다시 시도',
+  'result.hint': '힌트 보기',
+  'result.pick': '단계 선택',
+  'result.tapRetry': '화면 아무 곳이나 눌러도 다시 시도해요',
+  'result.stats': '비행 시간 {sec}초 · 시도 {n}회',
+
+  // §13.2.1 새 요소 소개 카드
+  'intro.planet': '행성',
+  'intro.planet.body': '점선 원 안에 들어가면 행성 쪽으로 끌려요. 가까울수록 세게 끌려요.',
+  'intro.rock': '소행성',
+  'intro.rock.body': '부딪히면 끝이에요. 중력은 없어요.',
+  'intro.hole': '블랙홀',
+  'intro.hole.body': '끌림이 아주 강해요. 가운데에 닿으면 빨려 들어가요.',
+  'intro.ufo': '외계인',
+  'intro.ufo.body': '붉은 원 안에 들어가면 우주선을 향해 쏴요.',
+  'intro.orbit': '움직이는 행성',
+  'intro.orbit.body': '정해진 원을 따라 돌아요. 발사할 때를 기다려 보세요.',
+  'intro.wide': '넓은 맵',
+  'intro.wide.body': '한눈에 안 들어와요. 구석의 미니맵을 눌러 항로를 살펴보세요.',
+  // §7.4: 5-1 에만 덧붙인다. 앞 공백까지 문구의 일부다 — 띄어 쓰는 언어만 넣는다
+  'intro.wideExtra': ' 이제 가로로도 넓어요.',
+  'intro.ok': '확인',
+
+  // §13.5 힌트
+  'hint.title': '힌트',
+  'hint.preview': '긴 예측선',
+  'hint.preview.desc': '궤도를 더 멀리까지 미리 볼 수 있어요',
+  'hint.direction': '방향 표시',
+  'hint.direction.desc': '성공하는 발사 방향을 알려 드려요',
+  'hint.skip': '건너뛰기',
+  'hint.skip.desc': '이 단계를 넘기고 다음 단계를 열어요',
+  'hint.freeGiven': '이번 힌트는 무료로 드렸어요',
+  'hint.dismissed': '광고를 끝까지 보면 받을 수 있어요',
+  'hint.unavailable': '지금은 광고를 불러올 수 없어요. 잠시 후 다시 시도해 주세요',
+  'hint.applied': '적용됨',
+  'hint.lockSkip': '다섯 번 실패하면 열려요',
+  'hint.lockDirection': '두 번 실패하면 열려요',
+  'hint.getFree': '무료로 받기',
+  'hint.watchSkip': '광고 보고 건너뛰기',
+  'hint.watchGet': '광고 보고 받기',
+  'hint.close': '닫기',
+
+  // §13.6 설정
+  'set.title': '설정',
+  'set.back': '뒤로',
+  'set.on': '켬',
+  'set.off': '끔',
+  'set.sfx': '효과음',
+  'set.haptics': '진동',
+  'set.glow': '발광 효과',
+  'set.glowNormal': '보통',
+  'set.glowLow': '낮음',
+  'set.reduceMotion': '모션 줄이기',
+  'set.language': '언어',
+  'set.langAuto': '자동',
+  'set.privacyOptions': '개인정보 옵션',
+  'set.open': '열기',
+  'set.privacy': '개인정보처리방침',
+  'set.view': '보기',
+  'set.credits': '만든 것',
+  'set.oss': '오픈소스 고지',
+  'set.ossNote': '이 게임은 오픈소스 라이브러리를 쓰지 않습니다. Oxanium 글꼴은 SIL Open Font License 를 따릅니다.',
+  'set.version': '버전',
+} as const;
+
+export type Key = keyof typeof ko;
+/** 번역 사전의 모양. 키가 빠지거나 남으면 컴파일이 막힌다 */
+export type Dict = { readonly [K in Key]: string };

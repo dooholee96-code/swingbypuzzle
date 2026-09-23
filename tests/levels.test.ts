@@ -10,7 +10,8 @@ import { accel, gravs } from '../src/core/physics.js';
 import { inArc } from '../src/core/angle.js';
 import { angles, mainRuns, widthOf } from '../src/tools-shared/scan.js';
 import { PAD_R, SHIP_R } from '../src/core/constants.js';
-import { INTRO, introFor, seenKey } from '../src/ui/intro.js';
+import { INTRO_KEYS, introFor, seenKey } from '../src/ui/intro.js';
+import { t } from '../src/i18n/index.js';
 import type { IntroKey } from '../src/ui/intro.js';
 
 const CASES = [
@@ -117,13 +118,13 @@ describe('소개 카드 (§7.4, §13.2.1)', () => {
       .map((id) => [id, loadLevel(id).meta.intro] as const)
       .filter((p): p is readonly [string, IntroKey] => p[1] !== undefined);
     const keys = pairs.map((p) => p[1]);
-    expect(new Set(keys)).toEqual(new Set(Object.keys(INTRO)));   // 빠진 요소가 없다
+    expect(new Set(keys)).toEqual(new Set(INTRO_KEYS));           // 빠진 요소가 없다
 
     // 넓은 맵만 두 번이다 — §7.3 이 1-8 을 "미니맵 첫 등장" 으로 적었고,
     // 5-1 에서 가로로도 넓어진다(§7.4). 나머지 요소는 한 번뿐이다.
     const at = (k: IntroKey): string[] => pairs.filter((p) => p[1] === k).map((p) => p[0]);
     expect(at('wide')).toEqual(['1-8', '5-1']);
-    for (const k of Object.keys(INTRO) as IntroKey[]) {
+    for (const k of INTRO_KEYS) {
       if (k !== 'wide') expect(at(k)).toHaveLength(1);
     }
   });
@@ -133,6 +134,6 @@ describe('소개 카드 (§7.4, §13.2.1)', () => {
     expect(seenKey('1-8', 'wide')).toBe('wide');
     expect(seenKey('5-1', 'wide')).not.toBe(seenKey('1-8', 'wide'));
     expect(introFor('5-1', 'wide').body).toContain('이제 가로로도 넓어요.');
-    expect(introFor('1-8', 'wide').body).toBe(INTRO.wide.body);
+    expect(introFor('1-8', 'wide').body).toBe(t('intro.wide.body'));
   });
 });

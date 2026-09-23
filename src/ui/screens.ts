@@ -9,6 +9,8 @@ import { CHAPTERS, allIds } from '../levels/chapters.js';
 import { chapterOf, isChapterUnlocked, isUnlocked } from '../levels/progress.js';
 import type { Progress } from '../levels/progress.js';
 import { introFor, seenKey } from './intro.js';
+import { LANGS, LANG_NAME, type LangSetting, t } from '../i18n/index.js';
+import { chapterName } from '../i18n/levels.js';
 import type { IntroKey } from './intro.js';
 import type { Level } from '../core/types.js';
 
@@ -28,7 +30,10 @@ export interface ScreenDeps {
   settings: {
     sfx: boolean; haptics: boolean;
     glow: 'normal' | 'low'; reduce_motion: boolean; reduce_motion_set?: boolean;
+    lang: LangSetting;
   };
+  /** 자동일 때 실제로 고른 언어의 이름. 설정 화면에 "자동 (日本語)" 처럼 보인다 */
+  autoLangName(): string;
   /** 광고 SDK 가 동의 양식을 다시 열 수 있는가 (§13.6, §14.5). 해당 지역에서만 참 */
   canOpenPrivacyOptions?(): boolean;
   openPrivacyOptions?(): Promise<void>;
@@ -43,6 +48,8 @@ export class Screens {
   private settingsEl = $('settings');
   private introEl = $('intro');
   private chapter = 1;
+  /** 설정을 어디서 열었는가. 뒤로 가기가 그리로 돌아간다 */
+  private settingsFrom: Screen = 'select';
 
   constructor(private readonly d: ScreenDeps) {}
 
@@ -68,10 +75,10 @@ export class Screens {
     this.hideAll();
     this.titleEl.innerHTML = `
       <div class="spacer"></div>
-      <div class="logo"><h1>SWINGBY</h1><span class="ko">스윙바이</span></div>
+      <div class="logo"><h1>SWINGBY</h1>${t('title.sub') ? `<span class="ko">${t('title.sub')}</span>` : ''}</div>
       <div class="bar">
-        <button class="btn primary" data-a="start" type="button">시작하기</button>
-        <button class="btn" data-a="settings" type="button">설정</button>
+        <button class="btn primary" data-a="start" type="button">${t('title.start')}</button>
+        <button class="btn" data-a="settings" type="button">${t('title.settings')}</button>
       </div>
       <div class="spacer"></div>`;
     this.bind(this.titleEl, {
@@ -90,14 +97,16 @@ export class Screens {
       const open = isChapterUnlocked(c.chapter, p);
       return `<button class="tab" data-ch="${c.chapter}" type="button"
         aria-selected="${c.chapter === this.chapter}" ${open ? '' : 'disabled'}
-        >${c.chapter}장 ${open ? c.name : '잠김'}</button>`;
+        >${open ? t('chapter.label', { n: c.chapter, name: chapterName(c.chapter, c.name) })
+          : t('chapter.locked', { n: c.chapter })}</button>`;
     }).join('');
 
     const ch = CHAPTERS.find((c) => c.chapter === this.chapter) ?? CHAPTERS[0]!;
     const cards = ch.levels.map((id) => {
       const open = isUnlocked(id, p);
       const done = p.cleared(id);
-      const mark = p.skipped(id) ? '↷ 건너뜀' : done ? '✓ 클리어' : open ? '미클리어' : '잠김';
+      const mark = t(p.skipped(id) ? 'mark.skipped' : done ? 'mark.cleared'
+        : open ? 'mark.open' : 'mark.locked');
       return `<button class="card" data-id="${id}" type="button" ${open ? '' : 'disabled'}>
         <span class="id">${id}</span>
         <span class="nm">${open ? this.d.levelName(id) : '???'}</span>
@@ -107,12 +116,12 @@ export class Screens {
 
     this.pickerEl.innerHTML = `
       <div class="bar">
-        <button class="btn" data-a="title" type="button">타이틀</button>
+        <button class="btn" data-a="title" type="button">${t('picker.toTitle')}</button>
         <div class="spacer"></div>
-        <button class="btn" data-a="intro" type="button" aria-label="이 장의 새 요소 다시 보기">?</button>
-        <button class="btn" data-a="settings" type="button">설정</button>
+        <button class="btn" data-a="intro" type="button" aria-label="${t('picker.introAgain')}">?</button>
+        <button class="btn" data-a="settings" type="button">${t('picker.settings')}</button>
       </div>
-      <h2>단계 선택</h2>
+      <h2>${t('picker.title')}</h2>
       <div class="tabs">${tabs}</div>
       <div class="grid">${cards}</div>`;
 
@@ -159,53 +168,70 @@ export class Screens {
     const { title, body } = introFor(levelId, key);
     this.introEl.className = 'sheet';
     this.introEl.innerHTML = `<h2>${title}</h2><p>${body}</p>
-      <div class="row"><button class="btn primary" data-a="ok" type="button">확인</button></div>`;
+      <div class="row"><button class="btn primary" data-a="ok" type="button">${t('intro.ok')}</button></div>`;
     this.bind(this.introEl, { ok: () => { this.introEl.hidden = true; } });
     this.introEl.hidden = false;
   }
 
   // ── §13.6 설정 ────────────────────────────────────────────────────────
   showSettings(): void {
-    const back = this.current;
+    // 설정 안에서 값을 바꾸면 다시 그린다. 그때는 어디서 왔는지를 덮어쓰지 않는다
+    if (this.settingsEl.hidden) this.settingsFrom = this.current;
     const s = this.d.settings;
     const toggle = (k: string, label: string, on: boolean): string => `
       <div class="row2"><span class="label">${label}</span>
         <div class="seg">
-          <button data-set="${k}" data-v="1" aria-pressed="${on}" type="button">켬</button>
-          <button data-set="${k}" data-v="0" aria-pressed="${!on}" type="button">끔</button>
+          <button data-set="${k}" data-v="1" aria-pressed="${on}" type="button">${t('set.on')}</button>
+          <button data-set="${k}" data-v="0" aria-pressed="${!on}" type="button">${t('set.off')}</button>
         </div></div>`;
 
+    // 언어 이름은 각 언어로 쓴다 — 못 읽는 언어로 바뀌어도 자기 언어를 찾을 수 있게.
+    // 항목 이름에도 영어를 곁들인다. 같은 이유다.
+    const langOpts = (['auto', ...LANGS] as LangSetting[]).map((v) => {
+      const label = v === 'auto' ? `${t('set.langAuto')} (${this.d.autoLangName()})` : LANG_NAME[v];
+      return `<option value="${v}"${s.lang === v ? ' selected' : ''}>${label}</option>`;
+    }).join('');
+    const langLabel = t('set.language') === 'Language'
+      ? 'Language' : `${t('set.language')} · Language`;
+
     this.settingsEl.innerHTML = `
-      <div class="bar"><button class="btn" data-a="back" type="button">뒤로</button>
+      <div class="bar"><button class="btn" data-a="back" type="button">${t('set.back')}</button>
         <div class="spacer"></div></div>
-      <h2>설정</h2>
+      <h2>${t('set.title')}</h2>
       <div class="rows">
-        ${toggle('sfx', '효과음', s.sfx)}
-        ${toggle('haptics', '진동', s.haptics)}
-        <div class="row2"><span class="label">발광 효과</span>
+        <div class="row2"><label class="label" for="set-lang">${langLabel}</label>
+          <select id="set-lang" class="pick">${langOpts}</select></div>
+        ${toggle('sfx', t('set.sfx'), s.sfx)}
+        ${toggle('haptics', t('set.haptics'), s.haptics)}
+        <div class="row2"><span class="label">${t('set.glow')}</span>
           <div class="seg">
-            <button data-set="glow" data-v="normal" aria-pressed="${s.glow === 'normal'}" type="button">보통</button>
-            <button data-set="glow" data-v="low" aria-pressed="${s.glow === 'low'}" type="button">낮음</button>
+            <button data-set="glow" data-v="normal" aria-pressed="${s.glow === 'normal'}" type="button">${t('set.glowNormal')}</button>
+            <button data-set="glow" data-v="low" aria-pressed="${s.glow === 'low'}" type="button">${t('set.glowLow')}</button>
           </div></div>
-        ${toggle('reduce_motion', '모션 줄이기', s.reduce_motion)}
+        ${toggle('reduce_motion', t('set.reduceMotion'), s.reduce_motion)}
         ${this.d.canOpenPrivacyOptions?.()
-          ? '<div class="row2"><span class="label">개인정보 옵션</span>'
-            + '<button class="btn" data-a="privacy" type="button">열기</button></div>'
+          ? `<div class="row2"><span class="label">${t('set.privacyOptions')}</span>`
+            + `<button class="btn" data-a="privacy" type="button">${t('set.open')}</button></div>`
           : ''}
-        <div class="row2"><span class="label">개인정보처리방침</span>
-          <a class="btn" href="./privacy/" target="_blank" rel="noopener">보기</a></div>
-        <div class="row2"><span class="label">만든 것</span>
-          <span class="val dim">오픈소스 고지</span></div>
-        <p class="tapnote">이 게임은 오픈소스 라이브러리를 쓰지 않습니다.
-          Oxanium 글꼴은 SIL Open Font License 를 따릅니다.</p>
-        <div class="row2"><span class="label">버전</span>
+        <div class="row2"><span class="label">${t('set.privacy')}</span>
+          <a class="btn" href="./privacy/" target="_blank" rel="noopener">${t('set.view')}</a></div>
+        <div class="row2"><span class="label">${t('set.credits')}</span>
+          <span class="val dim">${t('set.oss')}</span></div>
+        <p class="tapnote">${t('set.ossNote')}</p>
+        <div class="row2"><span class="label">${t('set.version')}</span>
           <span class="val">${__APP_VERSION__}</span></div>
       </div>`;
 
     this.bind(this.settingsEl, {
-      back: () => { this.settingsEl.hidden = true; if (back === 'title') this.showTitle(); else if (back === 'select') this.showSelect(); },
+      back: () => this.closeSettings(),
       privacy: () => { void this.d.openPrivacyOptions?.(); },
     });
+    this.settingsEl.querySelector<HTMLSelectElement>('#set-lang')!
+      .addEventListener('change', (e) => {
+        s.lang = (e.target as HTMLSelectElement).value as LangSetting;
+        this.d.onSettingChange();
+        this.showSettings();                       // 새 언어로 다시 그린다
+      });
     for (const b of this.settingsEl.querySelectorAll<HTMLButtonElement>('[data-set]')) {
       b.addEventListener('click', () => {
         const k = b.dataset['set']!, v = b.dataset['v']!;
@@ -221,6 +247,16 @@ export class Screens {
     this.settingsEl.hidden = false;
   }
 
+  /**
+   * 설정을 닫고 연 곳으로 돌아간다. 화면의 [뒤로] 와 브라우저 뒤로 가기가 같은 길을 쓴다.
+   * 전에는 뒤로 가기만 언제나 단계 선택으로 갔다 — 타이틀에서 연 설정이 단계 선택으로 닫혔다.
+   */
+  private closeSettings(): void {
+    this.settingsEl.hidden = true;
+    if (this.settingsFrom === 'title') this.showTitle();
+    else this.showSelect();
+  }
+
   private hideAllButSettings(): void {
     this.titleEl.hidden = true;
     this.pickerEl.hidden = true;
@@ -229,7 +265,7 @@ export class Screens {
   /** 뒤로 가기 한 단계. 처리했으면 true (§15.2 의 뒤로 버튼 흐름). */
   goBack(): boolean {
     if (!this.introEl.hidden) { this.introEl.hidden = true; return true; }
-    if (!this.settingsEl.hidden) { this.settingsEl.hidden = true; this.showSelect(); return true; }
+    if (!this.settingsEl.hidden) { this.closeSettings(); return true; }
     if (!this.pickerEl.hidden) { this.showTitle(); return true; }
     return false;
   }

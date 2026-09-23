@@ -14,11 +14,11 @@
   <canvas id="cv"></canvas>
 
   <div class="hud top">
-    <button class="btn" id="back" type="button">단계</button>
-    <div class="stage" id="stage"></div>
+    <button class="btn" id="back" type="button" data-i18n="hud.levels">단계</button>
+    <div class="stage" id="stage"><span class="clamp"></span></div>
     <div class="grow"></div>
-    <button class="btn" id="hintbtn" type="button">힌트<i class="dot" hidden></i></button>
-    <button class="btn" id="retry" type="button">다시</button>
+    <button class="btn" id="hintbtn" type="button"><span data-i18n="hud.hint">힌트</span><i class="dot" hidden></i></button>
+    <button class="btn" id="retry" type="button" data-i18n="hud.retry">다시</button>
   </div>
 
   <div id="hint"></div>

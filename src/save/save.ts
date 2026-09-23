@@ -3,6 +3,8 @@
 // 한 번 읽어 메모리에 두고, 변경 시 500ms 디바운스로 기록한다.
 // 페이지를 떠날 때 즉시 기록한다. 읽기·파싱에 실패하면 기본값으로 시작한다.
 
+import type { LangSetting } from '../i18n/index.js';
+
 const KEY = 'swingby.save.v1';
 const VERSION = 1;
 const DEBOUNCE = 500;
@@ -18,6 +20,8 @@ export interface SaveData {
   seen_intros: string[];
   settings: {
     sfx: boolean; haptics: boolean; glow: 'normal' | 'low'; reduce_motion: boolean;
+    /** 화면 언어. auto 면 브라우저 언어를 따른다 */
+    lang: LangSetting;
     /** 사용자가 모션 줄이기를 직접 건드린 적이 있는가.
      *  없으면 OS 의 prefers-reduced-motion 을 따른다 (§12.4) */
     reduce_motion_set: boolean;
@@ -34,7 +38,7 @@ const defaults = (): SaveData => ({
   seen_intros: [],
   settings: {
     sfx: true, haptics: true, glow: 'normal',
-    reduce_motion: false, reduce_motion_set: false,
+    reduce_motion: false, reduce_motion_set: false, lang: 'auto',
   },
   ads: {
     free_hint_used: false, clears_since_interstitial: 0,

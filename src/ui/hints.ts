@@ -1,16 +1,17 @@
 // 힌트 시트. docs/PLAN.md §13.5, §14.3
 //
-// 문구는 §13.5 의 것을 그대로 쓴다 (§0.6).
+// 문구는 i18n 사전에서 꺼낸다. 한국어는 §13.5 의 것 그대로다 (§0.6).
 // 시트가 열려 있는 동안 단계 시계는 멈춘다 — 공전 단계의 타이밍 보호.
 
 import type { AdProvider, RewardPlacement } from '../platform/ads.js';
 import { type HintKind, type HintState, hintStatus } from '../monetization/hints.js';
+import { type Key, t } from '../i18n/index.js';
 
 /** §13.5 의 표 */
-const ITEMS: { kind: HintKind; title: string; desc: string }[] = [
-  { kind: 'preview', title: '긴 예측선', desc: '궤도를 더 멀리까지 미리 볼 수 있어요' },
-  { kind: 'direction', title: '방향 표시', desc: '성공하는 발사 방향을 알려 드려요' },
-  { kind: 'skip', title: '건너뛰기', desc: '이 단계를 넘기고 다음 단계를 열어요' },
+const ITEMS: readonly { kind: HintKind; title: Key; desc: Key }[] = [
+  { kind: 'preview', title: 'hint.preview', desc: 'hint.preview.desc' },
+  { kind: 'direction', title: 'hint.direction', desc: 'hint.direction.desc' },
+  { kind: 'skip', title: 'hint.skip', desc: 'hint.skip.desc' },
 ];
 
 const PLACEMENT: Record<HintKind, RewardPlacement> = {
@@ -19,10 +20,10 @@ const PLACEMENT: Record<HintKind, RewardPlacement> = {
 
 /** §13.5 의 안내 문구 */
 export const HINT_MSG = {
-  freeGiven: '이번 힌트는 무료로 드렸어요',
-  dismissed: '광고를 끝까지 보면 받을 수 있어요',
-  unavailable: '지금은 광고를 불러올 수 없어요. 잠시 후 다시 시도해 주세요',
-} as const;
+  freeGiven: 'hint.freeGiven',
+  dismissed: 'hint.dismissed',
+  unavailable: 'hint.unavailable',
+} as const satisfies Record<string, Key>;
 
 const $ = (id: string): HTMLElement => {
   const el = document.getElementById(id);
@@ -44,7 +45,8 @@ export interface HintHost {
 export class HintSheet {
   readonly el = $('hints');
   private busy = false;
-  private note = '';
+  /** 안내 문구의 키. 그릴 때 번역한다 */
+  private note: Key | '' = '';
 
   constructor(private readonly ads: AdProvider, private readonly host: HintHost) {
     this.el.addEventListener('click', (e) => {
@@ -117,21 +119,21 @@ export class HintSheet {
       const st = hintStatus(kind, h);
       let label: string;
       let disabled = this.busy;
-      if (st.state === 'applied') { label = '적용됨'; disabled = true; }
+      if (st.state === 'applied') { label = t('hint.applied'); disabled = true; }
       else if (st.state === 'locked') {
-        label = kind === 'skip' ? '다섯 번 실패하면 열려요' : '두 번 실패하면 열려요';
+        label = t(kind === 'skip' ? 'hint.lockSkip' : 'hint.lockDirection');
         disabled = true;
-      } else if (st.free) label = '무료로 받기';
-      else label = kind === 'skip' ? '광고 보고 건너뛰기' : '광고 보고 받기';
+      } else if (st.free) label = t('hint.getFree');
+      else label = t(kind === 'skip' ? 'hint.watchSkip' : 'hint.watchGet');
 
       return `<div class="hintrow">
-        <div><b>${title}</b><p class="dim">${desc}</p></div>
+        <div><b>${t(title)}</b><p class="dim">${t(desc)}</p></div>
         <button class="btn" type="button" data-kind="${kind}"${disabled ? ' disabled' : ''}>${label}</button>
       </div>`;
     }).join('');
 
-    this.el.innerHTML = `<h2>힌트</h2>${rows}
-      ${this.note ? `<p class="tapnote">${this.note}</p>` : ''}
-      <div class="row"><button class="btn" type="button">닫기</button></div>`;
+    this.el.innerHTML = `<h2>${t('hint.title')}</h2>${rows}
+      ${this.note ? `<p class="tapnote">${t(this.note)}</p>` : ''}
+      <div class="row"><button class="btn" type="button">${t('hint.close')}</button></div>`;
   }
 }
