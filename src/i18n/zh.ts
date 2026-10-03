@@ -8,7 +8,7 @@ export const zh: Dict = {
   'title.sub': '引力弹弓',
   'title.stage': '关卡',
   'title.infinity': '无尽模式',
-  'title.soon': '即将推出',
+  'title.infLocked': '通关 6-1 后解锁',
   'title.settings': '设置',
 
   'picker.title': '选择关卡',
@@ -69,6 +69,13 @@ export const zh: Dict = {
   'intro.wide.body': '一屏看不全。点击角落的小地图查看航线。',
   'intro.turn': '喷射',
   'intro.turn.body': '飞行中点击屏幕，就会朝那一侧转向。剩余次数显示在左上角。',
+  'intro.infinity': '无尽模式',
+  'intro.infinity.body': '在无尽的宇宙中别撞上任何东西，坚持得越久越好。吃到胡萝卜可以多一次喷射。',
+  'inf.time': '{sec}秒',
+  'inf.best': '最佳 {sec}秒',
+  'inf.over': '坚持到了这里',
+  'inf.stats': '坚持了 {sec} 秒 · 最佳 {best} 秒',
+  'inf.newBest': '新纪录！',
   'intro.wideExtra': '这次横向也很宽。',
   'intro.ok': '确定',
 

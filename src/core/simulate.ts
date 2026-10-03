@@ -9,7 +9,7 @@
 import { DT, MAX_FLIGHT, PAD_R, TURN_MAX } from './constants.js';
 import { fireUfos, stepBullets } from './hazards.js';
 import { gravs, stepShip } from './physics.js';
-import type { Grav, Level, Outcome, ShipState, SimState, Turn } from './types.js';
+import type { Grav, Level, Outcome, ShipState, SimState, Turn, Ufo } from './types.js';
 
 /**
  * 분사 (§22.1). 속력은 두고 진행 방향만 dir 쪽으로 돌린다. 차이가 TURN_MAX 를 넘으면
@@ -46,10 +46,13 @@ export class Sim {
 
   /** 이번 비행에서 실제로 쓴 분사. 리플레이·정답 기록이 이걸 쓴다 */
   turns: Turn[] = [];
+  /** 인피니티(§22.3): 30초 표류 제한을 두지 않는다. begin 전에 켠다 */
+  endless = false;
 
   private L!: Level;
   private G: Grav[] = [];
   private queued: number | null = null;
+  private ufoRef: Ufo[] = [];
   private plan: Turn[] = [];
   private planAt = 0;
   private t = 0;
@@ -67,6 +70,7 @@ export class Sim {
     this.L = L;
     this.G = G ?? gravs(L);
     this.state = { bullets: [], nextFire: (L.ufos ?? []).map((u) => u.delay) };
+    this.ufoRef = L.ufos ?? [];
     this.path.length = 0;
     this.turns = [];
     this.queued = null;
@@ -83,7 +87,21 @@ export class Sim {
     };
     this.t = launchStep * DT;
     this.n = 0;
-    this.maxN = MAX_FLIGHT / DT;        // 배정밀도에서 정확히 7200
+    this.maxN = this.endless ? Infinity : MAX_FLIGHT / DT;   // 배정밀도에서 정확히 7200
+  }
+
+  /**
+   * 인피니티(§22.3): 창(레벨의 배열)이 바뀐 뒤 부른다. 중력원 목록을 다시 묶고,
+   * 외계인 사격 시각을 **같은 외계인 객체끼리** 이어 준다 — 새로 들어온 외계인은
+   * 지금부터 delay 초 뒤 첫 사격. 스텝 경계에서만 부르므로 결정론은 그대로다.
+   */
+  refreshBodies(): void {
+    this.G = gravs(this.L);
+    const prev = new Map<Ufo, number>();
+    this.ufoRef.forEach((u, i) => prev.set(u, this.state.nextFire[i]!));
+    const ufos = this.L.ufos ?? [];
+    this.state.nextFire = ufos.map((u) => prev.get(u) ?? this.n * DT + u.delay);
+    this.ufoRef = ufos;
   }
 
   /**

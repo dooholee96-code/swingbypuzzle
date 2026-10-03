@@ -100,6 +100,8 @@ export const SMALL = {
   trail: ['W'],
   xmark: ['R...R', '.R.R.', '..R..', '.R.R.', 'R...R'],
   zz: ['KKK.', '..K.', '.K..', 'KKK.'],
+  // 분사 아이템 (§22.3). 시안에 없는 그림이라 같은 팔레트로 새로 그렸다
+  carrot: ['..L.L.', '..lLl.', '.KOOK.', '.KOOoK', 'KOOoK.', 'KOoK..', '.Ko...', '.K....'],
 } as const;
 export type SmallName = keyof typeof SMALL;
 

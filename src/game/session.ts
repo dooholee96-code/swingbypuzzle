@@ -7,6 +7,7 @@ import { padAngle } from '../core/angle.js';
 import { Sim, launchPos } from '../core/simulate.js';
 import type { Preview } from '../core/simulate.js';
 import type { Level, Outcome } from '../core/types.js';
+import { type InfinityWorld, MAX_TURNS } from '../tools-shared/infinity.js';
 import { Clock } from './clock.js';
 
 export type State = 'ready' | 'aiming' | 'flying' | 'ending';
@@ -29,6 +30,10 @@ export class Session {
   turnsLeft = 0;
   /** 시험용: 분사가 없는 단계에서도 써 볼 수 있게 더 준다 (main.ts 의 숨은 옵션 ?turns=N) */
   bonusTurns = 0;
+  /** 인피니티(§22.3)면 그 우주. 스테이지에서는 null */
+  world: InfinityWorld | null = null;
+  /** 이번 판에 먹은 분사 아이템 수. 화면이 바뀐 순간을 알아채려고 센다 */
+  itemsEaten = 0;
 
   trail: number[] = [];
   prevTrail: number[] = [];
@@ -37,7 +42,17 @@ export class Session {
   private clock = new Clock();
   private previewSim = new Sim();   // 비행 중 우주선 상태를 덮어쓰지 않도록 분리
 
+  /** 인피니티 한 판을 시작한다. 스테이지로 돌아갈 때는 setup() 이 world 를 비운다 */
+  setupInfinity(world: InfinityWorld): void {
+    this.setup(world.level);
+    this.world = world;
+    this.sim.endless = true;
+    this.itemsEaten = 0;
+  }
+
   setup(L: Level): void {
+    this.world = null;
+    this.sim.endless = false;
     this.level = L;
     this.angle = padAngle(L);       // 돔 중심에서 시작
     this.prevTrail = [];
@@ -60,6 +75,9 @@ export class Session {
   }
 
   get maxTurns(): number { return (this.level.turns ?? 0) + this.bonusTurns; }
+
+  /** HUD 의 칸 수. 인피니티는 아이템으로 MAX_TURNS 까지 찬다 */
+  get turnSlots(): number { return this.world ? MAX_TURNS + this.bonusTurns : this.maxTurns; }
 
   /**
    * 분사 (§22.1). 비행 중이고 남아 있으면 다음 스텝 경계에서 dirDeg 쪽으로 꺾는다.
@@ -137,6 +155,16 @@ export class Session {
       this.state = 'ending';
       this.endElapsed = 0;
       return true;
+    }
+    if (this.world) {
+      // 칸을 넘었으면 창을 갈아 끼우고, 지나가며 아이템을 먹는다 (§22.3)
+      const { x, y } = this.sim.ship;
+      if (this.world.sync(x, y)) this.sim.refreshBodies();
+      const n = this.world.eat(x, y);
+      if (n) {
+        this.itemsEaten += n;
+        this.turnsLeft = Math.min(MAX_TURNS, this.turnsLeft + n);
+      }
     }
     if (this.sim.flightStep % TRAIL_EVERY === 0) {
       this.trail.push(this.sim.ship.x, this.sim.ship.y);

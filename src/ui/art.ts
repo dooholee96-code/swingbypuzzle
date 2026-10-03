@@ -3,7 +3,7 @@
 
 import { holeArtRadius } from '../render/field.js';
 import { toDataUrl } from '../render/sprites/bake.js';
-import { type Face, rocket, ufo } from '../render/sprites/rocket.js';
+import { type Face, rocket, small, ufo } from '../render/sprites/rocket.js';
 import { blackhole, moon, planet, rock } from '../render/sprites/world.js';
 import type { IntroKey } from './intro.js';
 
@@ -28,6 +28,7 @@ export function introArt(key: IntroKey): string {
           : key === 'ufo' ? ufo(0)
             : key === 'orbit' ? planet(16, 1, { ring: true })
               : key === 'turn' ? rocket('fly', { flame: 0, ears: 'back' })
+              : key === 'infinity' ? small('carrot')
               : moon(18),
   ));
 }

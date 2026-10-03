@@ -8,7 +8,7 @@ export const en: Dict = {
   'title.sub': '',
   'title.stage': 'Stages',
   'title.infinity': 'Infinity',
-  'title.soon': 'Coming soon',
+  'title.infLocked': 'Clear 6-1 to unlock',
   'title.settings': 'Settings',
 
   'picker.title': 'Select Level',
@@ -69,6 +69,13 @@ export const en: Dict = {
   'intro.wide.body': "It doesn't fit on one screen. Tap the minimap in the corner to look over the route.",
   'intro.turn': 'Boost',
   'intro.turn.body': 'Tap the screen mid-flight to veer toward that side. Boosts left are shown at the top left.',
+  'intro.infinity': 'Infinity',
+  'intro.infinity.body': 'Survive as long as you can in endless space without crashing. Grab carrots to gain a boost.',
+  'inf.time': '{sec}s',
+  'inf.best': 'Best {sec}s',
+  'inf.over': 'You lasted this long',
+  'inf.stats': 'Lasted {sec}s · Best {best}s',
+  'inf.newBest': 'New best!',
   'intro.wideExtra': " Now it's wide sideways, too.",
   'intro.ok': 'OK',
 

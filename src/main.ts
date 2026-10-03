@@ -14,6 +14,7 @@ import { DOME_DRAW_R, FieldRenderer } from './render/field.js';
 import { drawMinimap, miniRect } from './render/minimap.js';
 import type { MiniRect } from './render/minimap.js';
 import { Hud } from './ui/hud.js';
+import { InfinityWorld } from './tools-shared/infinity.js';
 import { HintSheet } from './ui/hints.js';
 import { seenKey } from './ui/intro.js';
 import { Screens } from './ui/screens.js';
@@ -88,8 +89,8 @@ const screens = new Screens({
     }));
     screens.showSelect();
   },
-  onInfinity: () => {},
-  infinityOpen: () => false,
+  onInfinity: () => startInfinity(),
+  infinityOpen: () => save.cleared('6-1'),
   onPick: (id) => startPlay(id),
   onSettingChange: () => { applySettings(); save.touch(); },
   canOpenPrivacyOptions: () => ads.canOpenPrivacyOptions(),
@@ -316,6 +317,31 @@ function startPlay(id: string): void {
   });
 }
 
+/**
+ * 인피니티 한 판 (§22.3). 판 시드는 여기서 한 번만 고른다 — 판을 고르는 일이지
+ * 시뮬레이션이 아니다. 그 뒤의 비행은 시드로 정해진 칸 위에서 결정론적이다.
+ * 스테이지와 달리 힌트(applyHints)를 거치지 않는다: 그 함수는 session.level 을
+ * 복사해 바꾸는데, 인피니티는 그 객체(창)를 계속 갈아 끼우므로 복사본은 멈춰 버린다.
+ */
+function startInfinity(): void {
+  demo = false;
+  session.bonusTurns = TEST_TURNS;
+  session.setupInfinity(new InfinityWorld((Math.random() * 2 ** 31) | 0));
+  field.rebuild(session.level);
+  field.directionArc = null;
+  hud.infBest = save.data.infinity.best;
+  hud.hideResult();
+  hints.close();
+  panning = false;
+  resize();
+  snapToStart();
+  screens.hideSelect();
+  screens.maybeShowIntro(session.level, save.data.seen_intros, (key) => {
+    save.data.seen_intros.push(key);
+    save.touch();
+  });
+}
+
 // ── 입력 (§10) ──────────────────────────────────────────────────────────
 /**
  * 분사 (§22.1). 비행 중 탭한 곳 쪽으로 꺾는다. 방향은 화면에 보이는 우주선에서
@@ -410,7 +436,9 @@ function moveCamTo(x: number, y: number): void {
 // 브라우저 뒤로 가기 → 화면 한 단계 뒤로 (§15.2 의 흐름을 웹으로)
 history.replaceState({ depth: 0 }, '');
 addEventListener('popstate', () => {
-  if (!screens.goBack() && !demo) screens.showSelect();
+  if (!screens.goBack() && !demo) {
+    if (session.world) startDemo(); else screens.showSelect();
+  }
   history.pushState({ depth: 1 }, '');
 });
 history.pushState({ depth: 1 }, '');
@@ -425,9 +453,15 @@ addEventListener('pagehide', () => save.flush());
 
 // ── 화면 흐름 ───────────────────────────────────────────────────────────
 hud.onRetry = () => {
-  session.reset(); aim.finish(); hud.hideResult(); panning = false; snapToStart();
+  aim.finish();
+  if (session.world) { startInfinity(); return; }     // 인피니티는 언제나 새 판
+  session.reset(); hud.hideResult(); panning = false; snapToStart();
 };
-hud.onOpenPicker = () => { hud.hideResult(); screens.showSelect(); };
+// 인피니티에서 "뒤로"·단계 이름·결과의 두 번째 버튼은 타이틀로
+hud.onOpenPicker = () => {
+  hud.hideResult();
+  if (session.world) startDemo(); else screens.showSelect();
+};
 hud.onNext = () => { void goNext(); };
 hud.onHints = () => hints.show();
 hud.stage.addEventListener('click', () => hud.onOpenPicker());
@@ -498,7 +532,17 @@ function frame(now: number): void {
   }
   if (session.state !== 'ending') ended = false;
 
-  if (session.state === 'ending' && session.endProgress() >= 1 && hud.result.hidden) {
+  if (session.state === 'ending' && session.endProgress() >= 1 && hud.result.hidden && session.world) {
+    // 인피니티의 끝: 기록만 남긴다. 단계 기록·광고 횟수에는 넣지 않는다
+    const sec = session.flightSeconds();
+    const inf = save.data.infinity;
+    const isBest = sec > inf.best;
+    inf.runs++;
+    if (isBest) inf.best = sec;
+    save.touch();
+    hud.showInfinityResult(sec, inf.best, isBest);
+  }
+  if (session.state === 'ending' && session.endProgress() >= 1 && hud.result.hidden && !session.world) {
     save.record(session.level.id, session.outcome, session.flightSeconds());
     if (session.outcome === 'win') saveAdState(afterClear(adState()));
     const p = {
@@ -513,7 +557,8 @@ function frame(now: number): void {
   }
 
   hud.refresh(session);
-  mini = miniRect(session.level, cam, cssW);
+  // 인피니티는 맵이 끝없으니 미니맵이 없다 (§22.3)
+  mini = session.world ? null : miniRect(session.level, cam, cssW);
   draw(session.state === 'aiming' && session.aimFar ? session.preview() : null);
 }
 
@@ -581,7 +626,7 @@ if (!import.meta.env.DEV && 'serviceWorker' in navigator) {
 // 개발 서버에서만: 브라우저 확인 스크립트가 정확한 각도로 쏘려고 쓴다 (§16.6). 배포 번들에는 없다
 if (import.meta.env.DEV) {
   (window as unknown as { __swingby: unknown }).__swingby = {
-    session, cam, field, startPlay, tapTurn,
+    session, cam, field, startPlay, tapTurn, startInfinity,
     fire: (deg: number) => { session.setAngle(deg); session.launch(); },
   };
 }

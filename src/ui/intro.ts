@@ -4,7 +4,7 @@
 
 import { type Key, t } from '../i18n/index.js';
 
-export type IntroKey = 'planet' | 'rock' | 'hole' | 'ufo' | 'orbit' | 'wide' | 'turn';
+export type IntroKey = 'planet' | 'rock' | 'hole' | 'ufo' | 'orbit' | 'wide' | 'turn' | 'infinity';
 
 /** 요소 키 → 제목·본문 문구 키 (§13.2.1) */
 const TEXT: Readonly<Record<IntroKey, readonly [Key, Key]>> = {
@@ -17,9 +17,13 @@ const TEXT: Readonly<Record<IntroKey, readonly [Key, Key]>> = {
   wide: ['intro.wide', 'intro.wide.body'],
   // §22.1 분사. 6-1
   turn: ['intro.turn', 'intro.turn.body'],
+  // §22.3 인피니티. 처음 한 번
+  infinity: ['intro.infinity', 'intro.infinity.body'],
 };
 
 export const INTRO_KEYS = Object.keys(TEXT) as IntroKey[];
+/** 단계가 아니라 모드에 붙는 카드. 인피니티를 처음 열 때 (§22.3) */
+export const MODE_KEYS: readonly IntroKey[] = ['infinity'];
 
 // §7.4: 5-1 은 같은 "넓은 맵" 카드를 쓰되 문구 끝에 한 줄을 덧붙인다.
 const EXTRA: Readonly<Record<string, Key>> = { '5-1': 'intro.wideExtra' };

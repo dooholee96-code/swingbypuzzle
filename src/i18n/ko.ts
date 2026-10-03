@@ -10,7 +10,7 @@ export const ko = {
   'title.sub': '스윙바이',
   'title.stage': '스테이지',
   'title.infinity': '인피니티',
-  'title.soon': '준비 중',
+  'title.infLocked': '6-1 을 깨면 열려요',
   'title.settings': '설정',
 
   // §13.2 단계 선택
@@ -75,6 +75,13 @@ export const ko = {
   'intro.wide.body': '한눈에 안 들어와요. 구석의 미니맵을 눌러 항로를 살펴보세요.',
   'intro.turn': '분사',
   'intro.turn.body': '날아가는 중에 화면을 탭하면 그쪽으로 꺾여요. 쓸 수 있는 횟수는 왼쪽 위에 있어요.',
+  'intro.infinity': '인피니티',
+  'intro.infinity.body': '끝없는 우주에서 부딪히지 않고 오래 버티세요. 당근을 먹으면 분사가 하나 늘어요.',
+  'inf.time': '{sec}초',
+  'inf.best': '최고 {sec}초',
+  'inf.over': '여기까지 버텼어요',
+  'inf.stats': '{sec}초 버텼어요 · 최고 {best}초',
+  'inf.newBest': '최고 기록이에요!',
   // §7.4: 5-1 에만 덧붙인다. 앞 공백까지 문구의 일부다 — 띄어 쓰는 언어만 넣는다
   'intro.wideExtra': ' 이제 가로로도 넓어요.',
   'intro.ok': '확인',

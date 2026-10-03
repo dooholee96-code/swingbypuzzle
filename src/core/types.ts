@@ -36,7 +36,7 @@ export interface Metrics {
 
 export interface Meta {
   chapter: number; slot: number; role: string;
-  intro?: 'planet' | 'rock' | 'hole' | 'ufo' | 'orbit' | 'wide' | 'turn';
+  intro?: 'planet' | 'rock' | 'hole' | 'ufo' | 'orbit' | 'wide' | 'turn' | 'infinity';
   /** turns: 분사 기록 (§22.1). 6장부터. 없으면 분사 없이 풀리는 단계다 */
   solution: { angle: number; launch_step: number; turns?: Turn[] };
   metrics?: Metrics;

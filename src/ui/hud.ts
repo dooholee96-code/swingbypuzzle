@@ -41,6 +41,9 @@ export class Hud {
   /** 남은 분사 (§22.1). 분사가 있는 단계에서만 보인다 */
   readonly turns = $('turns');
   private turnsKey = '';
+  private readonly hintBtn = $('hintbtn');
+  /** 인피니티(§22.3)의 최고 기록(초). main 이 판을 시작할 때 넣는다 */
+  infBest = 0;
   readonly hint = $('hint');
   readonly result = $('result');
   readonly back = $('back') as HTMLButtonElement;
@@ -69,23 +72,29 @@ export class Hud {
    * 세 곳을 새로 썼다.
    */
   refresh(s: Session): void {
-    if (this.stageId.textContent !== s.level.id) {
+    // 인피니티: 단계 이름 자리에 버틴 시간과 최고 기록. 힌트는 없다
+    if (this.hintBtn.hidden !== !!s.world) this.hintBtn.hidden = !!s.world;
+    if (s.world) {
+      const sec = s.state === 'flying' || s.state === 'ending' ? s.flightSeconds() : 0;
+      set(this.stageId, t('inf.time', { sec: sec.toFixed(1) }));
+      set(this.stageText, t('inf.best', { sec: Math.max(this.infBest, sec).toFixed(1) }));
+    } else if (this.stageId.textContent !== s.level.id) {
       set(this.stageId, s.level.id);
       // 단계가 바뀌면 번호가 한 번 튄다 (§12.7). 클래스를 뗐다 붙여야 애니메이션이 다시 돈다
       this.stage.classList.remove('pop');
       void this.stage.offsetWidth;
       this.stage.classList.add('pop');
     }
-    set(this.stageText, levelName(s.level));
+    if (!s.world) set(this.stageText, levelName(s.level));
     set(this.angle, s.state === 'aiming' && s.aimFar
       ? t('hud.angle', { deg: toUi(s.angle).toFixed(1) }) : '');
     // 남은 분사: 바뀔 때만 다시 쓴다
-    const key = `${s.turnsLeft}/${s.maxTurns}`;
+    const key = `${s.turnsLeft}/${s.turnSlots}`;
     if (key !== this.turnsKey) {
       this.turnsKey = key;
-      this.turns.hidden = s.maxTurns === 0;
+      this.turns.hidden = s.turnSlots === 0;
       this.turns.innerHTML = `<span class="lb">${t('hud.turns')}</span>`
-        + Array.from({ length: s.maxTurns }, (_, i) =>
+        + Array.from({ length: s.turnSlots }, (_, i) =>
           `<i class="pip${i < s.turnsLeft ? ' on' : ''}"></i>`).join('');
       // 하나 쓸 때마다 판이 튄다 (§12.7)
       this.turns.classList.remove('pop'); void this.turns.offsetWidth; this.turns.classList.add('pop');
@@ -134,6 +143,30 @@ export class Hud {
         else if (a === 'pick') this.onOpenPicker();
         else if (a === 'hint') { this.hideResult(); this.onHints(); }
         else this.onRetry();
+      });
+    }
+    this.result.hidden = false;
+  }
+
+  /** 인피니티의 끝 (§22.3). 실패 시트와 같은 모양 — 화면 아무 곳이나 누르면 새 판 */
+  showInfinityResult(sec: number, best: number, isBest: boolean): void {
+    if (!this.result.hidden) return;
+    this.result.className = 'sheet lose';
+    this.result.innerHTML = `<div class="panel">
+      <div class="head">${img(rabbitIcon(isBest ? 'win' : 'sad'))}<h2></h2></div>
+      <p class="msg"></p>
+      <div class="row">
+        <button class="btn primary" data-a="retry" type="button">${t('result.retry')}</button>
+        <button class="btn" data-a="pick" type="button">${t('picker.toTitle')}</button>
+      </div>
+      ${isBest ? `<p class="tapnote">${t('inf.newBest')}</p>` : ''}
+      <p class="tapnote">${t('result.tapRetry')}</p></div>`;
+    this.result.querySelector('h2')!.textContent = t('inf.over');
+    this.result.querySelector('.msg')!.textContent =
+      t('inf.stats', { sec: sec.toFixed(1), best: best.toFixed(1) });
+    for (const b of this.result.querySelectorAll<HTMLButtonElement>('button')) {
+      b.addEventListener('click', () => {
+        if (b.dataset['a'] === 'pick') this.onOpenPicker(); else this.onRetry();
       });
     }
     this.result.hidden = false;

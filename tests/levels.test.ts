@@ -10,7 +10,7 @@ import { accel, gravs } from '../src/core/physics.js';
 import { inArc } from '../src/core/angle.js';
 import { angles, mainRuns, widthOf } from '../src/tools-shared/scan.js';
 import { PAD_R, SHIP_R } from '../src/core/constants.js';
-import { INTRO_KEYS, introFor, seenKey } from '../src/ui/intro.js';
+import { INTRO_KEYS, MODE_KEYS, introFor, seenKey } from '../src/ui/intro.js';
 import { t } from '../src/i18n/index.js';
 import type { IntroKey } from '../src/ui/intro.js';
 
@@ -128,14 +128,16 @@ describe('소개 카드 (§7.4, §13.2.1)', () => {
       .map((id) => [id, loadLevel(id).meta.intro] as const)
       .filter((p): p is readonly [string, IntroKey] => p[1] !== undefined);
     const keys = pairs.map((p) => p[1]);
-    expect(new Set(keys)).toEqual(new Set(INTRO_KEYS));           // 빠진 요소가 없다
+    // 빠진 요소가 없다. 모드 카드(인피니티)는 단계에 붙지 않는다
+    expect(new Set(keys)).toEqual(new Set(INTRO_KEYS.filter((k) => !MODE_KEYS.includes(k))));
 
     // 넓은 맵만 두 번이다 — §7.3 이 1-8 을 "미니맵 첫 등장" 으로 적었고,
     // 5-1 에서 가로로도 넓어진다(§7.4). 나머지 요소는 한 번뿐이다.
     const at = (k: IntroKey): string[] => pairs.filter((p) => p[1] === k).map((p) => p[0]);
     expect(at('wide')).toEqual(['1-8', '5-1']);
     for (const k of INTRO_KEYS) {
-      if (k !== 'wide') expect(at(k)).toHaveLength(1);
+      if (MODE_KEYS.includes(k)) expect(at(k)).toHaveLength(0);
+      else if (k !== 'wide') expect(at(k)).toHaveLength(1);
     }
   });
 

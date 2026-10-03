@@ -32,7 +32,7 @@ const OPTIONAL: Record<string, string[]> = {
 };
 const ROLES = ['required', 'optional', 'gate'];
 const SOURCES = ['verified', 'generated', 'editor'];
-const INTROS = ['planet', 'rock', 'hole', 'ufo', 'orbit', 'wide', 'turn'];
+const INTROS = ['planet', 'rock', 'hole', 'ufo', 'orbit', 'wide', 'turn', 'infinity'];
 
 export function validateSchema(raw: unknown, id: string): string[] {
   const errors: string[] = [];

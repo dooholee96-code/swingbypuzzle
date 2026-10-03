@@ -8,7 +8,7 @@ export const ja: Dict = {
   'title.sub': 'スイングバイ',
   'title.stage': 'ステージ',
   'title.infinity': 'インフィニティ',
-  'title.soon': '準備中',
+  'title.infLocked': '6-1 クリアで解放',
   'title.settings': '設定',
 
   'picker.title': 'ステージ選択',
@@ -69,6 +69,13 @@ export const ja: Dict = {
   'intro.wide.body': 'ひと目では見渡せません。隅のミニマップをタップして航路を確かめましょう。',
   'intro.turn': 'ブースト',
   'intro.turn.body': '飛んでいる最中に画面をタップすると、その方向へ曲がります。残り回数は左上に出ます。',
+  'intro.infinity': 'インフィニティ',
+  'intro.infinity.body': '果てしない宇宙で、ぶつからずにできるだけ長く飛び続けましょう。にんじんを取るとブーストが1回増えます。',
+  'inf.time': '{sec}秒',
+  'inf.best': 'ベスト {sec}秒',
+  'inf.over': 'ここまで耐えました',
+  'inf.stats': '{sec}秒 耐えました · ベスト {best}秒',
+  'inf.newBest': '自己ベスト更新！',
   'intro.wideExtra': '今度は横にも広いです。',
   'intro.ok': 'OK',
 

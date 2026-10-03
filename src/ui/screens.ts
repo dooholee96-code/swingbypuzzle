@@ -40,7 +40,7 @@ export interface ScreenDeps {
   openPrivacyOptions?(): Promise<void>;
   onStart(): void;                 // 타이틀 → 스테이지(단계 선택)
   onInfinity(): void;              // 타이틀 → 인피니티 (§13.8)
-  /** 인피니티가 열렸는가. 6장(분사)에서 열린다 — 아직 없으므로 지금은 언제나 거짓 */
+  /** 인피니티가 열렸는가. 6-1 을 깨면 열린다 (§22.3) */
   infinityOpen(): boolean;
   onPick(id: string): void;
   onSettingChange(): void;
@@ -84,7 +84,7 @@ export class Screens {
         <button class="btn primary" data-a="start" type="button">${t('title.stage')}</button>
         ${this.d.infinityOpen()
           ? `<button class="btn next" data-a="infinity" type="button">${t('title.infinity')}</button>`
-          : `<button class="btn" type="button" disabled>${t('title.infinity')}<small>${t('title.soon')}</small></button>`}
+          : `<button class="btn" type="button" disabled>${t('title.infinity')}<small>${t('title.infLocked')}</small></button>`}
         <div class="pair">
           <button class="btn" data-a="settings" type="button">${t('title.settings')}</button>
           <button class="btn" data-a="language" type="button">${t('set.language')}${

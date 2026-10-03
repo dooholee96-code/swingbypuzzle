@@ -93,6 +93,8 @@ img.px{image-rendering:pixelated;image-rendering:crisp-edges}
 .stage .clamp{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;
               line-clamp:2;overflow:hidden;overflow-wrap:anywhere;font:700 12px/1.35 var(--text)}
 #hintbtn{position:relative}
+/* .btn 의 display 가 hidden 속성을 이긴다 — 인피니티에서 힌트 버튼을 숨기려면 따로 적는다 */
+.btn[hidden]{display:none}
 #hintbtn .dot{position:absolute;top:-6px;right:-6px;width:10px;height:10px;
   background:var(--red);border:2px solid var(--ink)}
 

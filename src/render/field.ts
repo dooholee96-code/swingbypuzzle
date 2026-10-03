@@ -75,8 +75,12 @@ export class FieldRenderer {
   private shipS = new Spring(300, 12);
   private moonS = new Spring(320, 10);
   private goalS = new Spring(220, 9);
-  private bodyS: Spring[] = [];
-  private inside: boolean[] = [];
+  // 천체별 용수철은 **객체로** 찾는다. 인피니티(§22.3)는 창을 갈아 끼울 때마다 배열
+  // 순서가 바뀌므로 순번으로 찾으면 엉뚱한 행성이 출렁인다. 멈춘 것은 버린다.
+  private bodyS = new Map<Grav, Spring>();
+  private inside = new Set<Grav>();
+  /** 화면에 보이는 월드 사각형(여유 포함). 밖의 물체는 그리지 않는다 */
+  private view = { x0: 0, y0: 0, x1: 0, y1: 0 };
 
   // 분사 연출 (§22.1). 꺾은 자리에 연기, 탭한 곳에 반짝임
   private turnReq: [number, number] | null = null;
@@ -89,9 +93,8 @@ export class FieldRenderer {
   rebuild(L: Level): void {
     if (this.levelId) this.cache.dropPrefix(`L:`);
     this.levelId = L.id;
-    const n = gravs(L).length;
-    this.bodyS = Array.from({ length: n }, () => new Spring(240, 8));
-    this.inside = new Array<boolean>(n).fill(false);
+    this.bodyS.clear();
+    this.inside.clear();
     for (const sp of [this.shipS, this.moonS, this.goalS]) sp.reset();
     this.prevState = '';
     this.turnReq = null;
@@ -114,25 +117,40 @@ export class FieldRenderer {
     if (st === 'flying' && !this.reduceMotion) {
       const [x, y] = s.shipPos();
       const st2 = s.simTime();
-      gravs(s.level).forEach((b, i) => {
+      for (const b of gravs(s.level)) {
         const [bx, by] = bodyPos(b, st2);
         const now = (x - bx) ** 2 + (y - by) ** 2 < b.R * b.R;
-        if (now && !this.inside[i]) this.bodyS[i]?.kick(1.3);    // 끌려 들어가는 순간 출렁
-        this.inside[i] = now;
-      });
-    } else if (st !== 'ending') this.inside.fill(false);
-    for (const sp of [this.shipS, this.moonS, this.goalS, ...this.bodyS]) sp.step(dt);
+        if (now && !this.inside.has(b)) this.springOf(b).kick(1.3);   // 끌려 들어가는 순간 출렁
+        if (now) this.inside.add(b); else this.inside.delete(b);
+      }
+    } else if (st !== 'ending') this.inside.clear();
+    for (const sp of [this.shipS, this.moonS, this.goalS]) sp.step(dt);
+    for (const [b, sp] of this.bodyS) {
+      sp.step(dt);
+      if (sp.x === 0 && sp.v === 0) this.bodyS.delete(b);
+    }
+  }
+
+  private springOf(b: Grav): Spring {
+    let sp = this.bodyS.get(b);
+    if (!sp) { sp = new Spring(240, 8); this.bodyS.set(b, sp); }
+    return sp;
+  }
+
+  private seen(x: number, y: number, r: number): boolean {
+    const v = this.view;
+    return x + r >= v.x0 && x - r <= v.x1 && y + r >= v.y0 && y - r <= v.y1;
   }
 
   private nearestBody(s: Session): Spring | undefined {
     const [x, y] = s.shipPos();
-    let best = -1, bd = Infinity;
-    gravs(s.level).forEach((b, i) => {
+    let best: Grav | null = null, bd = Infinity;
+    for (const b of gravs(s.level)) {
       const [bx, by] = bodyPos(b, s.simTime());
       const d = (x - bx) ** 2 + (y - by) ** 2;
-      if (d < bd) { bd = d; best = i; }
-    });
-    return this.bodyS[best];
+      if (d < bd) { bd = d; best = b; }
+    }
+    return best ? this.springOf(best) : undefined;
   }
 
   private sprite(key: string, make: () => Grid): Baked { return this.cache.get(key, make); }
@@ -149,6 +167,7 @@ export class FieldRenderer {
     ctx.imageSmoothingEnabled = false;
     const dt = this.lastT < 0 ? 0 : Math.min(0.1, Math.max(0, t - this.lastT));
     this.lastT = t;
+    this.view = { x0: cam.x - 4, y0: cam.y - 4, x1: cam.x + cam.viewW + 4, y1: cam.y + cam.viewH + 4 };
     this.react(s, dt);
     if (this.turnReq) {
       const [x, y] = s.shipPos();
@@ -170,6 +189,7 @@ export class FieldRenderer {
     this.holes(ctx, L, t);
     this.ufos(ctx, L, t);
     this.goal(ctx, L, t);
+    if (s.world) this.items(ctx, s.world.items, t);
     this.bullets(ctx, s);
     this.pad(ctx, s);
     if (preview) this.preview(ctx, preview, t);
@@ -233,6 +253,7 @@ export class FieldRenderer {
   private gravity(ctx: CanvasRenderingContext2D, L: Level, st: number, t: number): void {
     for (const b of gravs(L)) {
       const [bx, by] = bodyPos(b, st);
+      if (!this.seen(bx, by, b.R + 2)) continue;
       const isHole = 'rH' in b;
       const key = isHole ? 'V' : 'B';
       put(ctx, this.lv(`range:${b.R}:${key}`, () => dottedRing(b.R, key)), bx, by);
@@ -250,6 +271,7 @@ export class FieldRenderer {
     const [sx, sy] = s.shipPos();
     const flying = s.state === 'flying';
     for (const u of L.ufos ?? []) {
+      if (!this.seen(u.x, u.y, u.range + 2)) continue;
       const inside = flying && Math.hypot(sx - u.x, sy - u.y) < u.range;
       const dark = inside && !this.reduceMotion && Math.floor(t * 7.5) % 2 === 1;
       const key = dark ? 'r' : 'R';
@@ -266,7 +288,9 @@ export class FieldRenderer {
   private rocks(ctx: CanvasRenderingContext2D, L: Level, t: number): void {
     (L.rocks ?? []).forEach((a, i) => {
       const f = this.reduceMotion ? 0 : (Math.floor(t * 0.5) + i) % 16;
-      put(ctx, this.lv(`rock:${i}:${f}`, () => rock(a.r, a.seed, f)), a.x, a.y);
+      if (!this.seen(a.x, a.y, a.r * 1.3)) return;
+      // 그림은 반경·시드·프레임으로만 정해진다 — 순번으로 찾지 않는다(인피니티의 창)
+      put(ctx, this.lv(`rock:${a.r}:${a.seed}:${f}`, () => rock(a.r, a.seed, f)), a.x, a.y);
     });
   }
 
@@ -274,23 +298,27 @@ export class FieldRenderer {
   private planets(ctx: CanvasRenderingContext2D, L: Level, st: number): void {
     (L.planets ?? []).forEach((p, i) => {
       const [x, y] = bodyPos(p as Grav, st);
-      const k = this.bodyS[i]?.x ?? 0;    // 출렁: 가로로 늘면 세로로 준다
-      putScaled(ctx, this.lv(`planet:${i}`, () => planet(p.r, p.sides % 6, { ring: !!p.ring })), x, y, 1 + k, 1 - k);
+      if (!this.seen(x, y, p.r * 2)) return;
+      const k = this.bodyS.get(p as Grav)?.x ?? 0;    // 출렁: 가로로 늘면 세로로 준다
+      const key = `planet:${p.r}:${p.sides % 6}:${p.ring ? 1 : 0}`;
+      putScaled(ctx, this.lv(key, () => planet(p.r, p.sides % 6, { ring: !!p.ring })), x, y, 1 + k, 1 - k);
     });
   }
 
   private holes(ctx: CanvasRenderingContext2D, L: Level, t: number): void {
     const f = this.reduceMotion ? 0 : Math.floor(t * 8) % 8;
-    const np = (L.planets ?? []).length;
-    (L.holes ?? []).forEach((h, j) => {
-      const k = this.bodyS[np + j]?.x ?? 0;
+    (L.holes ?? []).forEach((h) => {
+      if (!this.seen(h.x, h.y, holeArtRadius(h.rH) * 1.5)) return;
+      const k = this.bodyS.get(h as unknown as Grav)?.x ?? 0;
       putScaled(ctx, this.lv(`hole:${h.rH}:${f}`, () => blackhole(holeArtRadius(h.rH), f)), h.x, h.y, 1 + k, 1 - k);
     });
   }
 
   private ufos(ctx: CanvasRenderingContext2D, L: Level, t: number): void {
     const f = this.reduceMotion ? 0 : Math.floor(t * 7.5) % 2;
-    for (const u of L.ufos ?? []) put(ctx, this.sprite(`ufo:${f}`, () => ufo(f)), u.x, u.y);
+    for (const u of L.ufos ?? []) {
+      if (this.seen(u.x, u.y, 20)) put(ctx, this.sprite(`ufo:${f}`, () => ufo(f)), u.x, u.y);
+    }
   }
 
   // 목적지: 토끼굴. 반경 r 전체가 도착 판정이다
@@ -299,6 +327,17 @@ export class FieldRenderer {
     const f = this.reduceMotion ? 0 : Math.floor(t * 7.5) % 8;
     const k = this.goalS.x;
     putScaled(ctx, this.sprite(`portal:${r}:${f}`, () => portal(r, f)), x, y, 1 + k, 1 + k);
+  }
+
+  // 분사 아이템(§22.3): 당근. 두 배로 키워 찍고 위아래로 천천히 떠 있는다
+  private items(ctx: CanvasRenderingContext2D, items: readonly { x: number; y: number }[], t: number): void {
+    const b = this.fx('carrot');
+    items.forEach((it, i) => {
+      if (!this.seen(it.x, it.y, 20)) return;
+      const bob = this.reduceMotion ? 0 : Math.round(Math.sin(t * 3 + i) * 2);
+      putScaled(ctx, b, it.x, it.y + bob, 2, 2);
+      if (!this.reduceMotion && Math.floor(t * 2 + i) % 3 === 0) put(ctx, this.fx('sparkle1'), it.x + 9, it.y - 9 + bob);
+    });
   }
 
   private bullets(ctx: CanvasRenderingContext2D, s: Session): void {
