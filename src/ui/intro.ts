@@ -4,7 +4,7 @@
 
 import { type Key, t } from '../i18n/index.js';
 
-export type IntroKey = 'planet' | 'rock' | 'hole' | 'ufo' | 'orbit' | 'wide' | 'turn' | 'infinity';
+export type IntroKey = 'planet' | 'rock' | 'hole' | 'ufo' | 'orbit' | 'wide' | 'turn' | 'infinity' | 'dock';
 
 /** 요소 키 → 제목·본문 문구 키 (§13.2.1) */
 const TEXT: Readonly<Record<IntroKey, readonly [Key, Key]>> = {
@@ -19,6 +19,8 @@ const TEXT: Readonly<Record<IntroKey, readonly [Key, Key]>> = {
   turn: ['intro.turn', 'intro.turn.body'],
   // §22.3 인피니티. 처음 한 번
   infinity: ['intro.infinity', 'intro.infinity.body'],
+  // §22.4 궤도 행성. 7-1
+  dock: ['intro.dock', 'intro.dock.body'],
 };
 
 export const INTRO_KEYS = Object.keys(TEXT) as IntroKey[];

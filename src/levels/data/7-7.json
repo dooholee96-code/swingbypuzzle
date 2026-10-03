@@ -1,0 +1,94 @@
+{
+  "id": "7-7",
+  "name": "감시 속 궤도",
+  "w": 400,
+  "h": 760,
+  "speed": 150,
+  "preview": 0.9,
+  "start": {
+    "x": 200,
+    "y": 700
+  },
+  "goal": {
+    "x": 235,
+    "y": 145,
+    "r": 24
+  },
+  "planets": [
+    {
+      "x": 145,
+      "y": 420,
+      "r": 20,
+      "g": 775,
+      "R": 160,
+      "sides": 11
+    }
+  ],
+  "ufos": [
+    {
+      "x": 55,
+      "y": 260,
+      "range": 180,
+      "interval": 1,
+      "delay": 0.6,
+      "bs": 255
+    }
+  ],
+  "docks": [
+    {
+      "x": 255,
+      "y": 370,
+      "r": 17,
+      "cr": 47,
+      "sides": 2
+    }
+  ],
+  "meta": {
+    "chapter": 7,
+    "slot": 7,
+    "role": "도전",
+    "solution": {
+      "angle": -74.5,
+      "launch_step": 0,
+      "releases": [
+        771
+      ]
+    },
+    "source": "generated",
+    "updated": "2026-10-03",
+    "metrics": {
+      "main_window": 5.25,
+      "flight_time": 4.51,
+      "clearance": 36.29,
+      "difficulty": 4.34,
+      "release_timing": 0.2
+    }
+  },
+  "rocks": [
+    {
+      "x": 195,
+      "y": 200,
+      "r": 17,
+      "seed": 1
+    },
+    {
+      "x": 360,
+      "y": 310,
+      "r": 24,
+      "seed": 2
+    },
+    {
+      "x": 350,
+      "y": 445,
+      "r": 23,
+      "seed": 3
+    },
+    {
+      "x": 335,
+      "y": 635,
+      "r": 14,
+      "seed": 4
+    }
+  ],
+  "hint": "붉은 원을 피해 나갈 자리를 골라요"
+}

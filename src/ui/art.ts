@@ -4,7 +4,7 @@
 import { holeArtRadius } from '../render/field.js';
 import { toDataUrl } from '../render/sprites/bake.js';
 import { type Face, rocket, small, ufo } from '../render/sprites/rocket.js';
-import { blackhole, moon, planet, rock } from '../render/sprites/world.js';
+import { blackhole, dockArt, moon, planet, rock } from '../render/sprites/world.js';
 import type { IntroKey } from './intro.js';
 
 const memo = new Map<string, string>();
@@ -29,6 +29,7 @@ export function introArt(key: IntroKey): string {
             : key === 'orbit' ? planet(16, 1, { ring: true })
               : key === 'turn' ? rocket('fly', { flame: 0, ears: 'back' })
               : key === 'infinity' ? small('carrot')
+              : key === 'dock' ? dockArt()
               : moon(18),
   ));
 }

@@ -17,7 +17,7 @@ import { DATA_DIR, loadLevel } from './levels-fs.js';
 
 /** 장 이름은 §7.3 의 커리큘럼 제목이다. 새 장을 열 때 여기에 더한다. */
 const NAMES: Record<number, string> = {
-  1: '행성', 2: '블랙홀', 3: '외계인', 4: '공전 행성', 5: '넓은 항로', 6: '분사',
+  1: '행성', 2: '블랙홀', 3: '외계인', 4: '공전 행성', 5: '넓은 항로', 6: '분사', 7: '궤도 행성',
 };
 
 const OUT = join(ROOT, 'src', 'levels', 'chapters.ts');

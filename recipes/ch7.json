@@ -1,0 +1,219 @@
+{
+  "chapter": 7,
+  "defaults": {
+    "speed": 150,
+    "startZone": "bottom",
+    "goalZone": "top"
+  },
+  "slots": [
+    {
+      "slot": 1,
+      "role": "도입",
+      "name": "첫 궤도",
+      "hint": "초록 원에 붙잡히면 돌아요. 굴 쪽을 향할 때 탭하세요",
+      "map": {
+        "w": 400,
+        "h": 760
+      },
+      "preview": 1.8,
+      "docks": 1,
+      "required": [],
+      "hazards": {
+        "ufos": 0,
+        "rocksMax": 4
+      },
+      "window": {
+        "min": 6,
+        "max": 30
+      },
+      "seedCount": 400,
+      "intro": "dock"
+    },
+    {
+      "slot": 2,
+      "role": "연습",
+      "name": "오른쪽에서 나가기",
+      "hint": "링 오른쪽에서 나가야 굴에 닿아요",
+      "map": {
+        "w": 400,
+        "h": 760
+      },
+      "preview": 1.6,
+      "docks": 1,
+      "required": [],
+      "hazards": {
+        "ufos": 0,
+        "rocksMax": 4
+      },
+      "window": {
+        "min": 5,
+        "max": 30
+      },
+      "seedCount": 400
+    },
+    {
+      "slot": 3,
+      "role": "변형",
+      "name": "행성을 돌아 정거장으로",
+      "hint": "행성에 휘어 들어간 뒤 링에서 굴 쪽으로 나가요",
+      "map": {
+        "w": 400,
+        "h": 760
+      },
+      "preview": 1.4,
+      "docks": 1,
+      "required": [
+        {
+          "type": "planet",
+          "count": 1
+        }
+      ],
+      "hazards": {
+        "ufos": 0,
+        "rocksMax": 4
+      },
+      "window": {
+        "min": 5,
+        "max": 30
+      },
+      "seedCount": 400
+    },
+    {
+      "slot": 4,
+      "role": "휴식",
+      "name": "쉬어 가는 궤도",
+      "hint": "돌면서 천천히 방향을 골라요",
+      "map": {
+        "w": 400,
+        "h": 760
+      },
+      "preview": 1.8,
+      "docks": 1,
+      "required": [],
+      "hazards": {
+        "ufos": 0,
+        "rocksMax": 4
+      },
+      "window": {
+        "min": 6,
+        "max": 30
+      },
+      "seedCount": 400
+    },
+    {
+      "slot": 5,
+      "role": "조합",
+      "name": "블랙홀 곁 궤도",
+      "hint": "블랙홀 쪽으로 나가지 않게",
+      "map": {
+        "w": 400,
+        "h": 760
+      },
+      "preview": 1.2,
+      "docks": 1,
+      "required": [
+        {
+          "type": "planet",
+          "count": 1
+        }
+      ],
+      "hazards": {
+        "ufos": 0,
+        "rocksMax": 4
+      },
+      "window": {
+        "min": 4,
+        "max": 30
+      },
+      "seedCount": 400,
+      "optional": [
+        {
+          "type": "hole",
+          "count": 1,
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "slot": 6,
+      "role": "조합 심화",
+      "name": "두 행성 사이 궤도",
+      "hint": "두 행성의 끌림을 지나 링에 닿아요",
+      "map": {
+        "w": 400,
+        "h": 760
+      },
+      "preview": 1.0,
+      "docks": 1,
+      "required": [
+        {
+          "type": "planet",
+          "count": 2
+        }
+      ],
+      "hazards": {
+        "ufos": 0,
+        "rocksMax": 6
+      },
+      "window": {
+        "min": 4,
+        "max": 30
+      },
+      "seedCount": 400
+    },
+    {
+      "slot": 7,
+      "role": "도전",
+      "name": "감시 속 궤도",
+      "hint": "붉은 원을 피해 나갈 자리를 골라요",
+      "map": {
+        "w": 400,
+        "h": 760
+      },
+      "preview": 0.9,
+      "docks": 1,
+      "required": [
+        {
+          "type": "planet",
+          "count": 1
+        }
+      ],
+      "hazards": {
+        "ufos": 1,
+        "rocksMax": 4
+      },
+      "window": {
+        "min": 3,
+        "max": 30
+      },
+      "seedCount": 400
+    },
+    {
+      "slot": 8,
+      "role": "마무리",
+      "name": "달토끼 정거장",
+      "hint": "나간 뒤 행성이 크게 돌려 줘요",
+      "map": {
+        "w": 440,
+        "h": 860
+      },
+      "preview": 1.2,
+      "docks": 1,
+      "required": [
+        {
+          "type": "planet",
+          "count": 1
+        }
+      ],
+      "hazards": {
+        "ufos": 0,
+        "rocksMax": 4
+      },
+      "window": {
+        "min": 5,
+        "max": 30
+      },
+      "seedCount": 400
+    }
+  ]
+}

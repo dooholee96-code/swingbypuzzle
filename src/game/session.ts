@@ -83,6 +83,22 @@ export class Session {
    * 분사 (§22.1). 비행 중이고 남아 있으면 다음 스텝 경계에서 dirDeg 쪽으로 꺾는다.
    * 썼으면 true. 한 스텝 안의 두 번째 탭은 버린다(횟수만 줄고 효과가 없으면 억울하다).
    */
+  /** 궤도 행성에 붙잡혀 도는 중인가 (§22.4) */
+  get docked(): boolean { return this.state === 'flying' && this.sim.docked !== null; }
+
+  /** 궤도 행성에서 다음 스텝 경계에 나간다 (§22.4). 분사를 쓰지 않는다. 나갔으면 true */
+  release(): boolean {
+    if (!this.docked) return false;
+    this.sim.queueRelease();
+    return true;
+  }
+
+  /**
+   * 붙잡혀 돈 시간을 뺀 비행 시간. 인피니티의 점수다(§22.3) — 빼지 않으면 링에서
+   * 쉬기만 해도 점수가 오른다.
+   */
+  freeSeconds(): number { return (this.sim.flightStep - this.sim.dockedSteps) * DT; }
+
   turn(dirDeg: number): boolean {
     if (this.state !== 'flying' || this.turnsLeft <= 0 || this.sim.turnPending) return false;
     this.sim.queueTurn(dirDeg);

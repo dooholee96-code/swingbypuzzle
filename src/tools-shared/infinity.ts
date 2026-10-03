@@ -11,7 +11,7 @@
 
 import { dist } from '../core/physics.js';
 import { mulberry32 } from '../core/rng.js';
-import type { Hole, Level, Planet, Rock, Ufo } from '../core/types.js';
+import type { Dock, Hole, Level, Planet, Rock, Ufo } from '../core/types.js';
 
 /** 칸 한 변 */
 export const CHUNK = 400;
@@ -40,7 +40,7 @@ export interface Item { id: string; x: number; y: number }
 
 export interface Chunk {
   cx: number; cy: number;
-  planets: Planet[]; holes: Hole[]; rocks: Rock[]; ufos: Ufo[]; items: Item[];
+  planets: Planet[]; holes: Hole[]; rocks: Rock[]; ufos: Ufo[]; items: Item[]; docks: Dock[];
 }
 
 /** 칸 좌표 → 시드. 판 시드와 섞는다 */
@@ -67,7 +67,7 @@ export function makeChunk(seed: number, cx: number, cy: number): Chunk {
   const pick = (lo: number, hi: number): number => lo + rnd() * (hi - lo);
   const ring = Math.max(Math.abs(cx), Math.abs(cy));
   const x0 = ORIGIN + cx * CHUNK - CHUNK / 2, y0 = ORIGIN + cy * CHUNK - CHUNK / 2;
-  const out: Chunk = { cx, cy, planets: [], holes: [], rocks: [], ufos: [], items: [] };
+  const out: Chunk = { cx, cy, planets: [], holes: [], rocks: [], ufos: [], items: [], docks: [] };
 
   // 작은 칸 넷의 순서를 섞는다
   const subs = [0, 1, 2, 3];
@@ -80,6 +80,9 @@ export function makeChunk(seed: number, cx: number, cy: number): Chunk {
   const orbitP = ring >= 2 ? Math.min(0.08 + 0.02 * ring, 0.2) : 0;
   const ufoP = ring >= 3 ? Math.min(0.12 + 0.03 * ring, 0.35) : 0;
   const itemP = Math.max(0.42 - 0.02 * ring, 0.22);
+  // 궤도 행성(§22.4): 쉬면서 방향을 고르는 자리. 출발 칸 밖부터, 칸마다 하나까지
+  const dockP = ring >= 1 ? 0.22 : 0;
+  let dockN = 0;
   let itemN = 0;
 
   subs.forEach((sub, k) => {
@@ -105,6 +108,13 @@ export function makeChunk(seed: number, cx: number, cy: number): Chunk {
           R: Math.round(pick(130, 175)), sides: Math.floor(pick(0, 6)), ...(rnd() < 0.2 ? { ring: true } : {}),
         });
       }
+      return;
+    }
+    if (dockN === 0 && rnd() < dockP && clear(80)) {
+      // 흔들지 않는다: 작은 칸 가운데에서 모서리 파편(±15)까지 141 − 21 = 120 ≥ 링 50 + 파편 14 + 6
+      const r = Math.round(pick(16, 20));
+      out.docks.push({ x: Math.round(scx), y: Math.round(scy), r, cr: r + 30, sides: Math.floor(pick(0, 6)) });
+      dockN++;
       return;
     }
     if (roll < ufoP && clear(60)) {
@@ -156,7 +166,7 @@ export class InfinityWorld {
       start: { x: ORIGIN, y: ORIGIN },
       // 목적지는 없다. 돔 방향(위쪽)만 정하려고 아주 먼 곳에 둔다
       goal: { x: ORIGIN, y: ORIGIN - 1e5, r: 1 },
-      planets: [], holes: [], rocks: [], ufos: [],
+      planets: [], holes: [], rocks: [], ufos: [], docks: [],
       turns: START_TURNS,
       meta: {
         chapter: 0, slot: 0, role: 'infinity', intro: 'infinity',
@@ -193,16 +203,17 @@ export class InfinityWorld {
     this.at = [cx, cy];
     const L = this.level;
     const planets: Planet[] = [], holes: Hole[] = [], rocks: Rock[] = [], ufos: Ufo[] = [];
+    const docks: Dock[] = [];
     const items: Item[] = [];
     for (let dy = -WINDOW; dy <= WINDOW; dy++) {
       for (let dx = -WINDOW; dx <= WINDOW; dx++) {
         const c = this.chunk(cx + dx, cy + dy);
         planets.push(...c.planets); holes.push(...c.holes);
-        rocks.push(...c.rocks); ufos.push(...c.ufos);
+        rocks.push(...c.rocks); ufos.push(...c.ufos); docks.push(...c.docks);
         for (const it of c.items) if (!this.eaten.has(it.id)) items.push(it);
       }
     }
-    L.planets = planets; L.holes = holes; L.rocks = rocks; L.ufos = ufos;
+    L.planets = planets; L.holes = holes; L.rocks = rocks; L.ufos = ufos; L.docks = docks;
     this.items = items;
     return true;
   }

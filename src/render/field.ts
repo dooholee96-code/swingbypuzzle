@@ -18,7 +18,7 @@ import { type Baked, SpriteCache, put, putScaled } from './sprites/bake.js';
 import { Spring } from './spring.js';
 import { type Grid, grid, set } from './sprites/pixel.js';
 import { type Face, type SmallName, dir16, rocketDir, small, ufo } from './sprites/rocket.js';
-import { blackhole, moon, planet, portal, rock, starTile } from './sprites/world.js';
+import { blackhole, dockRing, moon, planet, portal, rock, starTile } from './sprites/world.js';
 
 /** 달(발사대)의 그림 반경. PAD_R(22) 보다 작다 — 우주선이 표면 바깥에 선다 (§12.3) */
 export const DOME_DRAW_R = 18;
@@ -89,12 +89,20 @@ export class FieldRenderer {
   /** 분사를 쓴 순간. 탭한 월드 좌표를 받는다 */
   onTurn(tx: number, ty: number): void { this.turnReq = [tx, ty]; }
 
+  // 궤도 행성 (§22.4)
+  private dockS = new Map<object, Spring>();
+  private wasDocked = false;
+  /** 궤도 행성에서 나간 순간 */
+  onRelease(): void { if (!this.reduceMotion) this.shipS.kick(4.5); }
+
   /** 단계마다 크기가 다른 그림은 단계를 바꿀 때 버린다. 로켓·효과는 남긴다. */
   rebuild(L: Level): void {
     if (this.levelId) this.cache.dropPrefix(`L:`);
     this.levelId = L.id;
     this.bodyS.clear();
     this.inside.clear();
+    this.dockS.clear();
+    this.wasDocked = false;
     for (const sp of [this.shipS, this.moonS, this.goalS]) sp.reset();
     this.prevState = '';
     this.turnReq = null;
@@ -128,6 +136,19 @@ export class FieldRenderer {
     for (const [b, sp] of this.bodyS) {
       sp.step(dt);
       if (sp.x === 0 && sp.v === 0) this.bodyS.delete(b);
+    }
+    // 붙잡히는 순간 궤도 행성이 출렁인다
+    const d = s.sim.docked;
+    if (d && !this.wasDocked && !this.reduceMotion) {
+      let sp = this.dockS.get(d.dock);
+      if (!sp) { sp = new Spring(240, 8); this.dockS.set(d.dock, sp); }
+      sp.kick(2.4);
+      this.shipS.kick(-2);
+    }
+    this.wasDocked = d !== null;
+    for (const [b, sp] of this.dockS) {
+      sp.step(dt);
+      if (sp.x === 0 && sp.v === 0) this.dockS.delete(b);
     }
   }
 
@@ -186,6 +207,7 @@ export class FieldRenderer {
     this.trail(ctx, s.trail, C.line);
     this.rocks(ctx, L, t);
     this.planets(ctx, L, st);
+    this.docks(ctx, L, s, t);
     this.holes(ctx, L, t);
     this.ufos(ctx, L, t);
     this.goal(ctx, L, t);
@@ -295,6 +317,24 @@ export class FieldRenderer {
   }
 
   // 행성: 반경 r 그대로. 색은 sides 로 고른다(단계마다 고정). 회전하지 않는다
+  // 궤도 행성 (§22.4): 몸체 + 초록 점선 포획 링. 붙잡혀 있으면 링이 밝게 깜빡이고,
+  // "지금 나가면 이렇게 간다" 예측선을 그린다
+  private docks(ctx: CanvasRenderingContext2D, L: Level, s: Session, t: number): void {
+    const cur = s.sim.docked?.dock ?? null;
+    for (const d of L.docks ?? []) {
+      if (!this.seen(d.x, d.y, d.cr + 4)) continue;
+      const lit = d === cur && !this.reduceMotion && Math.floor(t * 4) % 2 === 0;
+      put(ctx, this.lv(`dockring:${d.cr}:${lit ? 1 : 0}`, () => dockRing(d.cr, lit ? 'W' : 'L')), d.x, d.y);
+      const k = this.dockS.get(d)?.x ?? 0;
+      putScaled(ctx, this.lv(`dock:${d.r}:${d.sides % 6}`, () => planet(d.r, (d.sides % 6 + 4) % 6, { face: true })),
+        d.x, d.y, 1 + k, 1 - k);
+    }
+    if (cur && s.state === 'flying') {
+      const pr = s.sim.predictRelease(L, s.sim.ship, s.sim.time, L.preview);
+      this.preview(ctx, pr, t);
+    }
+  }
+
   private planets(ctx: CanvasRenderingContext2D, L: Level, st: number): void {
     (L.planets ?? []).forEach((p, i) => {
       const [x, y] = bodyPos(p as Grav, st);
@@ -422,6 +462,12 @@ export class FieldRenderer {
     if (s.state === 'flying') {
       // 서 있던 자리(STAND_R)에서 발사 좌표(PAD_R)로 0.1초에 걸쳐 붙는다 — 튀지 않게
       const lift = (STAND_R - PAD_R) * Math.max(0, 1 - s.flightSeconds() / 0.1);
+      // 궤도 행성에서 도는 동안은 불꽃을 끄고 조준하는 얼굴 — 탭을 기다린다 (§22.4)
+      if (s.sim.docked) {
+        const k = this.shipS.x;
+        putScaled(ctx, this.rocket('aim', a), x, y, 1 + k, 1 - k * 0.6, a);
+        return;
+      }
       const flame = this.reduceMotion ? 0 : Math.floor(t * 15) % 2;
       // 발사 순간 진행 방향으로 늘어났다가 출렁이며 돌아온다
       const k = this.shipS.x;

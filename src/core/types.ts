@@ -14,6 +14,11 @@ export interface Ufo {
   x: number; y: number; range: number; interval: number; delay: number; bs: number;
 }
 export interface Goal { x: number; y: number; r: number }
+/**
+ * 궤도 행성 (§22.4). 중력은 없다. 중심에서 cr 안에 들어오면 우주선이 붙잡혀 그 원을
+ * 돌고, 탭하면 접선 방향으로 나간다. r 은 몸체(충돌), sides 는 색 세트.
+ */
+export interface Dock { x: number; y: number; r: number; cr: number; sides: number }
 
 /** 중력원. 행성과 블랙홀이 같은 공식을 쓴다 (§5.3). */
 export type Grav = Planet | Hole;
@@ -31,14 +36,19 @@ export interface Metrics {
   /** 분사 단계(§22.2): 분사 타이밍(초)·탭 방향(°)의 연속 성공 폭 */
   turn_timing?: number;
   turn_delta?: number;
+  /** 궤도 행성 단계(§22.4): 나가기 타이밍(초)의 연속 성공 폭 */
+  release_timing?: number;
   difficulty: number;
 }
 
 export interface Meta {
   chapter: number; slot: number; role: string;
-  intro?: 'planet' | 'rock' | 'hole' | 'ufo' | 'orbit' | 'wide' | 'turn' | 'infinity';
-  /** turns: 분사 기록 (§22.1). 6장부터. 없으면 분사 없이 풀리는 단계다 */
-  solution: { angle: number; launch_step: number; turns?: Turn[] };
+  intro?: 'planet' | 'rock' | 'hole' | 'ufo' | 'orbit' | 'wide' | 'turn' | 'infinity' | 'dock';
+  /**
+   * turns: 분사 기록 (§22.1). 6장부터. 없으면 분사 없이 풀리는 단계다.
+   * releases: 궤도 행성에서 나간 비행 스텝 (§22.4). 7장부터
+   */
+  solution: { angle: number; launch_step: number; turns?: Turn[]; releases?: number[] };
   metrics?: Metrics;
   source: 'verified' | 'generated' | 'editor';
   updated: string;
@@ -56,6 +66,8 @@ export interface Level {
   holes?: Hole[];
   rocks?: Rock[];
   ufos?: Ufo[];
+  /** 궤도 행성 (§22.4). 7장부터 */
+  docks?: Dock[];
   hint?: string;
   /** 쓸 수 있는 분사 횟수 (§22.1). 없으면 0 — 1~5장 */
   turns?: number;

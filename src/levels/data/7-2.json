@@ -1,0 +1,62 @@
+{
+  "id": "7-2",
+  "name": "오른쪽에서 나가기",
+  "w": 400,
+  "h": 760,
+  "speed": 150,
+  "preview": 1.6,
+  "start": {
+    "x": 225,
+    "y": 675
+  },
+  "goal": {
+    "x": 265,
+    "y": 145,
+    "r": 24
+  },
+  "docks": [
+    {
+      "x": 260,
+      "y": 245,
+      "r": 18,
+      "cr": 48,
+      "sides": 0
+    }
+  ],
+  "meta": {
+    "chapter": 7,
+    "slot": 2,
+    "role": "연습",
+    "solution": {
+      "angle": -82,
+      "launch_step": 0,
+      "releases": [
+        962
+      ]
+    },
+    "source": "generated",
+    "updated": "2026-10-03",
+    "metrics": {
+      "main_window": 6.5,
+      "flight_time": 4.43,
+      "clearance": 60.83,
+      "difficulty": 1.65,
+      "release_timing": 0.53
+    }
+  },
+  "rocks": [
+    {
+      "x": 305,
+      "y": 70,
+      "r": 23,
+      "seed": 1
+    },
+    {
+      "x": 190,
+      "y": 335,
+      "r": 19,
+      "seed": 2
+    }
+  ],
+  "hint": "링 오른쪽에서 나가야 굴에 닿아요"
+}

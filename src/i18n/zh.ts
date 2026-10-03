@@ -27,6 +27,7 @@ export const zh: Dict = {
   'hud.retry': '重试',
   'hud.angle': '角度 {deg}°',
   'hud.turns': '喷射',
+  'hud.dockTap': '点击出发',
 
   'result.win': '到达目的地',
   'result.planet': '撞上了行星',
@@ -71,6 +72,8 @@ export const zh: Dict = {
   'intro.turn.body': '飞行中点击屏幕，就会朝那一侧转向。剩余次数显示在左上角。',
   'intro.infinity': '无尽模式',
   'intro.infinity.body': '在无尽的宇宙中别撞上任何东西，坚持得越久越好。吃到胡萝卜可以多一次喷射。',
+  'intro.dock': '轨道行星',
+  'intro.dock.body': '碰到绿色虚线圆就会被抓住绕圈。点击屏幕，就会从那里朝前飞出去。',
   'inf.time': '{sec}秒',
   'inf.best': '最佳 {sec}秒',
   'inf.over': '坚持到了这里',

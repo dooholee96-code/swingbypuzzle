@@ -1,0 +1,74 @@
+{
+  "id": "7-4",
+  "name": "쉬어 가는 궤도",
+  "w": 400,
+  "h": 760,
+  "speed": 150,
+  "preview": 1.8,
+  "start": {
+    "x": 305,
+    "y": 630
+  },
+  "goal": {
+    "x": 265,
+    "y": 145,
+    "r": 24
+  },
+  "docks": [
+    {
+      "x": 275,
+      "y": 250,
+      "r": 16,
+      "cr": 46,
+      "sides": 5
+    }
+  ],
+  "meta": {
+    "chapter": 7,
+    "slot": 4,
+    "role": "휴식",
+    "solution": {
+      "angle": -98,
+      "launch_step": 0,
+      "releases": [
+        865
+      ]
+    },
+    "source": "generated",
+    "updated": "2026-10-03",
+    "metrics": {
+      "main_window": 6.75,
+      "flight_time": 4.08,
+      "clearance": 33.48,
+      "difficulty": 1.28,
+      "release_timing": 0.5
+    }
+  },
+  "rocks": [
+    {
+      "x": 195,
+      "y": 540,
+      "r": 17,
+      "seed": 1
+    },
+    {
+      "x": 45,
+      "y": 155,
+      "r": 16,
+      "seed": 2
+    },
+    {
+      "x": 350,
+      "y": 525,
+      "r": 22,
+      "seed": 3
+    },
+    {
+      "x": 230,
+      "y": 495,
+      "r": 20,
+      "seed": 4
+    }
+  ],
+  "hint": "돌면서 천천히 방향을 골라요"
+}

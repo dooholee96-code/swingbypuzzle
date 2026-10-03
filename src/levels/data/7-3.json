@@ -1,0 +1,84 @@
+{
+  "id": "7-3",
+  "name": "행성을 돌아 정거장으로",
+  "w": 400,
+  "h": 760,
+  "speed": 150,
+  "preview": 1.4,
+  "start": {
+    "x": 75,
+    "y": 670
+  },
+  "goal": {
+    "x": 335,
+    "y": 145,
+    "r": 24
+  },
+  "planets": [
+    {
+      "x": 110,
+      "y": 415,
+      "r": 20,
+      "g": 775,
+      "R": 150,
+      "sides": 13
+    }
+  ],
+  "docks": [
+    {
+      "x": 255,
+      "y": 265,
+      "r": 20,
+      "cr": 50,
+      "sides": 1
+    }
+  ],
+  "meta": {
+    "chapter": 7,
+    "slot": 3,
+    "role": "변형",
+    "solution": {
+      "angle": -95,
+      "launch_step": 0,
+      "releases": [
+        1109
+      ]
+    },
+    "source": "generated",
+    "updated": "2026-10-03",
+    "metrics": {
+      "main_window": 6.25,
+      "flight_time": 5.37,
+      "clearance": 11.03,
+      "difficulty": 2.28,
+      "release_timing": 0.33
+    }
+  },
+  "rocks": [
+    {
+      "x": 280,
+      "y": 170,
+      "r": 19,
+      "seed": 1
+    },
+    {
+      "x": 240,
+      "y": 125,
+      "r": 23,
+      "seed": 2
+    },
+    {
+      "x": 60,
+      "y": 65,
+      "r": 23,
+      "seed": 3
+    },
+    {
+      "x": 35,
+      "y": 380,
+      "r": 16,
+      "seed": 4
+    }
+  ],
+  "hint": "행성에 휘어 들어간 뒤 링에서 굴 쪽으로 나가요"
+}

@@ -1,0 +1,84 @@
+{
+  "id": "7-8",
+  "name": "달토끼 정거장",
+  "w": 440,
+  "h": 860,
+  "speed": 150,
+  "preview": 1.2,
+  "start": {
+    "x": 215,
+    "y": 760
+  },
+  "goal": {
+    "x": 75,
+    "y": 165,
+    "r": 24
+  },
+  "planets": [
+    {
+      "x": 190,
+      "y": 340,
+      "r": 22,
+      "g": 740,
+      "R": 175,
+      "sides": 8
+    }
+  ],
+  "docks": [
+    {
+      "x": 295,
+      "y": 410,
+      "r": 16,
+      "cr": 46,
+      "sides": 2
+    }
+  ],
+  "meta": {
+    "chapter": 7,
+    "slot": 8,
+    "role": "마무리",
+    "solution": {
+      "angle": -73.5,
+      "launch_step": 0,
+      "releases": [
+        1310
+      ]
+    },
+    "source": "generated",
+    "updated": "2026-10-03",
+    "metrics": {
+      "main_window": 7.25,
+      "flight_time": 8.23,
+      "clearance": 13.91,
+      "difficulty": 3.3,
+      "release_timing": 0.25
+    }
+  },
+  "rocks": [
+    {
+      "x": 75,
+      "y": 385,
+      "r": 21,
+      "seed": 1
+    },
+    {
+      "x": 350,
+      "y": 285,
+      "r": 14,
+      "seed": 2
+    },
+    {
+      "x": 80,
+      "y": 615,
+      "r": 22,
+      "seed": 3
+    },
+    {
+      "x": 335,
+      "y": 620,
+      "r": 24,
+      "seed": 4
+    }
+  ],
+  "hint": "나간 뒤 행성이 크게 돌려 줘요"
+}

@@ -75,7 +75,7 @@ export class Hud {
     // 인피니티: 단계 이름 자리에 버틴 시간과 최고 기록. 힌트는 없다
     if (this.hintBtn.hidden !== !!s.world) this.hintBtn.hidden = !!s.world;
     if (s.world) {
-      const sec = s.state === 'flying' || s.state === 'ending' ? s.flightSeconds() : 0;
+      const sec = s.state === 'flying' || s.state === 'ending' ? s.freeSeconds() : 0;
       set(this.stageId, t('inf.time', { sec: sec.toFixed(1) }));
       set(this.stageText, t('inf.best', { sec: Math.max(this.infBest, sec).toFixed(1) }));
     } else if (this.stageId.textContent !== s.level.id) {
@@ -86,8 +86,10 @@ export class Hud {
       this.stage.classList.add('pop');
     }
     if (!s.world) set(this.stageText, levelName(s.level));
+    // 아래 판: 조준 중이면 각도, 궤도 행성에서 돌고 있으면 "탭하면 출발" (§22.4)
     set(this.angle, s.state === 'aiming' && s.aimFar
-      ? t('hud.angle', { deg: toUi(s.angle).toFixed(1) }) : '');
+      ? t('hud.angle', { deg: toUi(s.angle).toFixed(1) })
+      : s.docked ? t('hud.dockTap') : '');
     // 남은 분사: 바뀔 때만 다시 쓴다
     const key = `${s.turnsLeft}/${s.turnSlots}`;
     if (key !== this.turnsKey) {

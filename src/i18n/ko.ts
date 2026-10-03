@@ -31,6 +31,7 @@ export const ko = {
   'hud.retry': '다시',
   'hud.angle': '각도 {deg}°',
   'hud.turns': '분사',
+  'hud.dockTap': '탭하면 출발해요',
 
   // §13.4 결과
   'result.win': '도착했어요',
@@ -77,6 +78,8 @@ export const ko = {
   'intro.turn.body': '날아가는 중에 화면을 탭하면 그쪽으로 꺾여요. 쓸 수 있는 횟수는 왼쪽 위에 있어요.',
   'intro.infinity': '인피니티',
   'intro.infinity.body': '끝없는 우주에서 부딪히지 않고 오래 버티세요. 당근을 먹으면 분사가 하나 늘어요.',
+  'intro.dock': '궤도 행성',
+  'intro.dock.body': '초록 점선 원에 닿으면 붙잡혀 돌아요. 탭하면 그 자리에서 앞쪽으로 날아가요.',
   'inf.time': '{sec}초',
   'inf.best': '최고 {sec}초',
   'inf.over': '여기까지 버텼어요',

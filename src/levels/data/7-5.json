@@ -1,0 +1,94 @@
+{
+  "id": "7-5",
+  "name": "블랙홀 곁 궤도",
+  "w": 400,
+  "h": 760,
+  "speed": 150,
+  "preview": 1.2,
+  "start": {
+    "x": 130,
+    "y": 700
+  },
+  "goal": {
+    "x": 225,
+    "y": 145,
+    "r": 24
+  },
+  "planets": [
+    {
+      "x": 285,
+      "y": 450,
+      "r": 22,
+      "g": 880,
+      "R": 170,
+      "sides": 11
+    }
+  ],
+  "holes": [
+    {
+      "x": 115,
+      "y": 85,
+      "rH": 16,
+      "g": 950,
+      "R": 180,
+      "role": "optional"
+    }
+  ],
+  "docks": [
+    {
+      "x": 235,
+      "y": 245,
+      "r": 17,
+      "cr": 47,
+      "sides": 3
+    }
+  ],
+  "meta": {
+    "chapter": 7,
+    "slot": 5,
+    "role": "조합",
+    "solution": {
+      "angle": -43,
+      "launch_step": 0,
+      "releases": [
+        1230
+      ]
+    },
+    "source": "generated",
+    "updated": "2026-10-03",
+    "metrics": {
+      "main_window": 6.5,
+      "flight_time": 5.53,
+      "clearance": 20.2,
+      "difficulty": 2.51,
+      "release_timing": 0.52
+    }
+  },
+  "rocks": [
+    {
+      "x": 270,
+      "y": 190,
+      "r": 18,
+      "seed": 1
+    },
+    {
+      "x": 65,
+      "y": 365,
+      "r": 19,
+      "seed": 2
+    },
+    {
+      "x": 355,
+      "y": 200,
+      "r": 14,
+      "seed": 3
+    },
+    {
+      "x": 75,
+      "y": 290,
+      "r": 14,
+      "seed": 4
+    }
+  ],
+  "hint": "블랙홀 쪽으로 나가지 않게"
+}

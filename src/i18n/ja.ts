@@ -27,6 +27,7 @@ export const ja: Dict = {
   'hud.retry': 'リトライ',
   'hud.angle': '角度 {deg}°',
   'hud.turns': 'ブースト',
+  'hud.dockTap': 'タップで出発',
 
   'result.win': '到着しました',
   'result.planet': '惑星に衝突しました',
@@ -71,6 +72,8 @@ export const ja: Dict = {
   'intro.turn.body': '飛んでいる最中に画面をタップすると、その方向へ曲がります。残り回数は左上に出ます。',
   'intro.infinity': 'インフィニティ',
   'intro.infinity.body': '果てしない宇宙で、ぶつからずにできるだけ長く飛び続けましょう。にんじんを取るとブーストが1回増えます。',
+  'intro.dock': '軌道惑星',
+  'intro.dock.body': '緑の点線の円にふれるとつかまって回ります。タップすると、その場から前へ飛び出します。',
   'inf.time': '{sec}秒',
   'inf.best': 'ベスト {sec}秒',
   'inf.over': 'ここまで耐えました',

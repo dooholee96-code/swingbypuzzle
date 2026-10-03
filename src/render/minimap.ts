@@ -60,6 +60,7 @@ export function drawMinimap(
     dot(bx, by, col, 2);
   }
   for (const u of L.ufos ?? []) dot(u.x, u.y, C.danger, 2);
+  for (const d of L.docks ?? []) dot(d.x, d.y, C.win, 2);   // 궤도 행성 (§22.4)
   dot(L.goal.x, L.goal.y, C.win, 2.5);
 
   // 우주선은 흰 점. 비행 중에는 깜빡인다.

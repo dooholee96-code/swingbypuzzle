@@ -6,10 +6,46 @@
 // 시각 t 는 launchStep * DT 에서 시작해 **누산**한다. levelStep * DT 로 다시
 // 계산하면 배정밀도 결과가 미세하게 갈린다. 부록 A 와 같은 방식이다.
 
-import { DT, MAX_FLIGHT, PAD_R, TURN_MAX } from './constants.js';
+import { DOCK_HOLD_LAPS, DOCK_LAP, DT, MAX_FLIGHT, PAD_R, SHIP_R, TURN_MAX } from './constants.js';
 import { fireUfos, stepBullets } from './hazards.js';
-import { gravs, stepShip } from './physics.js';
-import type { Grav, Level, Outcome, ShipState, SimState, Turn, Ufo } from './types.js';
+import { dist, gravs, stepShip } from './physics.js';
+import type { Dock, Grav, Level, Outcome, ShipState, SimState, Turn, Ufo } from './types.js';
+
+/** 궤도 행성을 도는 각속도(rad/s) */
+const DOCK_OMEGA = 2 * Math.PI / DOCK_LAP;
+/** 붙잡힌 뒤 이 스텝이 지나면 저절로 나간다 (두 바퀴) */
+export const DOCK_HOLD_STEPS = Math.round(DOCK_LAP * DOCK_HOLD_LAPS / DT);
+/** 나간 궤도 행성은 링에서 이만큼 멀어져야 다시 붙잡는다 — 나가자마자 다시 잡히지 않게 */
+const DOCK_LEAVE = 6;
+
+/** 궤도 행성에 붙잡혀 도는 상태 (§22.4) */
+export interface Docked { dock: Dock; ang: number; dir: 1 | -1; speed: number; since: number }
+
+/** 이 위치에서 붙잡을 궤도 행성. 방금 나온 것은 빼고 본다 */
+function dockAt(L: Level, x: number, y: number, leaving: Dock | null): Dock | null {
+  for (const d of L.docks ?? []) {
+    if (d !== leaving && dist(d.x, d.y, x, y) < d.cr) return d;
+  }
+  return null;
+}
+
+/** 붙잡힌 상태를 만든다. 들어온 쪽으로 돌고, 속력은 지킨다 */
+function capture(d: Dock, s: ShipState, n: number): Docked {
+  const rx = s.x - d.x, ry = s.y - d.y;
+  const speed = Math.sqrt(s.vx * s.vx + s.vy * s.vy);
+  const dir: 1 | -1 = rx * s.vy - ry * s.vx >= 0 ? 1 : -1;
+  const ang = Math.atan2(ry, rx);
+  return { dock: d, ang, dir, speed, since: n };
+}
+
+/** 궤도 위 자리와 접선 속도를 우주선에 적는다 */
+function placeOnOrbit(o: Docked, s: ShipState): void {
+  const c = Math.cos(o.ang), sn = Math.sin(o.ang);
+  s.x = o.dock.x + o.dock.cr * c;
+  s.y = o.dock.y + o.dock.cr * sn;
+  s.vx = -sn * o.dir * o.speed;
+  s.vy = c * o.dir * o.speed;
+}
 
 /**
  * 분사 (§22.1). 속력은 두고 진행 방향만 dir 쪽으로 돌린다. 차이가 TURN_MAX 를 넘으면
@@ -48,6 +84,12 @@ export class Sim {
   turns: Turn[] = [];
   /** 인피니티(§22.3): 30초 표류 제한을 두지 않는다. begin 전에 켠다 */
   endless = false;
+  /** 궤도 행성에 붙잡혀 있으면 그 상태 (§22.4) */
+  docked: Docked | null = null;
+  /** 이번 비행에서 탭으로 나간 스텝들. 정답·리플레이 기록 (§22.4) */
+  releases: number[] = [];
+  /** 붙잡혀 돈 스텝 수. 30초 표류 시계와 인피니티 점수에서 뺀다 */
+  dockedSteps = 0;
 
   private L!: Level;
   private G: Grav[] = [];
@@ -55,6 +97,10 @@ export class Sim {
   private ufoRef: Ufo[] = [];
   private plan: Turn[] = [];
   private planAt = 0;
+  private relQueued = false;
+  private relPlan: number[] = [];
+  private relAt = 0;
+  private leaving: Dock | null = null;
   private t = 0;
   private n = 0;
   private maxN = 0;
@@ -66,7 +112,9 @@ export class Sim {
   get time(): number { return this.t; }
 
   /** 발사 준비. 이후 step() 을 반복 호출한다. turns 는 되풀이할 분사 기록 (§22.1) */
-  begin(L: Level, angleDeg: number, launchStep: number, G?: Grav[], turns?: Turn[]): void {
+  begin(
+    L: Level, angleDeg: number, launchStep: number, G?: Grav[], turns?: Turn[], releases?: number[],
+  ): void {
     this.L = L;
     this.G = G ?? gravs(L);
     this.state = { bullets: [], nextFire: (L.ufos ?? []).map((u) => u.delay) };
@@ -76,6 +124,13 @@ export class Sim {
     this.queued = null;
     this.plan = turns?.length ? [...turns].sort((a, b) => a.step - b.step) : [];
     this.planAt = 0;
+    this.docked = null;
+    this.releases = [];
+    this.dockedSteps = 0;
+    this.relQueued = false;
+    this.relPlan = releases?.length ? [...releases].sort((a, b) => a - b) : [];
+    this.relAt = 0;
+    this.leaving = null;
 
     const a = angleDeg * Math.PI / 180;
     // 돔 표면에서 이륙한다 (§5.9)
@@ -113,9 +168,26 @@ export class Sim {
   /** 아직 적용 안 된 분사가 있는가 — 한 스텝 안에 두 번 탭해도 한 번만 쓰게 */
   get turnPending(): boolean { return this.queued !== null; }
 
+  /** 궤도 행성에서 다음 스텝 경계에 나간다 (§22.4). 붙잡혀 있지 않으면 아무 일도 없다 */
+  queueRelease(): void { if (this.docked) this.relQueued = true; }
+
   /** 한 스텝. '' = 계속. */
   step(): Outcome | '' {
-    if (this.n >= this.maxN) return 'drift';
+    if (this.n - this.dockedSteps >= this.maxN) return 'drift';
+    while (this.relAt < this.relPlan.length && this.relPlan[this.relAt]! <= this.n) {
+      if (this.relPlan[this.relAt++] === this.n) this.relQueued = true;
+    }
+    if (this.docked) {
+      // 탭했거나 두 바퀴가 지나면 지금 자리의 접선으로 나간다. 속도는 이미 접선이다
+      const auto = this.n - this.docked.since >= DOCK_HOLD_STEPS;
+      if (this.relQueued || auto) {
+        if (this.relQueued) this.releases.push(this.n);
+        this.leaving = this.docked.dock;
+        this.docked = null;
+      }
+      this.relQueued = false;
+    }
+    if (this.docked) return this.orbitStep();
     while (this.planAt < this.plan.length && this.plan[this.planAt]!.step === this.n) {
       this.queued = this.plan[this.planAt++]!.dir;
     }
@@ -129,16 +201,45 @@ export class Sim {
     this.n += 1;
     if (this.recordPath) this.path.push(this.ship.x, this.ship.y);
     if (r) return r;
+    if (this.L.docks?.length) {
+      const s = this.ship;
+      for (const d of this.L.docks) {
+        if (dist(d.x, d.y, s.x, s.y) < d.r + SHIP_R) return 'planet';
+      }
+      if (this.leaving && dist(this.leaving.x, this.leaving.y, s.x, s.y) > this.leaving.cr + DOCK_LEAVE) {
+        this.leaving = null;
+      }
+      const d = dockAt(this.L, s.x, s.y, this.leaving);
+      if (d) {
+        this.docked = capture(d, s, this.n);
+        placeOnOrbit(this.docked, s);
+      }
+    }
     fireUfos(this.L, this.state, this.ship, this.n * DT);
     const rb = stepBullets(this.L, this.state, this.ship);
     if (rb) return rb;
-    if (this.n >= this.maxN) return 'drift';
+    if (this.n - this.dockedSteps >= this.maxN) return 'drift';
     return '';
   }
 
+  /** 붙잡혀 도는 한 스텝. 중력은 받지 않고, 총알은 맞는다 */
+  private orbitStep(): Outcome | '' {
+    const o = this.docked!;
+    o.ang += o.dir * DOCK_OMEGA * DT;
+    placeOnOrbit(o, this.ship);
+    this.t += DT;
+    this.n += 1;
+    this.dockedSteps += 1;
+    if (this.recordPath) this.path.push(this.ship.x, this.ship.y);
+    fireUfos(this.L, this.state, this.ship, this.n * DT);
+    return stepBullets(this.L, this.state, this.ship);
+  }
+
   /** 전체 비행. 결과 문자열을 반환한다. turns 는 정답·리플레이의 분사 기록 (§22.1). */
-  simulate(L: Level, angleDeg: number, launchStep: number, G?: Grav[], turns?: Turn[]): Outcome {
-    this.begin(L, angleDeg, launchStep, G, turns);
+  simulate(
+    L: Level, angleDeg: number, launchStep: number, G?: Grav[], turns?: Turn[], releases?: number[],
+  ): Outcome {
+    this.begin(L, angleDeg, launchStep, G, turns, releases);
     let r: Outcome | '' = '';
     while (!r) r = this.step();
     return r;
@@ -167,6 +268,30 @@ export class Sim {
       t += DT;
       points.push(s.x, s.y);
       if (outcome) break;
+      // 궤도 행성에 닿으면 거기서 붙잡힌다 — 예측선도 거기서 끝낸다 (§22.4)
+      if (dockAt(L, s.x, s.y, null)) break;
+    }
+    return { points, outcome };
+  }
+
+  /**
+   * 궤도 행성에서 지금 나가면 어디로 가는가 (§22.4). 도는 동안 프레임마다 부른다.
+   * 실제 비행과 같은 stepShip 이다. 나온 궤도 행성의 링은 무시하고, 다른 링에 닿으면 멈춘다.
+   */
+  predictRelease(L: Level, from: ShipState, t0: number, seconds: number, G?: Grav[]): Preview {
+    const g = G ?? gravs(L);
+    const s: ShipState = { ...from };
+    const leaving = this.docked?.dock ?? null;
+    let t = t0;
+    const points: number[] = [];
+    const max = Math.round(seconds / DT);
+    let outcome: Outcome | '' = '';
+    for (let n = 0; n < max; n++) {
+      outcome = stepShip(L, g, s, t);
+      t += DT;
+      points.push(s.x, s.y);
+      if (outcome) break;
+      if (dockAt(L, s.x, s.y, leaving)) break;
     }
     return { points, outcome };
   }

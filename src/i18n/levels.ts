@@ -63,6 +63,14 @@ export const LEVEL_TEXT: Readonly<Record<Other, Readonly<Record<string, Text>>>>
     '6-6': ['Gap in the Rocks', 'Swing wide and turn at the top-left corner'],
     '6-7': ['Through the Watch', 'Skirt the red circle\'s edge and turn at the very top'],
     '6-8': ['Carrot Rocket Flight', 'Turn between the pulls of the two planets'],
+    '7-1': ['First Orbit', 'Touch the green circle and you orbit. Tap when you face the burrow'],
+    '7-2': ['Leave from the Right', 'Leave from the right side of the ring to reach the burrow'],
+    '7-3': ['Around the Planet to the Station', 'Curve around the planet, then leave the ring toward the burrow'],
+    '7-4': ['A Restful Orbit', 'Take your time choosing a direction as you circle'],
+    '7-5': ['Orbit by the Black Hole', 'Don\'t leave toward the black hole'],
+    '7-6': ['Orbit Between Two Planets', 'Pass through both pulls to reach the ring'],
+    '7-7': ['Orbit Under Watch', 'Pick a spot to leave that avoids the red circle'],
+    '7-8': ['Moon Rabbit Station', 'After you leave, the planet swings you around wide'],
   },
   ja: {
     '1-1': ['はじめてのスイングバイ', '画面のどこでもドラッグして方向を決め、指を離すと発射'],
@@ -113,6 +121,14 @@ export const LEVEL_TEXT: Readonly<Record<Other, Readonly<Record<string, Text>>>>
     '6-6': ['小惑星のすきま', '大きく回って、左上の端で曲がりましょう'],
     '6-7': ['監視網突破', '赤い円のふちを通って、いちばん上で曲がりましょう'],
     '6-8': ['にんじんロケット飛行', 'ふたつの惑星の引力のあいだで曲がりましょう'],
+    '7-1': ['はじめての軌道', '緑の円につかまると回ります。巣穴のほうを向いたらタップ'],
+    '7-2': ['右から出る', '輪の右側から出ると巣穴に届きます'],
+    '7-3': ['惑星を回って駅へ', '惑星で曲がって輪に入り、巣穴のほうへ出ましょう'],
+    '7-4': ['ひと休みの軌道', '回りながらゆっくり向きを選びましょう'],
+    '7-5': ['ブラックホールのそばの軌道', 'ブラックホールのほうへ出ないように'],
+    '7-6': ['ふたつの惑星のあいだの軌道', 'ふたつの引力を抜けて輪に入りましょう'],
+    '7-7': ['監視の中の軌道', '赤い円をさけて出る場所を選びましょう'],
+    '7-8': ['月うさぎの駅', '出たあと、惑星が大きく回してくれます'],
   },
   zh: {
     '1-1': ['第一次引力弹弓', '在屏幕任意位置拖动来瞄准，松手即发射'],
@@ -163,14 +179,22 @@ export const LEVEL_TEXT: Readonly<Record<Other, Readonly<Record<string, Text>>>>
     '6-6': ['小行星缝隙', '绕一大圈，在左上角转向'],
     '6-7': ['突破警戒网', '沿着红圈边缘飞过，在最上方转向'],
     '6-8': ['胡萝卜火箭飞行', '在两颗行星的引力之间转向'],
+    '7-1': ['第一次绕轨', '碰到绿圈就会绕圈。朝向洞口时点击'],
+    '7-2': ['从右边出发', '要从圆环右侧出发才能到达洞口'],
+    '7-3': ['绕过行星进站', '绕过行星进入圆环，再朝洞口出发'],
+    '7-4': ['歇脚的轨道', '一边绕圈一边慢慢选方向'],
+    '7-5': ['黑洞旁的轨道', '别朝黑洞那边出发'],
+    '7-6': ['两颗行星之间的轨道', '穿过两股引力抵达圆环'],
+    '7-7': ['监视下的轨道', '选一个避开红圈的出发点'],
+    '7-8': ['月兔空间站', '出发后，行星会带你绕一大圈'],
   },
 };
 
 /** 장 이름. 한국어 원문은 chapters.ts (tools/register.ts 의 NAMES) */
 export const CHAPTER_NAME: Readonly<Record<Other, Readonly<Record<number, string>>>> = {
-  en: { 1: 'Planets', 2: 'Black Holes', 3: 'Aliens', 4: 'Orbiting Planets', 5: 'Wide Routes', 6: 'Boost' },
-  ja: { 1: '惑星', 2: 'ブラックホール', 3: 'エイリアン', 4: '公転する惑星', 5: '広い航路', 6: 'ブースト' },
-  zh: { 1: '行星', 2: '黑洞', 3: '外星人', 4: '公转行星', 5: '广阔航线', 6: '喷射' },
+  en: { 1: 'Planets', 2: 'Black Holes', 3: 'Aliens', 4: 'Orbiting Planets', 5: 'Wide Routes', 6: 'Boost', 7: 'Orbit Stations' },
+  ja: { 1: '惑星', 2: 'ブラックホール', 3: 'エイリアン', 4: '公転する惑星', 5: '広い航路', 6: 'ブースト', 7: '軌道惑星' },
+  zh: { 1: '行星', 2: '黑洞', 3: '外星人', 4: '公转行星', 5: '广阔航线', 6: '喷射', 7: '轨道行星' },
 };
 
 /** 지금 언어의 단계 이름. 번역이 없으면 원문 */

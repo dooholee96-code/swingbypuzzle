@@ -13,13 +13,13 @@ const near = (ax: number, ay: number, bx: number, by: number): number =>
   Math.sqrt((ax - bx) ** 2 + (ay - by) ** 2);
 
 function region(seed: number, n: number) {
-  const planets = [], holes = [], rocks = [], ufos = [], items = [];
+  const planets = [], holes = [], rocks = [], ufos = [], items = [], docks = [];
   for (let cy = -n; cy <= n; cy++) for (let cx = -n; cx <= n; cx++) {
     const c = makeChunk(seed, cx, cy);
     planets.push(...c.planets); holes.push(...c.holes); rocks.push(...c.rocks);
-    ufos.push(...c.ufos); items.push(...c.items);
+    ufos.push(...c.ufos); items.push(...c.items); docks.push(...c.docks);
   }
-  return { planets, holes, rocks, ufos, items };
+  return { planets, holes, rocks, ufos, items, docks };
 }
 
 describe('칸 만들기', () => {
@@ -53,6 +53,7 @@ describe('칸 만들기', () => {
       ...r.planets.filter((p) => p.orbit).map((p) => ({ x: p.orbit!.cx, y: p.orbit!.cy, r: p.orbit!.rad + p.r })),
       ...r.holes.map((h) => ({ x: h.x, y: h.y, r: h.rH + 4 })),
       ...r.rocks.map((q) => ({ x: q.x, y: q.y, r: q.r })),
+      ...r.docks.map((d) => ({ x: d.x, y: d.y, r: d.cr })),       // 링까지 비어 있어야 한다
     ];
     for (let i = 0; i < solids.length; i++) for (let j = i + 1; j < solids.length; j++) {
       const a = solids[i]!, b = solids[j]!;
@@ -66,6 +67,8 @@ describe('칸 만들기', () => {
     expect(all.holes.length).toBeGreaterThan(0);
     expect(all.ufos.length).toBeGreaterThan(0);
     expect(all.items.length).toBeGreaterThan(0);
+    expect(all.docks.length).toBeGreaterThan(0);
+    expect(region(9, 0).docks.length).toBe(0);                    // 출발 칸에는 없다
   });
 });
 

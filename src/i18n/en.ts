@@ -27,6 +27,7 @@ export const en: Dict = {
   'hud.retry': 'Retry',
   'hud.angle': 'Angle {deg}°',
   'hud.turns': 'Boost',
+  'hud.dockTap': 'Tap to launch',
 
   'result.win': 'You made it',
   'result.planet': 'You crashed into a planet',
@@ -71,6 +72,8 @@ export const en: Dict = {
   'intro.turn.body': 'Tap the screen mid-flight to veer toward that side. Boosts left are shown at the top left.',
   'intro.infinity': 'Infinity',
   'intro.infinity.body': 'Survive as long as you can in endless space without crashing. Grab carrots to gain a boost.',
+  'intro.dock': 'Orbit Station',
+  'intro.dock.body': 'Touch the green dotted circle to get caught in orbit. Tap to fly off straight ahead.',
   'inf.time': '{sec}s',
   'inf.best': 'Best {sec}s',
   'inf.over': 'You lasted this long',

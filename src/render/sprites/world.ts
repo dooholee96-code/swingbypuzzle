@@ -1,6 +1,6 @@
 // 천체 스프라이트 — 반경(유닛)을 받아 그 크기로 찍는다. 시안 sprites-world.js 를 옮겼다.
 
-import { type Grid, fillCircle, grid, outline, rng, rotate, set } from './pixel.js';
+import { type Grid, fillCircle, get, grid, outline, rng, rotate, set } from './pixel.js';
 
 /** 행성 색 묶음 [밝은 곳, 바탕, 그림자]. 딸기·민트·레몬·하늘·복숭아·라벤더 */
 export const PLANET_SETS: readonly (readonly [string, string, string])[] = [
@@ -163,4 +163,35 @@ export function starTile(seed = 3, w = 64, h = 64, count = Math.round(26 * w * h
 export function rock(r: number, seed = 1, frame = 0): Grid {
   const g = asteroid(r, seed);
   return frame ? rotate(g, frame * Math.PI / 8, g.ax, g.ay) : g;
+}
+
+/**
+ * 궤도 행성의 포획 링 (§22.4). 2px 점선에 검은 테두리 — 1px 초록 점선은 파란 하늘에서
+ * 거의 안 보였다. 시안에 없는 그림이라 같은 팔레트로 새로 그렸다.
+ */
+export function dockRing(R: number, key = 'L', on = 5, off = 4): Grid {
+  const n = Math.ceil(R) * 2 + 7;
+  const g = grid(n, n);
+  g.ax = n / 2; g.ay = n / 2;
+  const steps = Math.floor(2 * Math.PI * R);
+  for (let i = 0; i < steps; i++) {
+    if (i % (on + off) >= on) continue;
+    const a = i / R, c = Math.cos(a), sn = Math.sin(a);
+    for (const rr of [R, R - 1]) set(g, Math.floor(g.ax + c * rr), Math.floor(g.ay + sn * rr), key);
+  }
+  return outline(g);
+}
+
+/** 소개 카드의 궤도 행성 그림: 행성 + 포획 링 */
+export function dockArt(r = 14, kind = 4): Grid {
+  const ring = dockRing(r + 9);
+  const body = planet(r, kind, { face: true });
+  const ox = Math.round(ring.ax - body.ax), oy = Math.round(ring.ay - body.ay);
+  for (let y = 0; y < body.h; y++) {
+    for (let x = 0; x < body.w; x++) {
+      const c = get(body, x, y);
+      if (c) set(ring, x + ox, y + oy, c);
+    }
+  }
+  return ring;
 }

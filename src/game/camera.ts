@@ -143,6 +143,7 @@ export function contentBox(L: Level): [number, number, number, number] {
   for (const h of L.holes ?? []) add(h.x, h.y, h.rH + 8);
   for (const r of L.rocks ?? []) add(r.x, r.y, r.r);
   for (const u of L.ufos ?? []) add(u.x, u.y, 14);
+  for (const d of L.docks ?? []) add(d.x, d.y, d.cr);
   boxes.set(L, b);
   return b;
 }

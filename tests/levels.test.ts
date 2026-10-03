@@ -56,12 +56,22 @@ describe('등록된 단계 (§19)', () => {
     expect(loadAll(allIds()).size).toBe(allIds().length);
   });
 
-  it('meta.solution이 모두 win이다 (분사 단계는 분사 기록째 — §22.1)', () => {
+  it('meta.solution이 모두 win이다 (분사·나가기 기록째 — §22.1, §22.4)', () => {
     const sim = new Sim();
     for (const id of allIds()) {
       const L = loadLevel(id);
-      const { angle, launch_step, turns } = L.meta.solution;
-      expect(sim.simulate(L, angle, launch_step, undefined, turns), `${id}`).toBe('win');
+      const { angle, launch_step, turns, releases } = L.meta.solution;
+      expect(sim.simulate(L, angle, launch_step, undefined, turns, releases), `${id}`).toBe('win');
+    }
+  });
+
+  it('궤도 행성 단계는 탭 없이는 정답 각도로 풀리지 않는다 (§22.4 규칙 12)', () => {
+    const sim = new Sim();
+    for (const id of allIds()) {
+      const L = loadLevel(id);
+      if (!L.docks?.length) continue;
+      const { angle, launch_step } = L.meta.solution;
+      expect(sim.simulate(L, angle, launch_step), `${id}`).not.toBe('win');
     }
   });
 

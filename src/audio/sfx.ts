@@ -7,7 +7,7 @@
 // 정책 때문이고, 만들어도 suspended 로 시작해 경고만 남는다.
 // 화면이 숨겨지면 음소거한다(§15.3).
 
-export type Sfx = 'launch' | 'enterField' | 'shoot' | 'explode' | 'arrive' | 'tick' | 'boost';
+export type Sfx = 'launch' | 'enterField' | 'shoot' | 'explode' | 'arrive' | 'tick' | 'boost' | 'dock';
 
 export class Audio {
   enabled = true;
@@ -56,6 +56,8 @@ export class Audio {
       case 'tick': return this.tone(1200, 1200, 0.02, 'square', 0.15);
       // 분사: 짧게 쉭 올라가는 소리 (§22.1)
       case 'boost': return this.tone(320, 760, 0.12, 'sawtooth', 0.4);
+      // 궤도 행성에 붙잡힘: 부드럽게 내려앉는 소리 (§22.4)
+      case 'dock': return this.tone(660, 330, 0.22, 'triangle', 0.6);
     }
   }
 

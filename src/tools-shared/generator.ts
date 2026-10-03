@@ -11,9 +11,10 @@ import { inArc, quantize } from '../core/angle.js';
 import { bodyPos, dist, gravs } from '../core/physics.js';
 import { mulberry32 } from '../core/rng.js';
 import { Sim } from '../core/simulate.js';
-import type { Grav, Hole, Level, Planet, Rock, Ufo } from '../core/types.js';
+import type { Dock, Grav, Hole, Level, Planet, Rock, Ufo } from '../core/types.js';
 import { FROM, STEP, TO, launchSteps, widthOf } from './scan.js';
 import { type RelTurn, arcRuns, flyRel, turnAngleRuns } from './turns.js';
+import { dockAngleRuns, flyDock } from './docks.js';
 import {
   DIVISIONS, MIN_WINDOW, checkLevel, computeMetrics, roleOf,
 } from './metrics.js';
@@ -368,6 +369,7 @@ export function generateOne(
   r: Recipe, s: SlotRecipe, seed: number,
 ): { ok: Candidate } | { reject: Reject } {
   if ((s.turns ?? 0) > 0) return generateTurnOne(r, s, seed);
+  if ((s.docks ?? 0) > 0) return generateDockOne(r, s, seed);
   const rnd = mulberry32(seedOf(r.chapter, s.slot, seed));
   const { speed, startZone, goalZone } = resolve(r, s);
   const { w, h } = s.map;
@@ -886,3 +888,263 @@ function generateTurnOne(
     },
   };
 }
+
+// ── 궤도 행성 단계 (§22.4) ──────────────────────────────────────────
+//
+// 분사 단계(§22.2)와 같은 틀이다. 다른 점은 갈래를 "분사 순간 × 방향" 대신
+// "링 위 나가는 자리 φ" 로 훑는다는 것 — 붙잡힌 뒤의 길은 발사 각도와 상관없이
+// φ 와 도는 방향으로만 정해진다.
+//   1. 배치 + 궤도 행성 하나를 출발점과 목적지 영역 사이에.
+//   2. 걸을 수 있는 각도(1°)를 탭 없이 날려(지나치거나 두 바퀴 뒤 저절로 나감)
+//      칸마다 "탭 없이 닿는 갈래 수"를 센다. 붙잡히는 각도와 도는 방향도 함께 적는다.
+//   3. 가장 넓게 붙잡히는 각도 묶음의 가운데로 쏘고, φ 를 3° 간격으로 훑어
+//      나간 뒤 궤적이 지나간 칸을 모은다.
+//   4. φ 폭(=나가기 타이밍 폭)이 넉넉하고 탭 없이 닿는 갈래가 적은 칸을 목적지로.
+//   5. 정답: φ 가운데, 발사 각도는 그 φ 로 훑은 성공 구간의 가운데.
+//   6. 탭 없이 가는 지름길(걸을 수 있는 범위 안)을 소행성으로 막는다.
+
+const PHI_STEP = 3;
+const MAX_NO_TAP_HITS = 24;
+
+function placeDocks(rnd: Rand, s: SlotRecipe, sx: number, sy: number, bodies: Grav[]): Dock[] | null {
+  const { w, h } = s.map;
+  const docks: Dock[] = [];
+  for (let n = 0; n < (s.docks ?? 0); n++) {
+    let ok = false;
+    for (let attempt = 0; attempt < 300 && !ok; attempt++) {
+      const r = pickInt(rnd, [16, 20]);
+      const cr = r + 30;
+      const x = snap(pick(rnd, [0.25 * w, 0.75 * w]));
+      const y = snap(pick(rnd, [0.30 * h, 0.62 * h]));
+      if (dist(x, y, sx, sy) < cr + 120) continue;
+      if (bodies.some((b) => {
+        const [bx, by] = centerOf(b);
+        return dist(x, y, bx, by) < bodyRadius(b) + cr + 25;
+      })) continue;
+      if (docks.some((d) => dist(x, y, d.x, d.y) < d.cr + cr + 60)) continue;
+      docks.push({ x, y, r, cr, sides: pickInt(rnd, [0, 5]) });
+      ok = true;
+    }
+    if (!ok) return null;
+  }
+  return docks;
+}
+
+function generateDockOne(
+  r: Recipe, s: SlotRecipe, seed: number,
+): { ok: Candidate } | { reject: Reject } {
+  const rnd = mulberry32(seedOf(r.chapter, s.slot, seed));
+  const { speed, startZone, goalZone } = resolve(r, s);
+  const { w, h } = s.map;
+
+  // 1. 배치
+  const [zx0, zy0, zx1, zy1] = zoneBox(startZone, w, h);
+  const sx = snap(pick(rnd, [zx0, zx1])), sy = snap(pick(rnd, [zy0, zy1]));
+  const placed = placeBodies(rnd, s, sx, sy);
+  if (!placed) return { reject: 'place' };
+  const planets = placed.planets;
+  const holes = placed.holes.map((p) => asHole(p as unknown as Planet));
+  const docks = placeDocks(rnd, s, sx, sy, [...planets, ...holes] as Grav[]);
+  if (!docks) return { reject: 'place' };
+  const base: Level = {
+    id: levelId(r, s), name: s.name, w, h, speed, preview: s.preview,
+    start: { x: sx, y: sy }, goal: { ...NO_GOAL },
+    ...(planets.length ? { planets } : {}),
+    ...(holes.length ? { holes } : {}),
+    ...(placed.ufos.length ? { ufos: placed.ufos } : {}),
+    docks,
+    meta: {
+      chapter: r.chapter, slot: s.slot, role: s.role,
+      ...(s.intro ? { intro: s.intro } : {}),
+      solution: { angle: 0, launch_step: 0 },
+      source: 'generated', updated: '',
+    },
+  };
+  const G = gravs(base);
+  const cols = Math.ceil(w / GRID), rows = Math.ceil(h / GRID);
+  const mark = (pts: number[], from: number, radius: number, into: (k: number) => void): void => {
+    const reach = Math.ceil(radius / GRID);
+    for (let i = from; i < pts.length; i += 2 * PATH_SUBSAMPLE) {
+      const px = pts[i]!, py = pts[i + 1]!;
+      const cx = Math.floor(px / GRID), cy = Math.floor(py / GRID);
+      for (let dx = -reach; dx <= reach; dx++) {
+        for (let dy = -reach; dy <= reach; dy++) {
+          const gx = cx + dx, gy = cy + dy;
+          if (gx < 0 || gy < 0 || gx >= cols || gy >= rows) continue;
+          if (dist(gx * GRID + GRID / 2, gy * GRID + GRID / 2, px, py) > radius) continue;
+          into(gy * cols + gx);
+        }
+      }
+    }
+  };
+
+  // 2. 탭 없이 닿는 갈래와 붙잡히는 각도
+  const [gx0, gy0, gx1, gy1] = zoneBox(goalZone, w, h);
+  const toward = Math.round(Math.atan2((gy0 + gy1) / 2 - sy, (gx0 + gx1) / 2 - sx) * 180 / Math.PI);
+  const sim = new Sim();
+  sim.recordPath = true;
+  const noTap = new Map<number, number>();
+  const caught: { a: number; dir: number }[] = [];
+  for (let a = toward - ARC; a <= toward + ARC; a += 1) {
+    const aa = ((a + 540) % 360) - 180;
+    sim.begin(base, aa, 0, G);
+    let res = '', dir = 0;
+    while (!res) {
+      res = sim.step();
+      if (sim.docked && !dir) dir = sim.docked.dir;
+    }
+    if (dir) caught.push({ a: aa, dir });
+    const seen = new Set<number>();
+    mark(sim.path, 0, GOAL_R, (k) => seen.add(k));
+    for (const k of seen) noTap.set(k, (noTap.get(k) ?? 0) + 1);
+  }
+  if (!caught.length) return { reject: 'goal' };
+
+  // 3. 가장 넓게 붙잡히는 묶음(같은 도는 방향, 연속 1°)의 가운데로 쏜다
+  let bestRun: { a0: number; a1: number; dir: number } | null = null;
+  let cur: { a0: number; a1: number; dir: number } | null = null;
+  for (const c of caught) {
+    if (cur && c.dir === cur.dir && Math.abs(wrapDeg(c.a - cur.a1) - 1) < 1e-6) cur.a1 = c.a;
+    else cur = { a0: c.a, a1: c.a, dir: c.dir };
+    if (!bestRun || cur.a1 - cur.a0 > bestRun.a1 - bestRun.a0) bestRun = { ...cur };
+  }
+  const a0 = quantize(bestRun!.a0 + wrapDeg(bestRun!.a1 - bestRun!.a0) / 2);
+
+  const cells = new Map<number, number[]>();
+  for (let phi = -180; phi < 180; phi += PHI_STEP) {
+    flyDock(sim, base, a0, 0, G, [phi]);
+    const rel = sim.releases[0];
+    if (rel === undefined) continue;
+    const seen = new Set<number>();
+    mark(sim.path, 2 * rel, GOAL_R - 4, (c) => {
+      if ((noTap.get(c) ?? 0) <= MAX_NO_TAP_HITS) seen.add(c);
+    });
+    for (const c of seen) (cells.get(c) ?? cells.set(c, []).get(c)!).push(phi);
+  }
+  if (!cells.size) return { reject: 'goal' };
+
+  // 4. 목적지 칸
+  const diag = Math.sqrt(w * w + h * h);
+  const want = 30;   // φ 폭 30° = 0.5초 근처를 노린다
+  let best: { x: number; y: number; phi: number; score: number } | null = null;
+  for (const [c, list] of cells) {
+    const x = (c % cols) * GRID + GRID / 2, y = Math.floor(c / cols) * GRID + GRID / 2;
+    if (!inZone(goalZone, w, h, x, y)) continue;
+    if (dist(x, y, sx, sy) < diag * GOAL_MIN_FRACTION) continue;
+    if (x < GOAL_R + 6 || y < GOAL_R + 6 || x > w - GOAL_R - 6 || y > h - GOAL_R - 6) continue;
+    if (G.some((b) => {
+      const [bx, by] = centerOf(b);
+      return dist(x, y, bx, by) < Math.max(b.R * 0.5, bodyRadius(b) + GOAL_R + 8);
+    })) continue;
+    if (docks.some((d) => dist(x, y, d.x, d.y) < d.cr + GOAL_R + 15)) continue;
+    list.sort((p, q) => p - q);
+    let run: [number, number] = [list[0]!, list[0]!], wide = run;
+    for (let i = 1; i < list.length; i++) {
+      if (Math.abs(list[i]! - run[1] - PHI_STEP) < 1e-6) run = [run[0], list[i]!];
+      else run = [list[i]!, list[i]!];
+      if (run[1] - run[0] > wide[1] - wide[0]) wide = run;
+    }
+    const width = wide[1] - wide[0] + PHI_STEP;
+    if (width < 12) continue;                         // 0.2초
+    const score = -Math.abs(width - want) * 0.1 - (noTap.get(c) ?? 0) * 0.25 + rnd() * 0.5;
+    if (!best || score > best.score) best = { x, y, phi: (wide[0] + wide[1]) / 2, score };
+  }
+  if (!best) return { reject: 'goal' };
+  const lv: Level = { ...base, goal: { x: best.x, y: best.y, r: GOAL_R } };
+
+  // 5. 정답: 그 φ 로 훑은 성공 구간에서 a0 를 품은 것의 가운데
+  const runs = dockAngleRuns(lv, 0, [best.phi], G);
+  const hit = runs.find((rr) => a0 >= rr[0] - 1 && a0 <= rr[1] + 1);
+  if (!hit) return { reject: 'turn' };
+  const angle = quantize((hit[0] + hit[1]) / 2);
+  const tsim = new Sim();
+  const releasesOf = (L: Level): number[] | null => {
+    tsim.recordPath = true;
+    const res = flyDock(tsim, L, angle, 0, G, [best!.phi]);
+    return res === 'win' ? tsim.releases.slice() : null;
+  };
+  const solPath = (L: Level): number[] => {
+    const ps = new Sim();
+    ps.recordPath = true;
+    ps.simulate(L, angle, 0, G, undefined, releasesOf(L) ?? []);
+    return ps.path.slice();
+  };
+  if (!releasesOf(lv)) return { reject: 'turn' };
+
+  // 6. 탭 없이 가는 지름길을 막는다
+  const rocks: Rock[] = [];
+  let seedN = 1;
+  for (let round = 0; round <= s.hazards.rocksMax; round++) {
+    const curL: Level = { ...lv, ...(rocks.length ? { rocks } : {}) };
+    const bad = arcRuns(curL, scanRuns(curL));
+    if (!bad.length) break;
+    if (rocks.length >= s.hazards.rocksMax) return { reject: 'rocks' };
+    const spot = blockSpot(curL, bad[0]!, [solPath(curL)], rnd);
+    if (!spot) return { reject: 'shortcut' };
+    rocks.push({ x: snap(spot[0]), y: snap(spot[1]), r: pickInt(rnd, RANGE.rock.r), seed: seedN++ });
+  }
+  const blocked: Level = { ...lv, ...(rocks.length ? { rocks } : {}) };
+
+  // 7. 장식 소행성 — 정답 궤적·링·출발·목적지에서 떨어진 곳에
+  const mainPaths = [solPath(blocked)];
+  const decor = Math.round(pick(rnd, [2, 4]));
+  for (let i = 0; i < decor; i++) {
+    for (let attempt = 0; attempt < 60; attempt++) {
+      const x = snap(pick(rnd, [0.08 * w, 0.92 * w]));
+      const y = snap(pick(rnd, [0.08 * h, 0.92 * h]));
+      const rr = pickInt(rnd, RANGE.rock.r);
+      if (nearPaths(mainPaths, x, y) < DECOR_GAP + rr) continue;
+      if (dist(x, y, sx, sy) < 80 || dist(x, y, best.x, best.y) < 80) continue;
+      if (rocks.some((q) => dist(q.x, q.y, x, y) < q.r + rr + 10)) continue;
+      if (docks.some((d) => dist(x, y, d.x, d.y) < d.cr + rr + 20)) continue;
+      if (G.some((b) => {
+        const [bx, by] = centerOf(b);
+        return dist(x, y, bx, by) < bodyRadius(b) + rr + 20;
+      })) continue;
+      rocks.push({ x, y, r: rr, seed: seedN++ });
+      break;
+    }
+  }
+
+  const final: Level = {
+    ...blocked,
+    ...(rocks.length ? { rocks } : {}),
+    ...(s.hint ? { hint: s.hint } : {}),
+  };
+  const rel = releasesOf(final);
+  if (!rel) return { reject: 'turn' };
+  final.meta = { ...final.meta, solution: { angle, launch_step: 0, releases: rel }, updated: today() };
+
+  // 8. 검증 (§8.5 + 규칙 12·13)
+  const metrics = computeMetrics(final);
+  const report = checkLevel(final, metrics, { window: s.window, timing: null });
+  if (DEBUG_TURN.on && report.failures.length) DEBUG_TURN.log(report.failures.join(' | '));
+  if (report.failures.length) return { reject: 'rules' };
+  if (metrics.main_window > s.window.max) return { reject: 'rules' };
+
+  final.meta = {
+    ...final.meta,
+    metrics: {
+      main_window: r2(metrics.main_window_at_solution),
+      flight_time: r2(metrics.flight_time),
+      clearance: r2(metrics.clearance),
+      difficulty: r2(metrics.difficulty),
+      ...(metrics.dock ? { release_timing: r2(metrics.dock.release) } : {}),
+    },
+  };
+  const ps = new Sim();
+  ps.recordPath = true;
+  ps.simulate(final, angle, 0, G, undefined, rel);
+  return {
+    ok: {
+      level: final, seed,
+      difficulty: metrics.difficulty,
+      main_window: metrics.main_window_at_solution,
+      flight_time: metrics.flight_time,
+      clearance: metrics.clearance,
+      solutionPath: ps.path.filter((_, i) => Math.floor(i / 2) % 6 === 0),
+    },
+  };
+}
+
+function wrapDeg(d: number): number { return d - 360 * Math.round(d / 360); }

@@ -1,0 +1,63 @@
+{
+  "id": "7-1",
+  "name": "첫 궤도",
+  "w": 400,
+  "h": 760,
+  "speed": 150,
+  "preview": 1.8,
+  "start": {
+    "x": 110,
+    "y": 615
+  },
+  "goal": {
+    "x": 275,
+    "y": 145,
+    "r": 24
+  },
+  "docks": [
+    {
+      "x": 260,
+      "y": 235,
+      "r": 17,
+      "cr": 47,
+      "sides": 1
+    }
+  ],
+  "meta": {
+    "chapter": 7,
+    "slot": 1,
+    "role": "도입",
+    "intro": "dock",
+    "solution": {
+      "angle": -71.5,
+      "launch_step": 0,
+      "releases": [
+        889
+      ]
+    },
+    "source": "generated",
+    "updated": "2026-10-03",
+    "metrics": {
+      "main_window": 6.75,
+      "flight_time": 4.07,
+      "clearance": 148.93,
+      "difficulty": 1.28,
+      "release_timing": 0.6
+    }
+  },
+  "rocks": [
+    {
+      "x": 70,
+      "y": 130,
+      "r": 19,
+      "seed": 1
+    },
+    {
+      "x": 325,
+      "y": 635,
+      "r": 16,
+      "seed": 2
+    }
+  ],
+  "hint": "초록 원에 붙잡히면 돌아요. 굴 쪽을 향할 때 탭하세요"
+}

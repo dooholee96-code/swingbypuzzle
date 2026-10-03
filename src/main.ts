@@ -54,6 +54,7 @@ let last = performance.now();
 let elapsed = 0;                   // 연출용 시계(초). 물리 시계와 따로 간다
 let demo = false;                  // 타이틀 데모가 도는 중인가
 let demoIdle = 0;
+let wasDocked = false;             // 지난 프레임에 궤도 행성에 붙잡혀 있었는가
 let ended = false;               // 이번 비행의 끝 소리를 이미 냈는가
 /**
  * 단계를 열 때 목적지가 한 화면에 안 들어오면, 목적지를 먼저 보여 주고 발사대로
@@ -376,7 +377,12 @@ canvas.addEventListener('pointerdown', (e) => {
   // 발사되지 않게 한다. 조준은 한 손가락이다.
   if (!e.isPrimary || dragMode) return;
   if (demo || screens.overlayOpen || hints.open || !session.level) return;
-  if (session.state === 'flying') { tapTurn(...pos(e)); return; }
+  if (session.state === 'flying') {
+    // 궤도 행성에서 도는 중이면 탭은 "나가기"다 (§22.4). 분사를 쓰지 않는다
+    if (session.release()) { sfx.play('launch'); buzz(15); field.onRelease(); return; }
+    tapTurn(...pos(e));
+    return;
+  }
   if (session.state !== 'ready' && session.state !== 'aiming') return;
   if (glide) snapToStart();          // 누르면 훑어보기는 바로 끝난다
   const [x, y] = pos(e);
@@ -539,10 +545,13 @@ function frame(now: number): void {
     else { sfx.play('explode'); buzz(60); }
   }
   if (session.state !== 'ending') ended = false;
+  // 궤도 행성에 붙잡힌 순간 한 번 (§22.4)
+  if (session.docked && !wasDocked) { sfx.play('dock'); buzz(20); }
+  wasDocked = session.docked;
 
   if (session.state === 'ending' && session.endProgress() >= 1 && hud.result.hidden && session.world) {
     // 인피니티의 끝: 기록만 남긴다. 단계 기록·광고 횟수에는 넣지 않는다
-    const sec = session.flightSeconds();
+    const sec = session.freeSeconds();          // 링에서 쉰 시간은 빼고 (§22.3)
     const inf = save.data.infinity;
     const isBest = sec > inf.best;
     inf.runs++;
