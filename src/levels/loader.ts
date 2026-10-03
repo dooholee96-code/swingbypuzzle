@@ -21,10 +21,11 @@ const REQUIRED: Record<string, string[]> = {
   orbit: ['cx', 'cy', 'rad', 'period', 'phase'],
   meta: ['chapter', 'slot', 'role', 'solution', 'source', 'updated'],
   solution: ['angle', 'launch_step'],
+  turn: ['step', 'dir'],
 };
 const OPTIONAL: Record<string, string[]> = {
-  level: ['planets', 'holes', 'rocks', 'ufos', 'hint'],
-  start: [], goal: [], orbit: [], solution: [], rock: [], ufo: [],
+  level: ['planets', 'holes', 'rocks', 'ufos', 'hint', 'turns'],
+  start: [], goal: [], orbit: [], solution: ['turns'], rock: [], ufo: [], turn: [],
   planet: ['ring', 'role', 'orbit'],
   hole: ['role'],
   meta: ['intro', 'metrics'],
@@ -70,11 +71,22 @@ export function validateSchema(raw: unknown, id: string): string[] {
   };
   list('planets', 'planet'); list('holes', 'hole');
   list('rocks', 'rock'); list('ufos', 'ufo');
+  const nt = L['turns'];
+  if (nt !== undefined && !(Number.isInteger(nt) && (nt as number) >= 0)) {
+    errors.push(`${id}: turns가 0 이상의 정수가 아닙니다`);
+  }
 
   const meta = L['meta'] as Record<string, unknown> | undefined;
   if (meta) {
     check(meta, 'meta', `${id} meta`);
-    if (meta['solution']) check(meta['solution'], 'solution', `${id} meta.solution`);
+    if (meta['solution']) {
+      check(meta['solution'], 'solution', `${id} meta.solution`);
+      const ts = (meta['solution'] as Record<string, unknown>)['turns'];
+      if (ts !== undefined) {
+        if (!Array.isArray(ts)) errors.push(`${id}: meta.solution.turns가 배열이 아닙니다`);
+        else ts.forEach((t, i) => check(t, 'turn', `${id} meta.solution.turns[${i}]`));
+      }
+    }
     if (meta['source'] !== undefined && !SOURCES.includes(String(meta['source']))) {
       errors.push(`${id}: meta.source가 ${SOURCES.join('|')} 중 하나가 아닙니다`);
     }

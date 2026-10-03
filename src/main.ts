@@ -294,8 +294,13 @@ function replayDemo(): void {
   session.launch();
 }
 
+/** 개발 서버에서 `?turns=N` 이면 모든 단계에 분사를 N번 더 준다 (§22.1 시험용). 배포에는 없다 */
+const DEV_TURNS = import.meta.env.DEV
+  ? Math.max(0, Number(new URLSearchParams(location.search).get('turns')) || 0) : 0;
+
 function startPlay(id: string): void {
   demo = false;
+  session.bonusTurns = DEV_TURNS;
   loadInto(id);
   beginGlide();
   screens.syncChapter(id);
@@ -308,6 +313,20 @@ function startPlay(id: string): void {
 }
 
 // ── 입력 (§10) ──────────────────────────────────────────────────────────
+/**
+ * 분사 (§22.1). 비행 중 탭한 곳 쪽으로 꺾는다. 방향은 화면에 보이는 우주선에서
+ * 탭한 지점으로 — 월드 좌표로 바꿔 잰다(배율이 소수여도 같은 방향).
+ */
+function tapTurn(x: number, y: number): void {
+  const [sx, sy] = session.shipPos();
+  const wx = cam.x + x / cam.scale, wy = cam.y + y / cam.scale;
+  const dir = Math.atan2(wy - sy, wx - sx) * 180 / Math.PI;
+  if (!session.turn(dir)) return;
+  field.onTurn(wx, wy);
+  sfx.play('boost');
+  buzz(15);
+}
+
 /** 캔버스 좌표. 위치는 resize() 가 잡아 둔 값을 쓴다 — getBoundingClientRect 는
  *  레이아웃을 강제하므로 초당 수십 번 오는 pointermove 에서 부르지 않는다. */
 function pos(e: PointerEvent): [number, number] {
@@ -319,6 +338,7 @@ canvas.addEventListener('pointerdown', (e) => {
   // 발사되지 않게 한다. 조준은 한 손가락이다.
   if (!e.isPrimary || dragMode) return;
   if (demo || screens.overlayOpen || hints.open || !session.level) return;
+  if (session.state === 'flying') { tapTurn(...pos(e)); return; }
   if (session.state !== 'ready' && session.state !== 'aiming') return;
   if (glide) snapToStart();          // 누르면 훑어보기는 바로 끝난다
   const [x, y] = pos(e);
@@ -524,7 +544,7 @@ function draw(preview: { points: number[]; outcome: string } | null): void {
 
 // HUD 는 플레이 중에만 보인다.
 // 전에는 따로 도는 두 번째 rAF 루프가 매 프레임 스타일을 썼다. 바뀔 때만 쓴다.
-const hudEls = [document.querySelector('.hud.top'), hud.hint, hud.angle] as HTMLElement[];
+const hudEls = [document.querySelector('.hud.top'), hud.hint, hud.angle, hud.turns] as HTMLElement[];
 let hudShown: boolean | null = null;
 function syncHudVisibility(): void {
   const show = !demo && !screens.overlayOpen && !hints.open;
@@ -557,7 +577,7 @@ if (!import.meta.env.DEV && 'serviceWorker' in navigator) {
 // 개발 서버에서만: 브라우저 확인 스크립트가 정확한 각도로 쏘려고 쓴다 (§16.6). 배포 번들에는 없다
 if (import.meta.env.DEV) {
   (window as unknown as { __swingby: unknown }).__swingby = {
-    session, cam, field, startPlay,
+    session, cam, field, startPlay, tapTurn,
     fire: (deg: number) => { session.setAngle(deg); session.launch(); },
   };
 }

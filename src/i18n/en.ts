@@ -26,6 +26,7 @@ export const en: Dict = {
   'hud.hint': 'Hint',
   'hud.retry': 'Retry',
   'hud.angle': 'Angle {deg}°',
+  'hud.turns': 'Boost',
 
   'result.win': 'You made it',
   'result.planet': 'You crashed into a planet',

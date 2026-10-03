@@ -30,6 +30,7 @@ export const ko = {
   'hud.hint': '힌트',
   'hud.retry': '다시',
   'hud.angle': '각도 {deg}°',
+  'hud.turns': '분사',
 
   // §13.4 결과
   'result.win': '도착했어요',

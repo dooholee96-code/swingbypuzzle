@@ -26,6 +26,7 @@ export const ja: Dict = {
   'hud.hint': 'ヒント',
   'hud.retry': 'リトライ',
   'hud.angle': '角度 {deg}°',
+  'hud.turns': 'ブースト',
 
   'result.win': '到着しました',
   'result.planet': '惑星に衝突しました',

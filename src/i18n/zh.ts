@@ -26,6 +26,7 @@ export const zh: Dict = {
   'hud.hint': '提示',
   'hud.retry': '重试',
   'hud.angle': '角度 {deg}°',
+  'hud.turns': '喷射',
 
   'result.win': '到达目的地',
   'result.planet': '撞上了行星',

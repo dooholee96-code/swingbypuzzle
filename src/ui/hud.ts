@@ -38,6 +38,9 @@ export class Hud {
   private readonly stageId = this.stage.querySelector<HTMLElement>('.sid') ?? this.stage;
   private readonly stageText = this.stage.querySelector<HTMLElement>('.clamp') ?? this.stage;
   readonly angle = $('angle');
+  /** 남은 분사 (§22.1). 분사가 있는 단계에서만 보인다 */
+  readonly turns = $('turns');
+  private turnsKey = '';
   readonly hint = $('hint');
   readonly result = $('result');
   readonly back = $('back') as HTMLButtonElement;
@@ -76,6 +79,17 @@ export class Hud {
     set(this.stageText, levelName(s.level));
     set(this.angle, s.state === 'aiming' && s.aimFar
       ? t('hud.angle', { deg: toUi(s.angle).toFixed(1) }) : '');
+    // 남은 분사: 바뀔 때만 다시 쓴다
+    const key = `${s.turnsLeft}/${s.maxTurns}`;
+    if (key !== this.turnsKey) {
+      this.turnsKey = key;
+      this.turns.hidden = s.maxTurns === 0;
+      this.turns.innerHTML = `<span class="lb">${t('hud.turns')}</span>`
+        + Array.from({ length: s.maxTurns }, (_, i) =>
+          `<i class="pip${i < s.turnsLeft ? ' on' : ''}"></i>`).join('');
+      // 하나 쓸 때마다 판이 튄다 (§12.7)
+      this.turns.classList.remove('pop'); void this.turns.offsetWidth; this.turns.classList.add('pop');
+    }
     // 첫 시도의 ready 상태에서만 레벨 hint (§13.3)
     set(this.hint, s.firstTry && s.state === 'ready' ? (levelHint(s.level) ?? '') : '');
   }

@@ -287,7 +287,7 @@ export function isEssential(L: Level, e: { kind: 'planet' | 'hole'; index: numbe
     ? { ...L, planets: (L.planets ?? []).filter((_, i) => i !== e.index) }
     : { ...L, holes: (L.holes ?? []).filter((_, i) => i !== e.index) };
   const sol = L.meta.solution;
-  return new Sim().simulate(without, sol.angle, sol.launch_step) !== 'win';
+  return new Sim().simulate(without, sol.angle, sol.launch_step, undefined, sol.turns) !== 'win';
 }
 
 // ── 규칙 (§8.5) ──────────────────────────────────────────────────────
@@ -349,10 +349,14 @@ export function checkLevel(L: Level, m = computeMetrics(L), limits?: RecipeLimit
     failures.push(`규칙5 clearance ${m.clearance.toFixed(2)} < ${MIN_CLEARANCE}유닛`);
   }
 
-  // 7. 저장된 정답이 실제로 성공하는가
-  const got = new Sim().simulate(L, sol.angle, sol.launch_step);
+  // 7. 저장된 정답이 실제로 성공하는가. 분사 기록이 있으면 그대로 되풀이한다 (§22.1)
+  const got = new Sim().simulate(L, sol.angle, sol.launch_step, undefined, sol.turns);
   if (got !== 'win') {
     failures.push(`규칙7 저장된 정답(${sol.angle}°, step ${sol.launch_step})의 결과가 ${got}`);
+  }
+  const used = sol.turns?.length ?? 0;
+  if (used > (L.turns ?? 0)) {
+    failures.push(`규칙7 정답이 분사를 ${used}번 쓰는데 단계는 ${L.turns ?? 0}번만 준다`);
   }
 
   // 8. 돔 표면이 무언가의 판정 안에 있는가

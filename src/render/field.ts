@@ -78,6 +78,13 @@ export class FieldRenderer {
   private bodyS: Spring[] = [];
   private inside: boolean[] = [];
 
+  // 분사 연출 (§22.1). 꺾은 자리에 연기, 탭한 곳에 반짝임
+  private turnReq: [number, number] | null = null;
+  private puff: { t: number; x: number; y: number; tx: number; ty: number; a: number } | null = null;
+
+  /** 분사를 쓴 순간. 탭한 월드 좌표를 받는다 */
+  onTurn(tx: number, ty: number): void { this.turnReq = [tx, ty]; }
+
   /** 단계마다 크기가 다른 그림은 단계를 바꿀 때 버린다. 로켓·효과는 남긴다. */
   rebuild(L: Level): void {
     if (this.levelId) this.cache.dropPrefix(`L:`);
@@ -87,6 +94,8 @@ export class FieldRenderer {
     this.inside = new Array<boolean>(n).fill(false);
     for (const sp of [this.shipS, this.moonS, this.goalS]) sp.reset();
     this.prevState = '';
+    this.turnReq = null;
+    this.puff = null;
   }
 
   /** 상태가 바뀐 순간과 중력 범위에 들어선 순간에 용수철을 튕긴다 */
@@ -141,6 +150,14 @@ export class FieldRenderer {
     const dt = this.lastT < 0 ? 0 : Math.min(0.1, Math.max(0, t - this.lastT));
     this.lastT = t;
     this.react(s, dt);
+    if (this.turnReq) {
+      const [x, y] = s.shipPos();
+      // 연기는 새 진행 방향의 반대쪽으로 뿜는다
+      const a = Math.atan2(this.turnReq[1] - y, this.turnReq[0] - x);
+      this.puff = { t, x, y, tx: this.turnReq[0], ty: this.turnReq[1], a };
+      if (!this.reduceMotion) this.shipS.kick(4);
+      this.turnReq = null;
+    }
 
     this.sky(ctx, cam, L);
     this.bounds(ctx, L);
@@ -156,7 +173,26 @@ export class FieldRenderer {
     this.bullets(ctx, s);
     this.pad(ctx, s);
     if (preview) this.preview(ctx, preview, t);
+    this.turnPuff(ctx, t);
     this.ship(ctx, s, t);
+  }
+
+  /** 분사 연기(0.35초, 뒤로 퍼지며 커지는 네 덩이)와 탭 지점 반짝임(0.25초) */
+  private turnPuff(ctx: CanvasRenderingContext2D, t: number): void {
+    const p = this.puff;
+    if (!p) return;
+    const age = t - p.t;
+    if (age > 0.35) { this.puff = null; return; }
+    const u = age / 0.35;
+    const back = p.a + Math.PI;
+    const puff = this.fx(u < 0.4 ? 'dust0' : 'dust1');
+    for (let i = 0; i < 4; i++) {
+      const q = back + (i - 1.5) * 0.35;
+      const d = 4 + (10 + i * 3) * Math.sqrt(u);
+      const k = 1.6 + u * 1.4;
+      putScaled(ctx, puff, p.x + Math.cos(q) * d, p.y + Math.sin(q) * d, k, k);
+    }
+    if (age < 0.25) put(ctx, this.fx(Math.floor(age * 16) % 2 ? 'sparkle1' : 'sparkle0'), p.tx, p.ty);
   }
 
   // 밤하늘. 맵 바깥은 한 칸 어두운 색($03)으로 칠해 벽이 읽히게 한다.

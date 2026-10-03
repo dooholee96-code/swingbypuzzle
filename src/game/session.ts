@@ -25,6 +25,10 @@ export class Session {
   attempts = 0;
   firstTry = true;
   aimFar = false;                   // 예측선 표시 여부 (§10.2)
+  /** 남은 분사 (§22.1). 단계의 turns + bonusTurns */
+  turnsLeft = 0;
+  /** 개발용: 분사가 없는 단계에서도 시험해 볼 수 있게 더 준다 (main.ts 의 ?turns=N, DEV 전용) */
+  bonusTurns = 0;
 
   trail: number[] = [];
   prevTrail: number[] = [];
@@ -52,6 +56,20 @@ export class Session {
     this.trail = [];
     this.endElapsed = 0;
     this.clock.reset();
+    this.turnsLeft = this.maxTurns;
+  }
+
+  get maxTurns(): number { return (this.level.turns ?? 0) + this.bonusTurns; }
+
+  /**
+   * 분사 (§22.1). 비행 중이고 남아 있으면 다음 스텝 경계에서 dirDeg 쪽으로 꺾는다.
+   * 썼으면 true. 한 스텝 안의 두 번째 탭은 버린다(횟수만 줄고 효과가 없으면 억울하다).
+   */
+  turn(dirDeg: number): boolean {
+    if (this.state !== 'flying' || this.turnsLeft <= 0 || this.sim.turnPending) return false;
+    this.sim.queueTurn(dirDeg);
+    this.turnsLeft--;
+    return true;
   }
 
   pauseReset(): void { this.clock.reset(); }

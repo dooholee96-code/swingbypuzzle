@@ -105,6 +105,16 @@ img.px{image-rendering:pixelated;image-rendering:crisp-edges}
 #hint{bottom:calc(16px + env(safe-area-inset-bottom,0px));padding:8px 12px;
       background:var(--paper);font:400 13px/1.5 var(--text);width:max-content}
 #angle:empty,#hint:empty{display:none}
+/* 남은 분사 (§22.1): 왼쪽 위, 뒤로 버튼 바로 밑. 아래 가운데는 각도·힌트 판 자리라 겹친다.
+   채운 칸 = 남은 횟수 */
+#turns{position:absolute;left:12px;top:calc(64px + env(safe-area-inset-top,0px));
+  pointer-events:none;display:flex;align-items:center;gap:5px;padding:6px 10px;
+  background:var(--white);border:3px solid var(--ink);box-shadow:3px 3px 0 var(--ink)}
+#turns[hidden]{display:none}
+#turns .lb{font:700 12px/1 var(--text);margin-right:3px}
+#turns .pip{width:10px;height:14px;border:2px solid var(--ink);background:var(--gray-light)}
+#turns .pip.on{background:var(--orange)}
+#turns.pop{animation:pop .3s ease-out both}
 
 /* ── 판(패널) ─────────────────────────────────────────────────────── */
 .panel{background:var(--paper);border:4px solid var(--ink);box-shadow:6px 6px 0 var(--ink);

@@ -34,7 +34,8 @@ export interface Metrics {
 export interface Meta {
   chapter: number; slot: number; role: string;
   intro?: 'planet' | 'rock' | 'hole' | 'ufo' | 'orbit' | 'wide';
-  solution: { angle: number; launch_step: number };
+  /** turns: 분사 기록 (§22.1). 6장부터. 없으면 분사 없이 풀리는 단계다 */
+  solution: { angle: number; launch_step: number; turns?: Turn[] };
   metrics?: Metrics;
   source: 'verified' | 'generated' | 'editor';
   updated: string;
@@ -53,8 +54,13 @@ export interface Level {
   rocks?: Rock[];
   ufos?: Ufo[];
   hint?: string;
+  /** 쓸 수 있는 분사 횟수 (§22.1). 없으면 0 — 1~5장 */
+  turns?: number;
   meta: Meta;
 }
+
+/** 분사 한 번. 비행 시계 step 째 스텝을 밟기 직전에 dir(°, 월드각) 쪽으로 꺾는다 */
+export interface Turn { step: number; dir: number }
 
 /** §5.4 의 결과 종류. '' 는 "아직 계속"을 뜻한다. */
 export type Outcome =
