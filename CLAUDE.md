@@ -100,6 +100,8 @@ npm run gen -- --recipe recipes/ch1.json --slot 2 --count 10   후보 생성 (§
 **회귀 테스트가 배포 관문이다.** 깨진 물리는 올라가지 않는다.
 
 Settings → Pages → Source 는 **"GitHub Actions"** 로 되어 있다 (확인함).
+"Deploy from a branch" 로 바뀌면 GitHub 이 빌드하지 않은 소스를 Jekyll 로 그대로 올려
+(`/src/main.ts` 를 부르는 `index.html`) **빈 화면이 된다.** 한 번 그렇게 된 적이 있다.
 주소: `https://dooholee96-code.github.io/swingbypuzzle/`
 
 기본 브랜치는 **`main`** 이다. 배포는 기본 브랜치에서만 된다 — 워크플로
@@ -159,9 +161,9 @@ Settings → Pages → Source 는 **"GitHub Actions"** 로 되어 있다 (확인
    승인 뒤 퍼블리셔 ID 를 **GitHub Actions 시크릿 `VITE_H5_CLIENT`** 로 넣는다.
    저장소 파일에 적지 않는다 (§0.8)
 2. **개인정보처리방침의 문의처 이메일** — `public/privacy/index.html` 에 자리만 비어 있다
-3. **Settings → Environments → `github-pages` 의 배포 브랜치에 `main` 추가** —
-   기본 브랜치는 `main` 으로 바꿨지만 이 목록이 옛 브랜치에 묶여 있어 배포가 막혀 있다.
-   고치고 나면 옛 브랜치 `claude/kind-wozniak-x4heoi` 를 지운다
+3. **옛 브랜치 정리** — `claude/kind-wozniak-x4heoi`·`claude/upbeat-noether-355hjk`.
+   둘 다 main 에 없는 커밋이 없다. 이 세션 권한으로는 원격 브랜치를 지울 수 없어 사용자가 지운다.
+   (`main` 배포는 `github-pages` 환경의 브랜치 목록을 `main` 으로 바꿔 풀렸다)
 4. **폰으로 40단계를 직접 플레이** — 검증기는 "풀린다"까지만 보장한다.
    재미와 난이도 체감, 60fps, 소리는 사람이 판단한다 (§18)
 5. 구글 플레이 계정·업로드 키·AdMob 광고 단위 (M12)
