@@ -8,12 +8,15 @@ import { CHAPTERS, allIds } from './chapters.js';
 export interface Progress {
   cleared(id: string): boolean;
   skipped(id: string): boolean;
+  /** 개발자용 숨은 옵션(?open): 모든 단계·장을 연다. 클리어 표시는 바꾸지 않는다 */
+  allOpen?: boolean;
 }
 
 /** 이 단계를 지금 플레이할 수 있는가. 첫 단계는 언제나 열려 있다. */
 export function isUnlocked(id: string, p: Progress): boolean {
   const ids = allIds();
   const i = ids.indexOf(id);
+  if (p.allOpen) return i >= 0;
   if (i <= 0) return i === 0;
   const prev = ids[i - 1]!;
   return p.cleared(prev) || p.skipped(prev);
@@ -22,6 +25,7 @@ export function isUnlocked(id: string, p: Progress): boolean {
 /** 장 탭이 열렸는가. 이전 장이 전부 끝나야 열린다. */
 export function isChapterUnlocked(chapter: number, p: Progress): boolean {
   const i = CHAPTERS.findIndex((c) => c.chapter === chapter);
+  if (p.allOpen) return i >= 0;
   if (i <= 0) return i === 0;
   const prev = CHAPTERS[i - 1]!;
   return prev.levels.every((id) => p.cleared(id) || p.skipped(id));

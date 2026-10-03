@@ -48,6 +48,21 @@ describe('장 잠금 (§13.2)', () => {
   });
 });
 
+describe('개발자용 ?open (§22.3)', () => {
+  it('모든 단계와 장을 연다 — 클리어 표시는 바꾸지 않는다', () => {
+    const p: Progress = { ...P(), allOpen: true };
+    for (const id of allIds()) expect(isUnlocked(id, p), id).toBe(true);
+    for (const c of CHAPTERS) expect(isChapterUnlocked(c.chapter, p), `${c.chapter}`).toBe(true);
+    expect(p.cleared(FIRST)).toBe(false);
+  });
+
+  it('없는 단계·장까지 열지는 않는다', () => {
+    const p: Progress = { ...P(), allOpen: true };
+    expect(isUnlocked('99-1', p)).toBe(false);
+    expect(isChapterUnlocked(99, p)).toBe(false);
+  });
+});
+
 describe('다음 단계와 이어 하기', () => {
   it('마지막 단계 다음은 없다', () => {
     const ids = allIds();

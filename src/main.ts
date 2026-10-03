@@ -73,10 +73,26 @@ save.load();
 saveAdState(forNewSession(adState()));
 applySettings();
 
+// ── 개발자용 숨은 옵션 (§22.1, §22.3) ─────────────────────────────────
+// 화면 어디에도 안내하지 않는다. 저장하지 않으므로 주소에서 빼면 꺼진다.
+// 배포 사이트에서도 켜진다 — 사용자가 폰에서 새 장·모드를 바로 시험하려고 요청했다.
+const PARAMS = new URLSearchParams(location.search);
+/**
+ * `?turns=N`: 모든 단계에 분사를 N번(최대 9) 더 준다. 그 상태로 깬 단계는 평소처럼
+ * 클리어로 남는다.
+ */
+const TEST_TURNS = Math.min(9, Math.max(0, Math.floor(Number(PARAMS.get('turns')) || 0)));
+/**
+ * `?open`: 모든 장·단계와 인피니티를 연다. 클리어 표시(✓)는 그대로다 — 열기만 한다.
+ * `?open&turns=3` 처럼 함께 쓸 수 있다.
+ */
+const TEST_OPEN = PARAMS.has('open');
+
 const screens = new Screens({
   progress: {
     cleared: (id) => save.cleared(id),
     skipped: (id) => save.level(id).skipped,
+    allOpen: TEST_OPEN,
   },
   levelName: (id) => levelName(loadLevel(id)),
   settings: save.data.settings,
@@ -90,7 +106,7 @@ const screens = new Screens({
     screens.showSelect();
   },
   onInfinity: () => startInfinity(),
-  infinityOpen: () => save.cleared('6-1'),
+  infinityOpen: () => TEST_OPEN || save.cleared('6-1'),
   onPick: (id) => startPlay(id),
   onSettingChange: () => { applySettings(); save.touch(); },
   canOpenPrivacyOptions: () => ads.canOpenPrivacyOptions(),
@@ -294,14 +310,6 @@ function replayDemo(): void {
   session.setAngle(session.level.meta.solution.angle);
   session.launch();
 }
-
-/**
- * 숨은 시험 옵션(§22.1): 주소에 `?turns=N` 이 있으면 모든 단계에 분사를 N번(최대 9) 더 준다.
- * 사용자가 폰에서 분사 손맛을 보려고 배포 사이트에도 켰다. 화면 어디에도 안내하지 않는다.
- * 옵션 자체는 저장하지 않는다(주소를 빼면 꺼진다). 그 상태로 깬 단계는 평소처럼 클리어로 남는다.
- */
-const TEST_TURNS = Math.min(9, Math.max(0,
-  Math.floor(Number(new URLSearchParams(location.search).get('turns')) || 0)));
 
 function startPlay(id: string): void {
   demo = false;
