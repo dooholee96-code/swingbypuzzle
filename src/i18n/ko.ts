@@ -100,9 +100,6 @@ export const ko = {
   'set.off': '끔',
   'set.sfx': '효과음',
   'set.haptics': '진동',
-  'set.glow': '발광 효과',
-  'set.glowNormal': '보통',
-  'set.glowLow': '낮음',
   'set.reduceMotion': '모션 줄이기',
   'set.language': '언어',
   'set.langAuto': '자동',
@@ -112,7 +109,7 @@ export const ko = {
   'set.view': '보기',
   'set.credits': '만든 것',
   'set.oss': '오픈소스 고지',
-  'set.ossNote': '이 게임은 오픈소스 라이브러리를 쓰지 않습니다. Oxanium 글꼴은 SIL Open Font License 를 따릅니다.',
+  'set.ossNote': '이 게임은 오픈소스 라이브러리를 쓰지 않습니다. 글꼴은 Galmuri(이민서)와 Fusion Pixel Font(TakWolf)이며 SIL Open Font License 를 따릅니다.',
   'set.version': '버전',
 } as const;
 

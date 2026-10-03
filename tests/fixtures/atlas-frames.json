@@ -1,0 +1,912 @@
+{
+"fx/bullet": {
+"h": 4,
+"sha1": "b640a06a71c57ff21638bc91b8f1f80ed9e71a2d",
+"w": 4
+},
+"fx/dizzy": {
+"h": 5,
+"sha1": "ba931bf29a71e57ea9b7fce5a161bfd4abd3c1ec",
+"w": 5
+},
+"fx/dot": {
+"h": 2,
+"sha1": "57db8ee618d058f47d5c4bbced7cd0c056b5dedd",
+"w": 2
+},
+"fx/dust0": {
+"h": 4,
+"sha1": "2f68100193a6328ce0d517f9f04c479cc6d9ff1c",
+"w": 4
+},
+"fx/dust1": {
+"h": 5,
+"sha1": "5aad6e10674fd19d12d95edbd32b953dd60df0d2",
+"w": 6
+},
+"fx/sparkle0": {
+"h": 5,
+"sha1": "14007f8bcbbb2a32d9f098066d1feade79955074",
+"w": 5
+},
+"fx/sparkle1": {
+"h": 5,
+"sha1": "d2ca58355ec122068a0186671dba8495da0b6ba7",
+"w": 5
+},
+"fx/star1": {
+"h": 1,
+"sha1": "402e0396fd6f1cd52c39acd006c01c50022e7a6c",
+"w": 1
+},
+"fx/star2": {
+"h": 3,
+"sha1": "9b32ac6163ed98e40fdf92b598d9944ea8f4d334",
+"w": 3
+},
+"fx/trail": {
+"h": 1,
+"sha1": "402e0396fd6f1cd52c39acd006c01c50022e7a6c",
+"w": 1
+},
+"fx/xmark": {
+"h": 5,
+"sha1": "0c4d6b913389f7589293b7b152f7d994892b03ab",
+"w": 5
+},
+"fx/zz": {
+"h": 4,
+"sha1": "4f4647543e65e99df3bd06b62c26a080ee3eb08c",
+"w": 4
+},
+"hole_r12/0": {
+"h": 42,
+"sha1": "7a7070a1351f7964abeaac8c53903967d00998bd",
+"w": 42
+},
+"hole_r12/1": {
+"h": 42,
+"sha1": "ade4b7c38f56096d06ab59e5c98b54ba985cbb91",
+"w": 42
+},
+"hole_r12/2": {
+"h": 42,
+"sha1": "64c5fe4634612b90a7a63a0bea9a96737f490b95",
+"w": 42
+},
+"hole_r12/3": {
+"h": 42,
+"sha1": "5228bc991678fd0882d060d2cc165b95c9ef2f3b",
+"w": 42
+},
+"hole_r12/4": {
+"h": 42,
+"sha1": "4d8b984787560d7679dc9d721cba6da998cbdaae",
+"w": 42
+},
+"hole_r12/5": {
+"h": 42,
+"sha1": "875e72ebbe999de66625406d17e4d82e05c113b0",
+"w": 42
+},
+"hole_r12/6": {
+"h": 42,
+"sha1": "23ed687b7df35885c812c8d2712834cd4ee8f2d0",
+"w": 42
+},
+"hole_r12/7": {
+"h": 42,
+"sha1": "52d221b314f2fc67bb8a7cdafca9d46f896febdc",
+"w": 42
+},
+"moon_r18": {
+"h": 44,
+"sha1": "ae1bd8651876501ac1a775567505094399824520",
+"w": 44
+},
+"planet_r22/0": {
+"h": 48,
+"sha1": "18f4e3ea623fba5b702a7c5c03abba67e2a4ff5a",
+"w": 48
+},
+"planet_r22/1": {
+"h": 48,
+"sha1": "ce05e174ab06763077d441624945e5e74f951808",
+"w": 48
+},
+"planet_r22/2": {
+"h": 48,
+"sha1": "8a2aa5a414a92223772ce5bb714751054985a0f9",
+"w": 48
+},
+"planet_r22/3": {
+"h": 48,
+"sha1": "d4f4a0829e8bd056ac6eb2cf9fba7744dca13a0b",
+"w": 48
+},
+"planet_r22/4": {
+"h": 48,
+"sha1": "d9988bf70fd10b70acbeee650bd1864851ea9955",
+"w": 48
+},
+"planet_r22/5": {
+"h": 48,
+"sha1": "f4ae9995a481f5e0b33127147f8c0964de2dc6d6",
+"w": 48
+},
+"planet_r26_ring": {
+"h": 82,
+"sha1": "1b7ed9b04288803961eef1f2275da6c6cb004aaf",
+"w": 82
+},
+"portal_r24/0": {
+"h": 56,
+"sha1": "c9142550d992d0575fdb084192e1c6f529fc298a",
+"w": 56
+},
+"portal_r24/1": {
+"h": 56,
+"sha1": "2fd60abc7c519f98a64285038d20b4f5873be48f",
+"w": 56
+},
+"portal_r24/2": {
+"h": 56,
+"sha1": "c9142550d992d0575fdb084192e1c6f529fc298a",
+"w": 56
+},
+"portal_r24/3": {
+"h": 56,
+"sha1": "2fd60abc7c519f98a64285038d20b4f5873be48f",
+"w": 56
+},
+"portal_r24/4": {
+"h": 56,
+"sha1": "c9142550d992d0575fdb084192e1c6f529fc298a",
+"w": 56
+},
+"portal_r24/5": {
+"h": 56,
+"sha1": "2fd60abc7c519f98a64285038d20b4f5873be48f",
+"w": 56
+},
+"portal_r24/6": {
+"h": 56,
+"sha1": "c9142550d992d0575fdb084192e1c6f529fc298a",
+"w": 56
+},
+"portal_r24/7": {
+"h": 56,
+"sha1": "2fd60abc7c519f98a64285038d20b4f5873be48f",
+"w": 56
+},
+"rocket/aim/0": {
+"h": 36,
+"sha1": "183712722722971b18cb854031be26f8abed77eb",
+"w": 36
+},
+"rocket/aim/1": {
+"h": 36,
+"sha1": "324efcf5cf00735e93b97fbb762958e3764486e5",
+"w": 36
+},
+"rocket/aim/10": {
+"h": 36,
+"sha1": "4be33edbf0d0528fcf3b3284700f48bc0043ef4d",
+"w": 36
+},
+"rocket/aim/11": {
+"h": 36,
+"sha1": "3928a927d90c46dffb214d5c7ebe4e06db0e3d4f",
+"w": 36
+},
+"rocket/aim/12": {
+"h": 36,
+"sha1": "d4e9e3127fd1aa3392f45512f9e64a643786cb2a",
+"w": 36
+},
+"rocket/aim/13": {
+"h": 36,
+"sha1": "f9acf010583f355fda0bf28abbd23cfbf52019a1",
+"w": 36
+},
+"rocket/aim/14": {
+"h": 36,
+"sha1": "ee89e4fc48ae20acf4e65373cba452b262dcff48",
+"w": 36
+},
+"rocket/aim/15": {
+"h": 36,
+"sha1": "17ee95326319faacc084281abb04c6160e5d4c36",
+"w": 36
+},
+"rocket/aim/2": {
+"h": 36,
+"sha1": "6a08ac3203be9fd35451f1d984a045cfdefcb98e",
+"w": 36
+},
+"rocket/aim/3": {
+"h": 36,
+"sha1": "edcaee34b67222d4ff73ca66593e315584032a0f",
+"w": 36
+},
+"rocket/aim/4": {
+"h": 36,
+"sha1": "4f96175b159fcbc35e91e888f45e9c8305748172",
+"w": 36
+},
+"rocket/aim/5": {
+"h": 36,
+"sha1": "31ea5afdd85d050aa1fbcfe4953f104a09ae20c4",
+"w": 36
+},
+"rocket/aim/6": {
+"h": 36,
+"sha1": "a9cfcd66ceb33147cf2747e65a3a3bd549921401",
+"w": 36
+},
+"rocket/aim/7": {
+"h": 36,
+"sha1": "f23f6659ada25c114a74b526a406364af7bc4b43",
+"w": 36
+},
+"rocket/aim/8": {
+"h": 36,
+"sha1": "e0b2fcf657727dff05c60c068d437c81b49f55e5",
+"w": 36
+},
+"rocket/aim/9": {
+"h": 36,
+"sha1": "4f09e2d3225ed0dfa4a0ca9325081a11e7e4ccf4",
+"w": 36
+},
+"rocket/bump/0": {
+"h": 36,
+"sha1": "f758dfa33d555f9a59c45bf43b19ce0d7d8a9f2c",
+"w": 36
+},
+"rocket/bump/1": {
+"h": 36,
+"sha1": "6ded4ff7e5f0466fd24953be1736e5641650cdc7",
+"w": 36
+},
+"rocket/bump/10": {
+"h": 36,
+"sha1": "376b713de2eaf3acf4057081d47af67205d25264",
+"w": 36
+},
+"rocket/bump/11": {
+"h": 36,
+"sha1": "2c18d28a9a4215c247636058333ccc9d3be0cc9c",
+"w": 36
+},
+"rocket/bump/12": {
+"h": 36,
+"sha1": "b44a5d8e008650c392679d01cb80dc4792ec1d93",
+"w": 36
+},
+"rocket/bump/13": {
+"h": 36,
+"sha1": "f50b7c2ebefcad07ee7f08fcaaa5f68d6109da88",
+"w": 36
+},
+"rocket/bump/14": {
+"h": 36,
+"sha1": "1b715dfff1efc0213eb394ec5a16b90f754360f1",
+"w": 36
+},
+"rocket/bump/15": {
+"h": 36,
+"sha1": "0d7fa8e09a2ed48a4ce6a8e873cc1f7de5f2de94",
+"w": 36
+},
+"rocket/bump/2": {
+"h": 36,
+"sha1": "f978c29172fb029388ce72eab93c01121dbb58bb",
+"w": 36
+},
+"rocket/bump/3": {
+"h": 36,
+"sha1": "e03362bbdb02f0d13b0dca7e06faea0cb8608320",
+"w": 36
+},
+"rocket/bump/4": {
+"h": 36,
+"sha1": "73c3407c778a2d536d01710742c171990f6e2376",
+"w": 36
+},
+"rocket/bump/5": {
+"h": 36,
+"sha1": "d7ae92b59d797cb175a48f2325dfe0478c1ec557",
+"w": 36
+},
+"rocket/bump/6": {
+"h": 36,
+"sha1": "1d89fc2889084e9b0cd8411eedb8dddeabb8660d",
+"w": 36
+},
+"rocket/bump/7": {
+"h": 36,
+"sha1": "5da9ec7d6ab2abbfd0ca2798948c828da308c4bc",
+"w": 36
+},
+"rocket/bump/8": {
+"h": 36,
+"sha1": "668caed04db9f649261de55c05ed146902110cc2",
+"w": 36
+},
+"rocket/bump/9": {
+"h": 36,
+"sha1": "05cc7c0d0ef0eaca0d03e7d85d83cbcd8d318625",
+"w": 36
+},
+"rocket/fly/0": {
+"h": 36,
+"sha1": "c4ca1be5dca96dcacfd7aae78295164d1bdc7274",
+"w": 36
+},
+"rocket/fly/1": {
+"h": 36,
+"sha1": "b1f25cd727146af323fa1cd9da1768c8753ab25d",
+"w": 36
+},
+"rocket/fly/10": {
+"h": 36,
+"sha1": "74268fa606ce027d8e35b83143646e1b5e35b153",
+"w": 36
+},
+"rocket/fly/11": {
+"h": 36,
+"sha1": "7bd8508984780b77d4538ae144f07352363673a8",
+"w": 36
+},
+"rocket/fly/12": {
+"h": 36,
+"sha1": "9dbbe6aa547af88f88ffd5f1e4d82ab6d8ffa783",
+"w": 36
+},
+"rocket/fly/13": {
+"h": 36,
+"sha1": "cce202cb9a24ca0e5f013a3b6d5d6ef614421803",
+"w": 36
+},
+"rocket/fly/14": {
+"h": 36,
+"sha1": "4b15fde9a409c2365dee2283829b1414fed4cacd",
+"w": 36
+},
+"rocket/fly/15": {
+"h": 36,
+"sha1": "b5b59849e6ff003bab74ed8a8ce34b356710820b",
+"w": 36
+},
+"rocket/fly/2": {
+"h": 36,
+"sha1": "645b9adc85b475cc41e63d0ca7f6742e2939d8b3",
+"w": 36
+},
+"rocket/fly/3": {
+"h": 36,
+"sha1": "3b8789340accc54dc0df0682964ac93385a2b3ea",
+"w": 36
+},
+"rocket/fly/4": {
+"h": 36,
+"sha1": "e1a364079418f551749af2eecbb89f0d1105a0ac",
+"w": 36
+},
+"rocket/fly/5": {
+"h": 36,
+"sha1": "12029dc367463ac55bc3f706b4d210ee5dede117",
+"w": 36
+},
+"rocket/fly/6": {
+"h": 36,
+"sha1": "dbab4db74c083cb89a59c610b19e28f3b00e5c89",
+"w": 36
+},
+"rocket/fly/7": {
+"h": 36,
+"sha1": "758f2ee2b741c34399f15cf65ba5aead6e650f8d",
+"w": 36
+},
+"rocket/fly/8": {
+"h": 36,
+"sha1": "d6d9da10fc32dbb3319f3a03556e46039b67ae69",
+"w": 36
+},
+"rocket/fly/9": {
+"h": 36,
+"sha1": "1cdf9b2f76860326a75241458be772d0b6b23049",
+"w": 36
+},
+"rocket/fly_flame0/0": {
+"h": 36,
+"sha1": "154f3ed839eb0e2c28333435ef59497f766c0ae9",
+"w": 36
+},
+"rocket/fly_flame0/1": {
+"h": 36,
+"sha1": "ba4e0933ecd4b273653b8b8403163a345ce15f8a",
+"w": 36
+},
+"rocket/fly_flame0/10": {
+"h": 36,
+"sha1": "c6895cbe398575167aed7254e8ab073bdd360613",
+"w": 36
+},
+"rocket/fly_flame0/11": {
+"h": 36,
+"sha1": "247f725458ce88d1430a70c87dc7bc06ea008a6f",
+"w": 36
+},
+"rocket/fly_flame0/12": {
+"h": 36,
+"sha1": "be885e6346f439962063aaeae6e7265c2422d825",
+"w": 36
+},
+"rocket/fly_flame0/13": {
+"h": 36,
+"sha1": "6c37416d5f031cde63c3112d3d1a8b3ac19790c6",
+"w": 36
+},
+"rocket/fly_flame0/14": {
+"h": 36,
+"sha1": "90d54ed3b97007ae3559198c3baff7783f496260",
+"w": 36
+},
+"rocket/fly_flame0/15": {
+"h": 36,
+"sha1": "b0579fa47968a989dac86bfe0fe148758e957814",
+"w": 36
+},
+"rocket/fly_flame0/2": {
+"h": 36,
+"sha1": "21976260e3fd6cfb068a0bdb68002c5c95778f73",
+"w": 36
+},
+"rocket/fly_flame0/3": {
+"h": 36,
+"sha1": "41be90dde6608e41ace7030d089b644ab5406417",
+"w": 36
+},
+"rocket/fly_flame0/4": {
+"h": 36,
+"sha1": "0c571b92b8dacae104775c411a45260846a83fb1",
+"w": 36
+},
+"rocket/fly_flame0/5": {
+"h": 36,
+"sha1": "4ec9705b16021636c7a6dd07e3c9d97861813820",
+"w": 36
+},
+"rocket/fly_flame0/6": {
+"h": 36,
+"sha1": "482f244f6d591abd94a71b1cdb6e5b78b7ba199d",
+"w": 36
+},
+"rocket/fly_flame0/7": {
+"h": 36,
+"sha1": "194858e7ab471ec1cb8b1844f852f631c7bc2160",
+"w": 36
+},
+"rocket/fly_flame0/8": {
+"h": 36,
+"sha1": "4dc66dceb67a6f15952c45f9b4f8a1b766a97d26",
+"w": 36
+},
+"rocket/fly_flame0/9": {
+"h": 36,
+"sha1": "08127333f189a6c2da20e3408403e84b8a9c8a5c",
+"w": 36
+},
+"rocket/fly_flame1/0": {
+"h": 36,
+"sha1": "001179b2f1caefbe0f6c5196ca56ba1ae999ba49",
+"w": 36
+},
+"rocket/fly_flame1/1": {
+"h": 36,
+"sha1": "76a8ef7302cc7a85a9b378a79b611ba9faa4ee6f",
+"w": 36
+},
+"rocket/fly_flame1/10": {
+"h": 36,
+"sha1": "fcd08f16d179002a1e773596a20f1f0b034d2d19",
+"w": 36
+},
+"rocket/fly_flame1/11": {
+"h": 36,
+"sha1": "6ebd06093e96f3749b8f70d6d60b5adb4940402d",
+"w": 36
+},
+"rocket/fly_flame1/12": {
+"h": 36,
+"sha1": "b6fba8b926c4856ede12e6d73ac1cabccb99db2d",
+"w": 36
+},
+"rocket/fly_flame1/13": {
+"h": 36,
+"sha1": "af562db79999430b16834a7511cbd0cbf4ce91b5",
+"w": 36
+},
+"rocket/fly_flame1/14": {
+"h": 36,
+"sha1": "4e44b660eb107238a7367b9fc09dbeb20f014fdf",
+"w": 36
+},
+"rocket/fly_flame1/15": {
+"h": 36,
+"sha1": "b1cb88b0ff67912eb95fd4ef93648610dac2564a",
+"w": 36
+},
+"rocket/fly_flame1/2": {
+"h": 36,
+"sha1": "163712ff8f2d998593f7fde640bedd2063d876b2",
+"w": 36
+},
+"rocket/fly_flame1/3": {
+"h": 36,
+"sha1": "3f570759742102b181f96b946cee0267710fa2a5",
+"w": 36
+},
+"rocket/fly_flame1/4": {
+"h": 36,
+"sha1": "cef5a192aa4b3e9e27fca02b132132721b27258b",
+"w": 36
+},
+"rocket/fly_flame1/5": {
+"h": 36,
+"sha1": "9c99675f2a58ccb3b32af7f2e4789b66fea0ba3a",
+"w": 36
+},
+"rocket/fly_flame1/6": {
+"h": 36,
+"sha1": "7a06abce9c1292a98422535605c266fb04ad4df2",
+"w": 36
+},
+"rocket/fly_flame1/7": {
+"h": 36,
+"sha1": "8f72d5eb028a9262469f573c082b0002c44ce877",
+"w": 36
+},
+"rocket/fly_flame1/8": {
+"h": 36,
+"sha1": "aae7d7ad918e521b13e7d3528872d9a19a8dfe6d",
+"w": 36
+},
+"rocket/fly_flame1/9": {
+"h": 36,
+"sha1": "e3081f2be0d3178c94ae2ff95c24d8ea12dabe05",
+"w": 36
+},
+"rocket/idle/0": {
+"h": 36,
+"sha1": "a09e77f20d0bba83dea911451a857274e9afabf4",
+"w": 36
+},
+"rocket/idle/1": {
+"h": 36,
+"sha1": "c9ccc037dc5f37543c415802b8b7749ba0758622",
+"w": 36
+},
+"rocket/idle/10": {
+"h": 36,
+"sha1": "069764b551462004f1d907b0245974283a2e0329",
+"w": 36
+},
+"rocket/idle/11": {
+"h": 36,
+"sha1": "034204eb27faaf68c31af9bfa4c01dcadebd03c2",
+"w": 36
+},
+"rocket/idle/12": {
+"h": 36,
+"sha1": "85ffade6b627b8c34e767c7d5fb34f6834c80e06",
+"w": 36
+},
+"rocket/idle/13": {
+"h": 36,
+"sha1": "09dd0dc18282d831a44fa4bddde2057be01b9d87",
+"w": 36
+},
+"rocket/idle/14": {
+"h": 36,
+"sha1": "3d6316b75cc2c7e38b1fabdd259b122dbc2da47c",
+"w": 36
+},
+"rocket/idle/15": {
+"h": 36,
+"sha1": "a4cb4d6f4a74014831d11e594b28a928329cb954",
+"w": 36
+},
+"rocket/idle/2": {
+"h": 36,
+"sha1": "53a63983b198a7a60a287cf4fea6b9d55b9b30b1",
+"w": 36
+},
+"rocket/idle/3": {
+"h": 36,
+"sha1": "72b5dda0f261e391c420621a6c6e5982f4dfd2b3",
+"w": 36
+},
+"rocket/idle/4": {
+"h": 36,
+"sha1": "e93ef05c25616ec223a79ac859aeba671f155ffd",
+"w": 36
+},
+"rocket/idle/5": {
+"h": 36,
+"sha1": "8b40e41863185abd224a3e1583d94c18335f73a4",
+"w": 36
+},
+"rocket/idle/6": {
+"h": 36,
+"sha1": "5da97836dbf800e5f9daa1d18a5368098b216615",
+"w": 36
+},
+"rocket/idle/7": {
+"h": 36,
+"sha1": "9b78eda82aabc22d6dc1937ccabd7f83890bf226",
+"w": 36
+},
+"rocket/idle/8": {
+"h": 36,
+"sha1": "543627341e47e7a2b63865dbeff99155d39a5029",
+"w": 36
+},
+"rocket/idle/9": {
+"h": 36,
+"sha1": "f794465ba62bf2ea278d7ec7481a5eaf35508250",
+"w": 36
+},
+"rocket/sad/0": {
+"h": 36,
+"sha1": "36c21cb5e23bbf50c344c3398ad8697eee845369",
+"w": 36
+},
+"rocket/sad/1": {
+"h": 36,
+"sha1": "7ded664753d7603e03bd6cb76532b56e94073e90",
+"w": 36
+},
+"rocket/sad/10": {
+"h": 36,
+"sha1": "b970cd5950eeb96acf1d2bf3f8a795fcc6791b96",
+"w": 36
+},
+"rocket/sad/11": {
+"h": 36,
+"sha1": "517065e19316c7fb962f7de7f9050784af4769d4",
+"w": 36
+},
+"rocket/sad/12": {
+"h": 36,
+"sha1": "eb0517b907487c6cf32e4214ea943b17966a2384",
+"w": 36
+},
+"rocket/sad/13": {
+"h": 36,
+"sha1": "b8811c2a8164404cfcc1613b5c1630a91ae604ee",
+"w": 36
+},
+"rocket/sad/14": {
+"h": 36,
+"sha1": "0812b3ef6fdd49e08a7895f18ffda4c75726acaf",
+"w": 36
+},
+"rocket/sad/15": {
+"h": 36,
+"sha1": "73ca2d10d7cd6677bf874c1997484d57fff1f5b3",
+"w": 36
+},
+"rocket/sad/2": {
+"h": 36,
+"sha1": "c44a4078021bb0402eea2720a6b7485518eea545",
+"w": 36
+},
+"rocket/sad/3": {
+"h": 36,
+"sha1": "7ab36f107957dec3834c7a95038d0af23606eb1f",
+"w": 36
+},
+"rocket/sad/4": {
+"h": 36,
+"sha1": "ab8480a6214be686e84e162b44a3b5812f3d6275",
+"w": 36
+},
+"rocket/sad/5": {
+"h": 36,
+"sha1": "eedff41cc120b814b4d2d5ad93d087d520347cd0",
+"w": 36
+},
+"rocket/sad/6": {
+"h": 36,
+"sha1": "05841e6d1532a67a6a7915384bed637fa4f495f1",
+"w": 36
+},
+"rocket/sad/7": {
+"h": 36,
+"sha1": "8be1188d407774fded1ef20f1d142098a6c94283",
+"w": 36
+},
+"rocket/sad/8": {
+"h": 36,
+"sha1": "593db5caf3e7756ba99abdc1bf6567e7cfb5dec3",
+"w": 36
+},
+"rocket/sad/9": {
+"h": 36,
+"sha1": "d391133bcc4eaede2aab9be3819d78334e689a72",
+"w": 36
+},
+"rocket/sleep/0": {
+"h": 36,
+"sha1": "ccd3bb702fc1c7c94ab7c96c2aa127be6c3f5f5e",
+"w": 36
+},
+"rocket/sleep/1": {
+"h": 36,
+"sha1": "0bc19b8d7cb11dff3668a447d125483e6bb7724a",
+"w": 36
+},
+"rocket/sleep/10": {
+"h": 36,
+"sha1": "ddd31e52d035f8f26fbab1e5da077ac47a542f1d",
+"w": 36
+},
+"rocket/sleep/11": {
+"h": 36,
+"sha1": "9aa83bd9a6c28d01da2bb45ff28912872ff598dc",
+"w": 36
+},
+"rocket/sleep/12": {
+"h": 36,
+"sha1": "499763bee7dd6ae925f2cea3cb3678fc85074a41",
+"w": 36
+},
+"rocket/sleep/13": {
+"h": 36,
+"sha1": "d46f0676e96b76b206ef834da8295cfbb6f0c694",
+"w": 36
+},
+"rocket/sleep/14": {
+"h": 36,
+"sha1": "7879d54b25dd32bd88082a6d9b08826c668a4518",
+"w": 36
+},
+"rocket/sleep/15": {
+"h": 36,
+"sha1": "73d105f401f8bfd45640a635be6810122d221904",
+"w": 36
+},
+"rocket/sleep/2": {
+"h": 36,
+"sha1": "42176d10b0a46000845f85348369b5b825e2cdf9",
+"w": 36
+},
+"rocket/sleep/3": {
+"h": 36,
+"sha1": "b507ed16f06b8f456e99ffb0277fece50b1fa9ef",
+"w": 36
+},
+"rocket/sleep/4": {
+"h": 36,
+"sha1": "86bea37578b55bd14cec4ac0fdb7fae5bdbbb975",
+"w": 36
+},
+"rocket/sleep/5": {
+"h": 36,
+"sha1": "04f8ff9e0cfc13af4b330b00b600dbd356606e1b",
+"w": 36
+},
+"rocket/sleep/6": {
+"h": 36,
+"sha1": "73f40b4c314f0c86c29746a2db19fb01e92244c5",
+"w": 36
+},
+"rocket/sleep/7": {
+"h": 36,
+"sha1": "42c0e455dba06aacf1e1f2804e3271d8342d7a0d",
+"w": 36
+},
+"rocket/sleep/8": {
+"h": 36,
+"sha1": "ae5c7ad29981acfd6e66795159e278d1a3dceda4",
+"w": 36
+},
+"rocket/sleep/9": {
+"h": 36,
+"sha1": "9249bd0cfbb5dcfeedf9413ee4e66f1e7390b793",
+"w": 36
+},
+"rocket/win/0": {
+"h": 36,
+"sha1": "7d1c9999d5639f5051f7fe936545302a96657b26",
+"w": 36
+},
+"rocket/win/1": {
+"h": 36,
+"sha1": "ecb4ad337dda370fc11c6dded8936112132536ef",
+"w": 36
+},
+"rocket/win/10": {
+"h": 36,
+"sha1": "6d5f1abbb9822ff68fa8fe9528a8537aabedf2c3",
+"w": 36
+},
+"rocket/win/11": {
+"h": 36,
+"sha1": "068ea714e0d6112e8123622e27c3747846eaa7d8",
+"w": 36
+},
+"rocket/win/12": {
+"h": 36,
+"sha1": "1a2b6e27717905f8e55e268be1519a24371b9776",
+"w": 36
+},
+"rocket/win/13": {
+"h": 36,
+"sha1": "31f73d86d8b7a79f2f3998b909fba6cd135a241c",
+"w": 36
+},
+"rocket/win/14": {
+"h": 36,
+"sha1": "42ee2691a1391bd9d1626301745630f42824a8bb",
+"w": 36
+},
+"rocket/win/15": {
+"h": 36,
+"sha1": "268e025ec1a78f2883e84c02eb73f9febb531c69",
+"w": 36
+},
+"rocket/win/2": {
+"h": 36,
+"sha1": "7d7ed5bd0838c2e024b8c7984b733b951ec2a63c",
+"w": 36
+},
+"rocket/win/3": {
+"h": 36,
+"sha1": "4dbcb6db33815b0800c65c72b56009a175499c28",
+"w": 36
+},
+"rocket/win/4": {
+"h": 36,
+"sha1": "0df5233344deac107a9c6560c98c3d88685c1c8d",
+"w": 36
+},
+"rocket/win/5": {
+"h": 36,
+"sha1": "ed00a57a3c4051a8ded8b92c83fad23971141e92",
+"w": 36
+},
+"rocket/win/6": {
+"h": 36,
+"sha1": "ecf6d32737b0e1130b5e0d0aafd52f4cc59b235a",
+"w": 36
+},
+"rocket/win/7": {
+"h": 36,
+"sha1": "c907af180dbc0e2e6b8e57e1ff587f96b7f57be8",
+"w": 36
+},
+"rocket/win/8": {
+"h": 36,
+"sha1": "f3383132c5c1c55aff0ccaf07b6f435e629fb91a",
+"w": 36
+},
+"rocket/win/9": {
+"h": 36,
+"sha1": "1158a98e26bd7fa09e1289282061195075f8e8f9",
+"w": 36
+},
+"ufo/0": {
+"h": 15,
+"sha1": "b3b6977337f48bca6f4c1161aa0780fdfb606ca9",
+"w": 28
+},
+"ufo/1": {
+"h": 15,
+"sha1": "5afb324b6a3377ee243a5593e09f861a82d38d6b",
+"w": 28
+}
+}

@@ -7,6 +7,7 @@ import type { Outcome } from '../core/types.js';
 import type { Session } from '../game/session.js';
 import { type Key, t } from '../i18n/index.js';
 import { levelHint, levelName } from '../i18n/levels.js';
+import { img, rabbitIcon } from './art.js';
 
 /** §13.4 결과 화면 문구의 키. 성공에는 조언이 없다 */
 export const RESULT: Readonly<Record<Outcome, readonly [Key, Key | null]>> = {
@@ -33,7 +34,8 @@ const $ = (id: string): HTMLElement => {
 
 export class Hud {
   readonly stage = $('stage');
-  /** 단계 이름 글자. 두 줄에서 자르려고 상자 안에 따로 둔다 */
+  /** 단계 번호와 이름. 이름은 두 줄에서 자르려고 따로 둔다 */
+  private readonly stageId = this.stage.querySelector<HTMLElement>('.sid') ?? this.stage;
   private readonly stageText = this.stage.querySelector<HTMLElement>('.clamp') ?? this.stage;
   readonly angle = $('angle');
   readonly hint = $('hint');
@@ -64,7 +66,8 @@ export class Hud {
    * 세 곳을 새로 썼다.
    */
   refresh(s: Session): void {
-    set(this.stageText, `${s.level.id} ${levelName(s.level)}`);
+    set(this.stageId, s.level.id);
+    set(this.stageText, levelName(s.level));
     set(this.angle, s.state === 'aiming' && s.aimFar
       ? t('hud.angle', { deg: toUi(s.angle).toFixed(1) }) : '');
     // 첫 시도의 ready 상태에서만 레벨 hint (§13.3)
@@ -86,20 +89,23 @@ export class Hud {
     const closing = win && opts.last ? t('result.allCleared')
       : win && opts.chapterLast ? t('result.chapterCleared', { n: s.level.meta.chapter }) : '';
     this.result.className = `sheet ${win ? 'win' : 'lose'}`;
-    this.result.innerHTML = `
-      <h2></h2><p></p>
+    // §13.4. 시안: 아래쪽 판 + 토끼 얼굴. 표류는 잠든 얼굴, 그 밖의 실패는 시무룩한 얼굴
+    const face = win ? 'win' : s.outcome === 'drift' ? 'sleep' : 'sad';
+    this.result.innerHTML = `<div class="panel">
+      <div class="head">${img(rabbitIcon(face))}<h2></h2></div>
+      <p class="msg"></p>
       <div class="row">
         ${win
-          ? (nextLabel ? `<button class="btn primary" data-a="next" type="button">${nextLabel}</button>` : '') +
+          ? (nextLabel ? `<button class="btn next" data-a="next" type="button">${nextLabel}</button>` : '') +
             `<button class="btn" data-a="retry" type="button">${t('result.again')}</button>`
           : `<button class="btn primary" data-a="retry" type="button">${t('result.retry')}</button>`}
-        ${!win && opts.canHint ? `<button class="btn" data-a="hint" type="button">${t('result.hint')}</button>` : ''}
+        ${!win && opts.canHint ? `<button class="btn hint" data-a="hint" type="button">${t('result.hint')}</button>` : ''}
         <button class="btn" data-a="pick" type="button">${t('result.pick')}</button>
       </div>
       ${closing ? `<p class="tapnote">${closing}</p>` : ''}
-      ${win ? '' : `<p class="tapnote">${t('result.tapRetry')}</p>`}`;
+      ${win ? '' : `<p class="tapnote">${t('result.tapRetry')}</p>`}</div>`;
     this.result.querySelector('h2')!.textContent = title;
-    this.result.querySelector('p')!.textContent = win
+    this.result.querySelector('.msg')!.textContent = win
       ? t('result.stats', { sec: s.flightSeconds().toFixed(1), n: s.attempts }) : tip;
     for (const b of this.result.querySelectorAll<HTMLButtonElement>('button')) {
       b.addEventListener('click', () => {

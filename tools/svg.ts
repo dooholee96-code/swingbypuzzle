@@ -3,7 +3,7 @@
 // 렌더링 없이 문자열로 직접 쓴다. 후보를 목록에서 눈으로 훑는 용도다.
 
 import { PAD_R } from '../src/core/constants.js';
-import { C } from '../src/render/palette.js';
+import { EDITOR as C } from '../src/render/palette.js';
 import type { Level } from '../src/core/types.js';
 
 const esc = (s: string): string =>

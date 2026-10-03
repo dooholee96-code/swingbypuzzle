@@ -11,6 +11,7 @@ import type { Progress } from '../levels/progress.js';
 import { introFor, seenKey } from './intro.js';
 import { LANGS, LANG_NAME, type LangSetting, t } from '../i18n/index.js';
 import { chapterName } from '../i18n/levels.js';
+import { img, introArt, rabbitIcon } from './art.js';
 import type { IntroKey } from './intro.js';
 import type { Level } from '../core/types.js';
 
@@ -105,9 +106,9 @@ export class Screens {
     const cards = ch.levels.map((id) => {
       const open = isUnlocked(id, p);
       const done = p.cleared(id);
-      const mark = t(p.skipped(id) ? 'mark.skipped' : done ? 'mark.cleared'
-        : open ? 'mark.open' : 'mark.locked');
-      return `<button class="card" data-id="${id}" type="button" ${open ? '' : 'disabled'}>
+      const state = p.skipped(id) ? 'skipped' : done ? 'cleared' : open ? 'open' : 'locked';
+      const mark = t(`mark.${state}` as const);
+      return `<button class="card" data-id="${id}" data-state="${state}" type="button" ${open ? '' : 'disabled'}>
         <span class="id">${id}</span>
         <span class="nm">${open ? this.d.levelName(id) : '???'}</span>
         <span class="st${done ? ' done' : open ? '' : ' lock'}">${mark}</span>
@@ -121,7 +122,7 @@ export class Screens {
         <button class="btn" data-a="intro" type="button" aria-label="${t('picker.introAgain')}">?</button>
         <button class="btn" data-a="settings" type="button">${t('picker.settings')}</button>
       </div>
-      <h2>${t('picker.title')}</h2>
+      <h2>${img(rabbitIcon('idle'))}${t('picker.title')}</h2>
       <div class="tabs">${tabs}</div>
       <div class="grid">${cards}</div>`;
 
@@ -167,8 +168,10 @@ export class Screens {
   private showIntroCard(levelId: string, key: IntroKey): void {
     const { title, body } = introFor(levelId, key);
     this.introEl.className = 'sheet';
-    this.introEl.innerHTML = `<h2>${title}</h2><p>${body}</p>
-      <div class="row"><button class="btn primary" data-a="ok" type="button">${t('intro.ok')}</button></div>`;
+    this.introEl.innerHTML = `<div class="panel">
+      <div class="art">${img(introArt(key), title)}</div>
+      <h2>${title}</h2><p>${body}</p>
+      <button class="btn primary" data-a="ok" type="button">${t('intro.ok')}</button></div>`;
     this.bind(this.introEl, { ok: () => { this.introEl.hidden = true; } });
     this.introEl.hidden = false;
   }
@@ -203,11 +206,6 @@ export class Screens {
           <select id="set-lang" class="pick">${langOpts}</select></div>
         ${toggle('sfx', t('set.sfx'), s.sfx)}
         ${toggle('haptics', t('set.haptics'), s.haptics)}
-        <div class="row2"><span class="label">${t('set.glow')}</span>
-          <div class="seg">
-            <button data-set="glow" data-v="normal" aria-pressed="${s.glow === 'normal'}" type="button">${t('set.glowNormal')}</button>
-            <button data-set="glow" data-v="low" aria-pressed="${s.glow === 'low'}" type="button">${t('set.glowLow')}</button>
-          </div></div>
         ${toggle('reduce_motion', t('set.reduceMotion'), s.reduce_motion)}
         ${this.d.canOpenPrivacyOptions?.()
           ? `<div class="row2"><span class="label">${t('set.privacyOptions')}</span>`

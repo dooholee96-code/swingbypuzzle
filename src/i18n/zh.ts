@@ -91,9 +91,6 @@ export const zh: Dict = {
   'set.off': '关',
   'set.sfx': '音效',
   'set.haptics': '振动',
-  'set.glow': '发光效果',
-  'set.glowNormal': '标准',
-  'set.glowLow': '低',
   'set.reduceMotion': '减少动态效果',
   'set.language': '语言',
   'set.langAuto': '自动',
@@ -103,6 +100,6 @@ export const zh: Dict = {
   'set.view': '查看',
   'set.credits': '制作信息',
   'set.oss': '开源声明',
-  'set.ossNote': '本游戏未使用任何开源库。Oxanium 字体遵循 SIL Open Font License。',
+  'set.ossNote': '本游戏未使用任何开源库。字体为 Galmuri(Lee Minseo)与 Fusion Pixel Font(TakWolf)，遵循 SIL Open Font License。',
   'set.version': '版本',
 };

@@ -7,7 +7,7 @@ Claude Code 가 초안을 만들고 사용자가 확인한다.
 
 | 파일 | 내용 | 상태 |
 |---|---|---|
-| `icon.svg` | 아이콘 원본 (512px 기준) | ✅ |
+| `icon-1024.png` | 스토어 아이콘. `npx tsx tools/make-icons.ts` 가 스프라이트로 만든다 | ✅ |
 | `../public/icon-192.png`, `icon-512.png` | 매니페스트용 | ✅ |
 | `listing.md` | 스토어 문구 초안 | ✅ |
 | `screenshots.md` | 스크린샷 구성안 5장 | ✅ |

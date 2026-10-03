@@ -12,3 +12,4 @@ ios/
 # 생성 후보 (§8.2)
 candidates/
 tools/out/
+.cache/

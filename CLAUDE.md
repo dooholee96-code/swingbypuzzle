@@ -20,7 +20,7 @@ TypeScript + Vite + Canvas 2D 로 만드는 물리 퍼즐. **웹과 앱 양쪽 �
 8. 광고 단위 ID·서명 키·스토어 계정 정보를 저장소에 넣지 않는다.
 9. **화면에 영향을 주는 변경은 브라우저에 띄워 보고 끝낸다**(§0.10, §16.6).
    확인 없이 "완료"라고 보고하지 않는다. v4(Godot)를 접은 이유가 이것이다.
-10. **색은 팔레트 밖에서 쓰지 않는다**(§12.6). 캔버스는 `src/render/palette.ts` 토큰,
+10. **색은 팔레트 밖에서 쓰지 않는다**(§12.6). NES 팔레트 칸만. 캔버스는 `src/render/palette.ts` 토큰,
     DOM 은 `styles.css` 의 `:root` 변수만.
 
 ## 발사대 행성 (PLAN §5.9)
@@ -58,6 +58,8 @@ npm run bench     성능 측정 (§8.9) — 1-1 0.061초 / 5-1 0.517초
 npm run preview   빌드 결과 서빙. **배포 전 확인은 dev 가 아니라 이것으로**
 npm run validate  §8.5 전체 검증 (--write 로 meta.metrics 기록). 커밋 전 필수
 npm run editor    스테이지 에디터 (/editor.html). 개발 서버에서만 뜬다
+npm run fonts     픽셀 글꼴 서브셋 재생성 (§13.7). 문구를 고치면 필요 — tests/fonts.test.ts 가 잡는다
+npx tsx tools/make-icons.ts   아이콘(favicon·192·512·스토어 1024)을 스프라이트에서 생성
 npm run gen -- --recipe recipes/ch1.json --slot 2 --count 10   후보 생성 (§8.4)
 ```
 
@@ -113,7 +115,8 @@ Settings → Pages → Source 는 **"GitHub Actions"** 로 되어 있다 (확인
 | `src/tools-shared/` | 스캔·지표·생성 알고리즘 (§8) | ★ DOM 금지 |
 | `src/levels/` | 단계 JSON, 로더(순수 검사) + registry(브라우저) | 좌표를 손으로 쓰지 않는다 |
 | `src/game/` | 상태 머신·카메라·입력·시계 (§9~§11) | |
-| `src/render/` | 그리기 (§12) | |
+| `src/render/` | 그리기 (§12). 픽셀 테마 "달토끼 당근 로켓" | 1 아트 픽셀 = 1 유닛 = 판정 크기 |
+| `src/render/sprites/` | 스프라이트 생성기·굽기 (§12.0) | 시안 아틀라스와 픽셀 동일 — `tests/sprites.test.ts` |
 | `src/ui/` | 화면 (§13) | 문구는 여기 쓰지 않는다 |
 | `src/i18n/` | 네 언어 문구, 단계·장 이름 번역 (§13.7) | 한국어 `ko.ts` 가 원본 |
 | `src/save/` | localStorage (§15.3) | |
@@ -123,6 +126,7 @@ Settings → Pages → Source 는 **"GitHub Actions"** 로 되어 있다 (확인
 | `candidates/` | 생성 후보 (§8.4) | git 제외 |
 | `tools/` | Node CLI. `levels-fs.ts` 가 Node 용 레벨 읽기 | |
 | `docs/reference/` | 부록 A~C 의 Node 참조 구현 | 이식 대조용 |
+| `docs/design/rabbit-rocket/` | Claude Design 시안 원본·통합 안내·아틀라스 | 배포하지 않는다. 대조용 |
 
 ## 진행 상황
 
@@ -141,9 +145,11 @@ Settings → Pages → Source 는 **"GitHub Actions"** 로 되어 있다 (확인
 - [x] **M11** 다듬기 — 효과음·서비스 워커·매니페스트·색 토큰 검사. 실기기 확인은 사용자 몫
 - [x] **언어 설정** — 한·영·일·중(간체). 네 언어 × 전 화면을 브라우저에서 확인 (§13.7)
 - [x] **코드 검토** — 버그 5개 수정(설정 자동 닫힘, 두 손가락 조준, 광고 시각 둘, H5 진입점). §17 M11
+- [x] **픽셀 테마 "달토끼 당근 로켓"** — Claude Design 시안 반영. 렌더러 재작성, 8비트 UI,
+      갈무리·Fusion Pixel 글꼴, 아이콘. 물리·판정·레벨은 그대로. **브라우저에서 확인함** (§12, §17 M11)
 - [ ] **M12** 스토어 출시 — Capacitor 앱 셸, AdMob, 서명, 심사
 
-테스트 170개. 빌드 gzip JS 32.1KB + CSS 2.3KB + 폰트 14KB (§18 예산 안).
+테스트 181개. 빌드 gzip JS 35.7KB + CSS 2.8KB + 글꼴 56KB(한국어 첫 화면) (§18 예산 안).
 
 ## 지금 열려 있는 것
 
@@ -168,6 +174,6 @@ Settings → Pages → Source 는 **"GitHub Actions"** 로 되어 있다 (확인
    배치를 사슬 모양으로 놓는 알고리즘 변경이 필요해 M13 으로 미뤘다
 9. **없앨 수 없는 경고 둘** — 1-4 의 휴식 칸 곡선, 5-1 의 장 넘김.
    둘 다 §6.2 가 고정한 단계라서다. 이유는 §8.5 에 적었다
-10. **픽셀 아트 화풍** — 사용자가 검토 중. §20 은 아직 범위 밖으로 두고 있다.
-    하게 되면 `src/render/` 재작성이다. 판정 반경은 그대로, 픽셀 글꼴은 숫자·로고만 (§20)
+10. **정수 배율** — 시안은 화면 배율을 정수로 내리라고 하지만, 390×844 폰에서 맵이 화면 폭의
+    68% 로 줄어 맞춤 배율(§11)을 유지했다. 최근접 확대라 번지지는 않는다 (§12.0). 사용자 판단
 11. **이름 "스윙바이"가 스토어에서 겹친다** — Google Play·App Store·Steam 에 같은 이름이 8개 넘게 있다

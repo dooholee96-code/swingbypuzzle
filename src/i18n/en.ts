@@ -91,9 +91,6 @@ export const en: Dict = {
   'set.off': 'Off',
   'set.sfx': 'Sound Effects',
   'set.haptics': 'Vibration',
-  'set.glow': 'Glow',
-  'set.glowNormal': 'Normal',
-  'set.glowLow': 'Low',
   'set.reduceMotion': 'Reduce Motion',
   'set.language': 'Language',
   'set.langAuto': 'Auto',
@@ -103,6 +100,6 @@ export const en: Dict = {
   'set.view': 'View',
   'set.credits': 'Credits',
   'set.oss': 'Open Source Notices',
-  'set.ossNote': 'This game uses no open-source libraries. The Oxanium font is licensed under the SIL Open Font License.',
+  'set.ossNote': 'This game uses no open-source libraries. Fonts: Galmuri by Lee Minseo and Fusion Pixel Font by TakWolf, under the SIL Open Font License.',
   'set.version': 'Version',
 };

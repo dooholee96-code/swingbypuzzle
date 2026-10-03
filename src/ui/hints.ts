@@ -128,12 +128,12 @@ export class HintSheet {
 
       return `<div class="hintrow">
         <div><b>${t(title)}</b><p class="dim">${t(desc)}</p></div>
-        <button class="btn" type="button" data-kind="${kind}"${disabled ? ' disabled' : ''}>${label}</button>
+        <button class="btn hint" type="button" data-kind="${kind}"${disabled ? ' disabled' : ''}>${label}</button>
       </div>`;
     }).join('');
 
-    this.el.innerHTML = `<h2>${t('hint.title')}</h2>${rows}
+    this.el.innerHTML = `<div class="panel"><h2>${t('hint.title')}</h2>${rows}
       ${this.note ? `<p class="tapnote">${t(this.note)}</p>` : ''}
-      <div class="row"><button class="btn" type="button">${t('hint.close')}</button></div>`;
+      <div class="row"><button class="btn" type="button">${t('hint.close')}</button></div></div>`;
   }
 }

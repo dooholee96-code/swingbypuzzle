@@ -11,7 +11,7 @@ import { padAngle } from '../core/angle.js';
 import { allIds } from '../levels/chapters.js';
 import { loadLevel } from '../levels/registry.js';
 import { validateSchema } from '../levels/loader.js';
-import { C } from '../render/palette.js';
+import { EDITOR as C } from '../render/palette.js';
 import type { Hole, Level, Planet, Rock, Ufo } from '../core/types.js';
 import type { FanPath, Req, Res } from './verify.worker.js';
 

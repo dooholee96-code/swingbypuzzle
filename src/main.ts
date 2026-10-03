@@ -13,8 +13,6 @@ import { Session } from './game/session.js';
 import { DOME_DRAW_R, FieldRenderer } from './render/field.js';
 import { drawMinimap, miniRect } from './render/minimap.js';
 import type { MiniRect } from './render/minimap.js';
-import { setGlow } from './render/draw.js';
-import { C } from './render/palette.js';
 import { Hud } from './ui/hud.js';
 import { HintSheet } from './ui/hints.js';
 import { seenKey } from './ui/intro.js';
@@ -150,7 +148,6 @@ let basePreview = 1.8;
 
 function applySettings(): void {
   field.reduceMotion = save.data.settings.reduce_motion;
-  setGlow(save.data.settings.glow !== 'low');
   sfx.enabled = save.data.settings.sfx;
   applyLang();
 }
@@ -438,15 +435,32 @@ function frame(now: number): void {
   draw(session.state === 'aiming' && session.aimFar ? session.preview() : null);
 }
 
+/**
+ * 픽셀 그림은 **월드 1유닛 = 1픽셀 크기의 작은 버퍼**에 그리고, 화면에는 한 번에 키워 찍는다.
+ *
+ * 전에는 스프라이트를 화면 해상도(기기 픽셀 2.5배 × 배율)로 하나하나 그렸다. 픽셀 수가
+ * 여섯 배쯤 되어, CPU 를 4배 늦춘 측정에서 5-1 비행이 14fps 였다(필드를 빼면 53fps).
+ * 작은 버퍼에 그리면 모든 그림 픽셀이 같은 격자에 놓이는 덤도 있다 — 시안이 바란 모습이다.
+ * 카메라의 소수 이동은 키워 찍을 때 기기 픽셀 단위로 반영해 스크롤은 부드럽게 둔다.
+ */
+const world = document.createElement('canvas');
+const wctx = world.getContext('2d', { alpha: false })!;
+
 function draw(preview: { points: number[]; outcome: string } | null): void {
+  const ox = Math.floor(cam.x), oy = Math.floor(cam.y);
+  const w = Math.ceil(cam.viewW) + 2, h = Math.ceil(cam.viewH) + 2;
+  if (world.width !== w) world.width = w;
+  if (world.height !== h) world.height = h;
+  wctx.setTransform(1, 0, 0, 1, -ox, -oy);
+  wctx.imageSmoothingEnabled = false;            // 픽셀 그림은 번지지 않게 (시안의 규칙)
+  field.draw(wctx, cam, session, elapsed, preview);
+
+  const px = cam.scale * dpr;                    // 월드 1유닛 = 기기 px
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(world, Math.round((ox - cam.x) * px), Math.round((oy - cam.y) * px),
+    Math.round(w * px), Math.round(h * px));
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.fillStyle = C.bg;
-  ctx.fillRect(0, 0, cssW, cssH);
-  ctx.save();
-  ctx.scale(cam.scale, cam.scale);
-  ctx.translate(-cam.x, -cam.y);
-  field.draw(ctx, cam, session, elapsed, preview);
-  ctx.restore();
   if (!demo && !screens.overlayOpen && !hints.open && mini) drawMinimap(ctx, mini, cam, session);
 }
 
@@ -480,6 +494,14 @@ if (!import.meta.env.DEV && 'serviceWorker' in navigator) {
       new URL('sw.js', location.href).pathname,
     ).catch(() => { /* 실패해도 게임은 그대로 돈다 */ });
   });
+}
+
+// 개발 서버에서만: 브라우저 확인 스크립트가 정확한 각도로 쏘려고 쓴다 (§16.6). 배포 번들에는 없다
+if (import.meta.env.DEV) {
+  (window as unknown as { __swingby: unknown }).__swingby = {
+    session, cam, field, startPlay,
+    fire: (deg: number) => { session.setAngle(deg); session.launch(); },
+  };
 }
 
 resize();

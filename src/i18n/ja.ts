@@ -91,9 +91,6 @@ export const ja: Dict = {
   'set.off': 'オフ',
   'set.sfx': '効果音',
   'set.haptics': '振動',
-  'set.glow': '発光エフェクト',
-  'set.glowNormal': '標準',
-  'set.glowLow': '低',
   'set.reduceMotion': 'モーションを減らす',
   'set.language': '言語',
   'set.langAuto': '自動',
@@ -103,6 +100,6 @@ export const ja: Dict = {
   'set.view': '見る',
   'set.credits': 'クレジット',
   'set.oss': 'オープンソースライセンス',
-  'set.ossNote': 'このゲームはオープンソースライブラリを使用していません。Oxanium フォントは SIL Open Font License に従います。',
+  'set.ossNote': 'このゲームはオープンソースライブラリを使用していません。フォントは Galmuri(Lee Minseo)と Fusion Pixel Font(TakWolf)で、SIL Open Font License に従います。',
   'set.version': 'バージョン',
 };

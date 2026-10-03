@@ -35,27 +35,28 @@ export function drawMinimap(
     ctx.beginPath(); ctx.arc(px, py, rad, 0, Math.PI * 2); ctx.fill();
   };
 
+  // 8비트 테마: 투명도 없이 짙은 바탕 + 검은 테두리 2px (시안의 패널 규칙)
+  ctx.imageSmoothingEnabled = false;
+  ctx.fillStyle = C.ink;
+  ctx.fillRect(r.x - 2, r.y - 2, r.w + 4, r.h + 4);
   ctx.fillStyle = C.miniBg;
   ctx.fillRect(r.x, r.y, r.w, r.h);
-  ctx.strokeStyle = C.line;
-  ctx.globalAlpha = 0.3;
-  ctx.lineWidth = 1;
-  ctx.strokeRect(r.x + 0.5, r.y + 0.5, r.w - 1, r.h - 1);
-  ctx.globalAlpha = 1;
+  ctx.fillStyle = C.bg;                        // 맵 안쪽은 밤하늘
+  ctx.fillRect(r.x + 1, r.y + 1, r.w - 2, r.h - 2);
 
   for (const a of L.rocks ?? []) dot(a.x, a.y, C.rock, 1.2);
 
+  ctx.lineWidth = 1;
   for (const b of gravs(L)) {
     const [bx, by] = bodyPos(b, t);
     const col = 'rH' in b ? C.hole : C.gravity;
     const [px, py] = P(bx, by);
-    ctx.strokeStyle = col; ctx.globalAlpha = 0.3;
+    ctx.strokeStyle = col;
     ctx.beginPath(); ctx.arc(px, py, b.R * r.k, 0, Math.PI * 2); ctx.stroke();
-    ctx.globalAlpha = 1;
     dot(bx, by, col, 2);
   }
   for (const u of L.ufos ?? []) dot(u.x, u.y, C.danger, 2);
-  dot(L.goal.x, L.goal.y, C.goal, 2.5);
+  dot(L.goal.x, L.goal.y, C.win, 2.5);
 
   // 우주선은 흰 점. 비행 중에는 깜빡인다.
   const flying = s.state === 'flying';
@@ -64,7 +65,6 @@ export function drawMinimap(
     dot(sx, sy, C.line, 2);
   }
 
-  ctx.strokeStyle = C.line; ctx.globalAlpha = 0.8;
+  ctx.strokeStyle = C.line;
   ctx.strokeRect(r.x + cam.x * r.k, r.y + cam.y * r.k, cam.viewW * r.k, cam.viewH * r.k);
-  ctx.globalAlpha = 1;
 }
