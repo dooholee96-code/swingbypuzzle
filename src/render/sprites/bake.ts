@@ -62,6 +62,23 @@ export function put(ctx: CanvasRenderingContext2D, b: Baked, x: number, y: numbe
   ctx.drawImage(b.img as CanvasImageSource, Math.round(x - b.ax), Math.round(y - b.ay));
 }
 
+/**
+ * 늘이고 줄여 찍는다(탄성 §12.7). a 방향으로 sx 배, 그 수직으로 sy 배.
+ * 거의 1 이면 그냥 찍는다 — 픽셀이 흐트러지지 않게.
+ */
+export function putScaled(
+  ctx: CanvasRenderingContext2D, b: Baked, x: number, y: number, sx: number, sy: number, a = 0,
+): void {
+  if (Math.abs(sx - 1) < 0.02 && Math.abs(sy - 1) < 0.02) { put(ctx, b, x, y); return; }
+  ctx.save();
+  ctx.translate(Math.round(x), Math.round(y));
+  if (a) ctx.rotate(a);
+  ctx.scale(sx, sy);
+  if (a) ctx.rotate(-a);
+  ctx.drawImage(b.img as CanvasImageSource, -b.ax, -b.ay);
+  ctx.restore();
+}
+
 /** DOM 에 넣을 그림(소개 카드·결과 시트의 아이콘). CSS 로 키운다 */
 export function toDataUrl(g: Grid): string {
   const c = document.createElement('canvas');

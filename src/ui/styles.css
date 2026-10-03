@@ -154,6 +154,16 @@ img.px{image-rendering:pixelated;image-rendering:crisp-edges}
                  padding:6px 12px}
 #title .bar{flex-direction:column;align-items:stretch;width:min(288px,100%);gap:14px}
 #title .bar .btn{min-height:52px;font-size:18px}
+#title .pair{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+#title .pair .btn{font-size:15px;padding:0 8px}
+/* 잠긴 모드: 버튼 안 둘째 줄에 작은 안내 */
+#title .btn:has(small){flex-direction:column;gap:2px}
+#title .btn small{display:block;font:400 11px/1.2 var(--text)}
+
+/* 언어 고르기: 각 언어를 그 언어로 쓴 큰 버튼 */
+.langs{display:flex;flex-direction:column;gap:12px;width:min(320px,100%);align-self:center}
+.langs .btn{min-height:52px;font-size:17px}
+.langs .btn[aria-pressed="true"]{background:var(--yellow)}
 
 .tabs{display:flex;gap:6px;flex-wrap:wrap}
 .tab{min-height:38px;padding:0 10px;border:3px solid var(--ink);background:var(--white);
@@ -202,7 +212,28 @@ img.px{image-rendering:pixelated;image-rendering:crisp-edges}
 :root:lang(ja) .btn,:root:lang(ja) .sheet h2,:root:lang(ja) .sheet p,
 :root:lang(ja) .stage .clamp,:root:lang(ja) .card .nm{word-break:auto-phrase}
 
+/* ── 탄성 (§12.7) ────────────────────────────────────────────────────
+   누르면 짧게 눌렸다가 놓으면 살짝 튀어 돌아온다. 판과 버튼은 튀어나오듯 나타난다. */
+.btn{transition:transform .26s cubic-bezier(.3,1.9,.5,1),box-shadow .26s cubic-bezier(.3,1.9,.5,1)}
+.btn:active{transform:translate(2px,2px) scale(.93);transition-duration:.06s}
+@keyframes pop{0%{transform:scale(.8);opacity:0}55%{transform:scale(1.06);opacity:1}
+  80%{transform:scale(.98)}100%{transform:none}}
+@keyframes rise{0%{transform:translateY(48px);opacity:0}55%{transform:translateY(-8px);opacity:1}
+  80%{transform:translateY(2px)}100%{transform:none}}
+@keyframes drop{0%{transform:translateY(-36px) scaleY(1.15)}50%{transform:translateY(4px) scaleY(.88)}
+  75%{transform:translateY(-2px) scaleY(1.04)}100%{transform:none}}
+.panel{animation:pop .34s ease-out both}
+#result .panel,#hints .panel{animation-name:rise}
+#title h1{animation:drop .6s ease-out both}
+#title .bar>*{animation:pop .36s ease-out both}
+#title .bar>:nth-child(2){animation-delay:.05s}
+#title .bar>:nth-child(3){animation-delay:.1s}
+.card,.langs .btn{animation:pop .3s ease-out both;animation-delay:calc(var(--i,0) * 28ms)}
+.stage.pop .sid{animation:pop .4s ease-out both}
+
+/* OS 설정과 게임 설정(§12.4) 둘 다 */
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.reduce *{animation:none!important;transition:none!important}
 
 /* 힌트 시트 (§13.5) */
 #hints .hintrow{display:flex;align-items:center;justify-content:space-between;

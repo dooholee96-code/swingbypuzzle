@@ -6,7 +6,9 @@ export const en: Dict = {
   'doc.title': 'Swingby',
 
   'title.sub': '',
-  'title.start': 'Start',
+  'title.stage': 'Stages',
+  'title.infinity': 'Infinity',
+  'title.soon': 'Coming soon',
   'title.settings': 'Settings',
 
   'picker.title': 'Select Level',

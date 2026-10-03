@@ -66,7 +66,13 @@ export class Hud {
    * 세 곳을 새로 썼다.
    */
   refresh(s: Session): void {
-    set(this.stageId, s.level.id);
+    if (this.stageId.textContent !== s.level.id) {
+      set(this.stageId, s.level.id);
+      // 단계가 바뀌면 번호가 한 번 튄다 (§12.7). 클래스를 뗐다 붙여야 애니메이션이 다시 돈다
+      this.stage.classList.remove('pop');
+      void this.stage.offsetWidth;
+      this.stage.classList.add('pop');
+    }
     set(this.stageText, levelName(s.level));
     set(this.angle, s.state === 'aiming' && s.aimFar
       ? t('hud.angle', { deg: toUi(s.angle).toFixed(1) }) : '');

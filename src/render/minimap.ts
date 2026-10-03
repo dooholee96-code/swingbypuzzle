@@ -10,13 +10,17 @@ import type { Session } from '../game/session.js';
 import { C } from './palette.js';
 
 export const MAX_W = 96, MAX_H = 150;    // CSS px (§12.5)
-const TOP = 68, RIGHT = 14, BLINK_MS = 300;
+const GAP = 10, RIGHT = 14, BLINK_MS = 300;
 
 export interface MiniRect { x: number; y: number; w: number; h: number; k: number }
 
-/** 화면 우상단에 놓을 자리와 배율. 맵이 다 보이면 null. */
+/**
+ * 화면 우상단, HUD 바로 아래에 놓을 자리와 배율. 맵이 다 보이거나 물체가 한 화면에
+ * 다 들어가면(빈 가장자리만 가려지면) null.
+ */
 export function miniRect(L: Level, cam: Camera, cssW: number): MiniRect | null {
-  if (cam.fits(L)) return null;
+  if (cam.fits(L) || cam.contentFits(L)) return null;
+  const TOP = cam.top * cam.scale + GAP;
   const k = Math.min(MAX_W / L.w, MAX_H / L.h);
   const w = L.w * k, h = L.h * k;
   return { x: cssW - w - RIGHT, y: TOP, w, h, k };

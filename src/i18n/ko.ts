@@ -8,7 +8,9 @@ export const ko = {
 
   // §13.1 타이틀
   'title.sub': '스윙바이',
-  'title.start': '시작하기',
+  'title.stage': '스테이지',
+  'title.infinity': '인피니티',
+  'title.soon': '준비 중',
   'title.settings': '설정',
 
   // §13.2 단계 선택

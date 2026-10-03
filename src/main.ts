@@ -54,6 +54,12 @@ let elapsed = 0;                   // 연출용 시계(초). 물리 시계와 �
 let demo = false;                  // 타이틀 데모가 도는 중인가
 let demoIdle = 0;
 let ended = false;               // 이번 비행의 끝 소리를 이미 냈는가
+/**
+ * 단계를 열 때 목적지가 한 화면에 안 들어오면, 목적지를 먼저 보여 주고 발사대로
+ * 내려온다(§11). 화면을 누르면 바로 끝난다. 재시도·모션 줄이기에서는 하지 않는다.
+ */
+let glide: { t: number; fx: number; fy: number; tx: number; ty: number } | null = null;
+const GLIDE_HOLD = 0.6, GLIDE_MOVE = 0.9;
 let paused = false;                // 힌트 시트가 열려 있으면 단계 시계를 멈춘다 (§13.5)
 let ads: AdProvider = new NoAdProvider();
 const started = performance.now();
@@ -74,10 +80,16 @@ const screens = new Screens({
   levelName: (id) => levelName(loadLevel(id)),
   settings: save.data.settings,
   autoLangName: () => LANG_NAME[detectLang(browserLangs())],
-  onStart: () => startPlay(resumeLevel({
-    cleared: (id) => save.cleared(id),
-    skipped: (id) => save.level(id).skipped,
-  })),
+  // 스테이지: 이어서 할 단계가 있는 장의 단계 선택으로 (§13.1)
+  onStart: () => {
+    screens.syncChapter(resumeLevel({
+      cleared: (id) => save.cleared(id),
+      skipped: (id) => save.level(id).skipped,
+    }));
+    screens.showSelect();
+  },
+  onInfinity: () => {},
+  infinityOpen: () => false,
   onPick: (id) => startPlay(id),
   onSettingChange: () => { applySettings(); save.touch(); },
   canOpenPrivacyOptions: () => ads.canOpenPrivacyOptions(),
@@ -148,6 +160,7 @@ let basePreview = 1.8;
 
 function applySettings(): void {
   field.reduceMotion = save.data.settings.reduce_motion;
+  document.documentElement.classList.toggle('reduce', field.reduceMotion);
   sfx.enabled = save.data.settings.sfx;
   applyLang();
 }
@@ -195,7 +208,8 @@ function resize(): void {
   const w = Math.round(cssW * dpr), h = Math.round(cssH * dpr);
   if (canvas.width !== w) canvas.width = w;
   if (canvas.height !== h) canvas.height = h;
-  cam.layout(cssW, cssH);
+  const [top, bottom] = insets(r);
+  cam.layout(cssW, cssH, top, bottom);
   if (session.level) {
     cam.clamp(session.level);
     if (!panning && session.state !== 'flying') snapToStart();
@@ -203,8 +217,49 @@ function resize(): void {
 }
 addEventListener('resize', resize);
 
+/**
+ * 캔버스 위·아래에서 HUD 와 각도 판이 가리는 높이(CSS px). HUD 는 데모 중에도
+ * `visibility: hidden` 으로 자리를 지키므로 언제 재도 같다. 각도 판은 비어 있으면
+ * 높이가 0 이라 판의 `bottom` 값(안전 영역 포함)에 한 줄 높이를 더한다.
+ */
+const ANGLE_PANEL_H = 40;
+function insets(r: DOMRect): [number, number] {
+  const top = Math.max(0, hudTop.getBoundingClientRect().bottom - r.top);
+  const bottom = (parseFloat(getComputedStyle(hud.angle).bottom) || 0) + ANGLE_PANEL_H;
+  return [top, bottom];
+}
+const hudTop = document.querySelector('.hud.top') as HTMLElement;
+
 function snapToStart(): void {
-  cam.centerOn(session.level, session.level.start.x, session.level.start.y);
+  glide = null;
+  cam.frameStart(session.level);
+}
+
+/** 목적지에서 출발해 발사대 장면으로 내려오는 첫 카메라 (§11) */
+function beginGlide(): void {
+  const g = session.level.goal;
+  if (field.reduceMotion || cam.sees(g.x - g.r, g.y - g.r, g.x + g.r, g.y + g.r)) return;
+  const tx = cam.x, ty = cam.y;
+  cam.centerOn(session.level, g.x, g.y);
+  glide = { t: 0, fx: cam.x, fy: cam.y, tx, ty };
+}
+
+/** 끝에서 살짝 지나쳤다 돌아오는 이징 (§12.7) */
+function backOut(u: number): number {
+  const c = 1.1, v = u - 1;
+  return 1 + (c + 1) * v * v * v + c * v * v;
+}
+
+function stepGlide(dt: number): void {
+  if (!glide) return;
+  if (session.state !== 'ready') { glide = null; return; }
+  glide.t += dt;
+  const u = Math.min(1, Math.max(0, (glide.t - GLIDE_HOLD) / GLIDE_MOVE));
+  const e = backOut(u);
+  cam.x = glide.fx + (glide.tx - glide.fx) * e;
+  cam.y = glide.fy + (glide.ty - glide.fy) * e;
+  cam.clamp(session.level);
+  if (u >= 1) glide = null;
 }
 
 function loadInto(id: string): void {
@@ -242,6 +297,7 @@ function replayDemo(): void {
 function startPlay(id: string): void {
   demo = false;
   loadInto(id);
+  beginGlide();
   screens.syncChapter(id);
   screens.hideSelect();
   screens.rememberIntro(id, session.level.meta.intro);
@@ -264,6 +320,7 @@ canvas.addEventListener('pointerdown', (e) => {
   if (!e.isPrimary || dragMode) return;
   if (demo || screens.overlayOpen || hints.open || !session.level) return;
   if (session.state !== 'ready' && session.state !== 'aiming') return;
+  if (glide) snapToStart();          // 누르면 훑어보기는 바로 끝난다
   const [x, y] = pos(e);
   canvas.setPointerCapture(e.pointerId);
   dragPointer = e.pointerId;
@@ -408,6 +465,7 @@ function frame(now: number): void {
     const { x, y, vx, vy } = session.sim.ship;
     cam.follow(session.level, x, y, vx, vy, dt);
   }
+  stepGlide(dt);
   // 비행이 끝난 순간 한 번만 소리와 진동
   if (session.state === 'ending' && !ended) {
     ended = true;

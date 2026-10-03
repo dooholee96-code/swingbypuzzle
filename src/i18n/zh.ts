@@ -6,7 +6,9 @@ export const zh: Dict = {
   'doc.title': '引力弹弓',
 
   'title.sub': '引力弹弓',
-  'title.start': '开始',
+  'title.stage': '关卡',
+  'title.infinity': '无尽模式',
+  'title.soon': '即将推出',
   'title.settings': '设置',
 
   'picker.title': '选择关卡',

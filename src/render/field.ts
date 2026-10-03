@@ -14,7 +14,8 @@ import type { Grav, Level, Outcome } from '../core/types.js';
 import type { Camera } from '../game/camera.js';
 import { END_SECONDS, type Session } from '../game/session.js';
 import { C } from './palette.js';
-import { type Baked, SpriteCache, put } from './sprites/bake.js';
+import { type Baked, SpriteCache, put, putScaled } from './sprites/bake.js';
+import { Spring } from './spring.js';
 import { type Grid, grid, set } from './sprites/pixel.js';
 import { type Face, type SmallName, dir16, rocketDir, small, ufo } from './sprites/rocket.js';
 import { blackhole, moon, planet, portal, rock, starTile } from './sprites/world.js';
@@ -67,10 +68,62 @@ export class FieldRenderer {
   private levelId = '';
   private cache = new SpriteCache();
 
+  // 탄성 (§12.7). 상태가 바뀌는 순간 용수철을 튕기고, 그림을 늘이고 줄인다.
+  // 값은 "늘어난 비율"(0.1 = 10%) 이다. 물리는 이 값을 읽지 않는다.
+  private lastT = -1;
+  private prevState = '';
+  private shipS = new Spring(300, 12);
+  private moonS = new Spring(320, 10);
+  private goalS = new Spring(220, 9);
+  private bodyS: Spring[] = [];
+  private inside: boolean[] = [];
+
   /** 단계마다 크기가 다른 그림은 단계를 바꿀 때 버린다. 로켓·효과는 남긴다. */
   rebuild(L: Level): void {
     if (this.levelId) this.cache.dropPrefix(`L:`);
     this.levelId = L.id;
+    const n = gravs(L).length;
+    this.bodyS = Array.from({ length: n }, () => new Spring(240, 8));
+    this.inside = new Array<boolean>(n).fill(false);
+    for (const sp of [this.shipS, this.moonS, this.goalS]) sp.reset();
+    this.prevState = '';
+  }
+
+  /** 상태가 바뀐 순간과 중력 범위에 들어선 순간에 용수철을 튕긴다 */
+  private react(s: Session, dt: number): void {
+    const st = s.state;
+    if (!this.reduceMotion && st !== this.prevState) {
+      if (st === 'aiming') this.shipS.kick(-2.6);                    // 웅크림
+      if (st === 'ready' && this.prevState === 'aiming') this.shipS.kick(1.5);
+      if (st === 'flying') { this.shipS.kick(5.2); this.moonS.kick(2.2); }  // 튀어 나감, 달이 밀림
+      if (st === 'ending') {
+        if (s.outcome === 'win') this.goalS.kick(3);
+        else if (s.outcome === 'planet' || s.outcome === 'hole') this.nearestBody(s)?.kick(2.6);
+      }
+    }
+    this.prevState = st;
+    if (st === 'flying' && !this.reduceMotion) {
+      const [x, y] = s.shipPos();
+      const st2 = s.simTime();
+      gravs(s.level).forEach((b, i) => {
+        const [bx, by] = bodyPos(b, st2);
+        const now = (x - bx) ** 2 + (y - by) ** 2 < b.R * b.R;
+        if (now && !this.inside[i]) this.bodyS[i]?.kick(1.3);    // 끌려 들어가는 순간 출렁
+        this.inside[i] = now;
+      });
+    } else if (st !== 'ending') this.inside.fill(false);
+    for (const sp of [this.shipS, this.moonS, this.goalS, ...this.bodyS]) sp.step(dt);
+  }
+
+  private nearestBody(s: Session): Spring | undefined {
+    const [x, y] = s.shipPos();
+    let best = -1, bd = Infinity;
+    gravs(s.level).forEach((b, i) => {
+      const [bx, by] = bodyPos(b, s.simTime());
+      const d = (x - bx) ** 2 + (y - by) ** 2;
+      if (d < bd) { bd = d; best = i; }
+    });
+    return this.bodyS[best];
   }
 
   private sprite(key: string, make: () => Grid): Baked { return this.cache.get(key, make); }
@@ -85,6 +138,9 @@ export class FieldRenderer {
     if (L.id !== this.levelId) this.rebuild(L);
     const st = s.simTime();
     ctx.imageSmoothingEnabled = false;
+    const dt = this.lastT < 0 ? 0 : Math.min(0.1, Math.max(0, t - this.lastT));
+    this.lastT = t;
+    this.react(s, dt);
 
     this.sky(ctx, cam, L);
     this.bounds(ctx, L);
@@ -182,15 +238,18 @@ export class FieldRenderer {
   private planets(ctx: CanvasRenderingContext2D, L: Level, st: number): void {
     (L.planets ?? []).forEach((p, i) => {
       const [x, y] = bodyPos(p as Grav, st);
-      put(ctx, this.lv(`planet:${i}`, () => planet(p.r, p.sides % 6, { ring: !!p.ring })), x, y);
+      const k = this.bodyS[i]?.x ?? 0;    // 출렁: 가로로 늘면 세로로 준다
+      putScaled(ctx, this.lv(`planet:${i}`, () => planet(p.r, p.sides % 6, { ring: !!p.ring })), x, y, 1 + k, 1 - k);
     });
   }
 
   private holes(ctx: CanvasRenderingContext2D, L: Level, t: number): void {
     const f = this.reduceMotion ? 0 : Math.floor(t * 8) % 8;
-    for (const h of L.holes ?? []) {
-      put(ctx, this.lv(`hole:${h.rH}:${f}`, () => blackhole(holeArtRadius(h.rH), f)), h.x, h.y);
-    }
+    const np = (L.planets ?? []).length;
+    (L.holes ?? []).forEach((h, j) => {
+      const k = this.bodyS[np + j]?.x ?? 0;
+      putScaled(ctx, this.lv(`hole:${h.rH}:${f}`, () => blackhole(holeArtRadius(h.rH), f)), h.x, h.y, 1 + k, 1 - k);
+    });
   }
 
   private ufos(ctx: CanvasRenderingContext2D, L: Level, t: number): void {
@@ -202,7 +261,8 @@ export class FieldRenderer {
   private goal(ctx: CanvasRenderingContext2D, L: Level, t: number): void {
     const { x, y, r } = L.goal;
     const f = this.reduceMotion ? 0 : Math.floor(t * 7.5) % 8;
-    put(ctx, this.sprite(`portal:${r}:${f}`, () => portal(r, f)), x, y);
+    const k = this.goalS.x;
+    putScaled(ctx, this.sprite(`portal:${r}:${f}`, () => portal(r, f)), x, y, 1 + k, 1 + k);
   }
 
   private bullets(ctx: CanvasRenderingContext2D, s: Session): void {
@@ -216,7 +276,9 @@ export class FieldRenderer {
   private pad(ctx: CanvasRenderingContext2D, s: Session): void {
     const L = s.level;
     const { x, y } = L.start;
-    put(ctx, this.sprite('moon', () => moon(DOME_DRAW_R)), x, y);
+    // 발사 반동: 발사 방향으로 눌리고 옆으로 퍼진다
+    const km = this.moonS.x;
+    putScaled(ctx, this.sprite('moon', () => moon(DOME_DRAW_R)), x, y, 1 - km, 1 + km * 0.6, s.angle * Math.PI / 180);
     if (s.state === 'flying' || s.state === 'ending') return;
 
     const aiming = s.state === 'aiming';
@@ -274,9 +336,11 @@ export class FieldRenderer {
   private ship(ctx: CanvasRenderingContext2D, s: Session, t: number): void {
     const a = s.shipHeading();
     if (s.state === 'ready' || s.state === 'aiming') {
+      // 조준을 시작하면 달 쪽으로 웅크리고, 놓으면 튀어 오른다 (§12.7)
       const { x, y } = s.level.start;
-      put(ctx, this.rocket(s.state === 'aiming' ? 'aim' : 'idle', a),
-        x + Math.cos(a) * STAND_R, y + Math.sin(a) * STAND_R);
+      const k = this.shipS.x, r = STAND_R + k * 10;
+      putScaled(ctx, this.rocket(s.state === 'aiming' ? 'aim' : 'idle', a),
+        x + Math.cos(a) * r, y + Math.sin(a) * r, 1 + k, 1 - k * 0.6, a);
       return;
     }
     const [x, y] = s.shipPos();
@@ -284,8 +348,10 @@ export class FieldRenderer {
       // 서 있던 자리(STAND_R)에서 발사 좌표(PAD_R)로 0.1초에 걸쳐 붙는다 — 튀지 않게
       const lift = (STAND_R - PAD_R) * Math.max(0, 1 - s.flightSeconds() / 0.1);
       const flame = this.reduceMotion ? 0 : Math.floor(t * 15) % 2;
-      put(ctx, this.rocket('fly', a, { flame, ears: 'back' }),
-        x + Math.cos(a) * lift, y + Math.sin(a) * lift);
+      // 발사 순간 진행 방향으로 늘어났다가 출렁이며 돌아온다
+      const k = this.shipS.x;
+      putScaled(ctx, this.rocket('fly', a, { flame, ears: 'back' }),
+        x + Math.cos(a) * lift, y + Math.sin(a) * lift, 1 + k, 1 - k * 0.6, a);
       return;
     }
     // ending

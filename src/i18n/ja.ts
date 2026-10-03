@@ -6,7 +6,9 @@ export const ja: Dict = {
   'doc.title': 'スイングバイ',
 
   'title.sub': 'スイングバイ',
-  'title.start': 'はじめる',
+  'title.stage': 'ステージ',
+  'title.infinity': 'インフィニティ',
+  'title.soon': '準備中',
   'title.settings': '設定',
 
   'picker.title': 'ステージ選択',
