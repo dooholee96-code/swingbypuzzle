@@ -308,8 +308,9 @@ export class FieldRenderer {
 
   // 소행성: 16프레임으로 천천히 돈다
   private rocks(ctx: CanvasRenderingContext2D, L: Level, t: number): void {
-    (L.rocks ?? []).forEach((a, i) => {
-      const f = this.reduceMotion ? 0 : (Math.floor(t * 0.5) + i) % 16;
+    (L.rocks ?? []).forEach((a) => {
+      // 도는 위상은 순번이 아니라 시드로 — 인피니티는 창을 바꿀 때마다 순번이 바뀐다
+      const f = this.reduceMotion ? 0 : (Math.floor(t * 0.5) + a.seed) % 16;
       if (!this.seen(a.x, a.y, a.r * 1.3)) return;
       // 그림은 반경·시드·프레임으로만 정해진다 — 순번으로 찾지 않는다(인피니티의 창)
       put(ctx, this.lv(`rock:${a.r}:${a.seed}:${f}`, () => rock(a.r, a.seed, f)), a.x, a.y);
@@ -374,9 +375,11 @@ export class FieldRenderer {
     const b = this.fx('carrot');
     items.forEach((it, i) => {
       if (!this.seen(it.x, it.y, 20)) return;
-      const bob = this.reduceMotion ? 0 : Math.round(Math.sin(t * 3 + i) * 2);
+      // 흔들림 위상도 자리로 — 순번은 창을 바꿀 때마다 바뀐다
+      const ph = (it.x + it.y) * 0.07;
+      const bob = this.reduceMotion ? 0 : Math.round(Math.sin(t * 3 + ph) * 2);
       putScaled(ctx, b, it.x, it.y + bob, 2, 2);
-      if (!this.reduceMotion && Math.floor(t * 2 + i) % 3 === 0) put(ctx, this.fx('sparkle1'), it.x + 9, it.y - 9 + bob);
+      if (!this.reduceMotion && Math.floor(t * 2 + ph) % 3 === 0) put(ctx, this.fx('sparkle1'), it.x + 9, it.y - 9 + bob);
     });
   }
 

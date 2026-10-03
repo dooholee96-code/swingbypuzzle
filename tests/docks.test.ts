@@ -108,6 +108,34 @@ describe('탭으로 나가기와 되풀이', () => {
   });
 });
 
+describe('기록 되풀이의 가장자리 (코드 검토에서 찾은 것)', () => {
+  it('붙잡혀 있지 않을 때 걸린 나가기 기록은 버린다 — 다음 포획에서 바로 나가지 않는다', () => {
+    const L = level();
+    const probe = new Sim();
+    flyToDock(probe, L);
+    const caughtAt = probe.flightStep;
+    const sim = new Sim();
+    sim.begin(L, -88, 0, undefined, undefined, [10]);        // 10 스텝째에는 아직 날고 있다
+    for (let i = 0; i < caughtAt + 240; i++) sim.step();
+    expect(sim.docked).not.toBeNull();                       // 붙잡힌 뒤 1초가 지나도 그대로 돈다
+    expect(sim.releases).toEqual([]);
+  });
+
+  it('도는 동안 걸린 분사 기록은 건너뛰고, 그 뒤의 분사는 그대로 쓴다', () => {
+    const L = level();
+    const probe = new Sim();
+    flyToDock(probe, L);
+    const caughtAt = probe.flightStep;
+    const out = caughtAt + 300, later = out + 120;
+    const sim = new Sim();
+    sim.begin(L, -88, 0, undefined,
+      [{ step: caughtAt + 50, dir: 0 }, { step: later, dir: 180 }], [out]);
+    for (let i = 0; i < later + 10; i++) sim.step();
+    expect(sim.releases).toEqual([out]);
+    expect(sim.turns.map((t) => t.step)).toEqual([later]);
+  });
+});
+
 describe('단계 데이터', () => {
   it('스키마가 docks 와 solution.releases 를 받는다', () => {
     const L = level();

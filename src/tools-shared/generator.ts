@@ -1006,9 +1006,10 @@ function generateDockOne(
   for (const c of caught) {
     if (cur && c.dir === cur.dir && Math.abs(wrapDeg(c.a - cur.a1) - 1) < 1e-6) cur.a1 = c.a;
     else cur = { a0: c.a, a1: c.a, dir: c.dir };
-    if (!bestRun || cur.a1 - cur.a0 > bestRun.a1 - bestRun.a0) bestRun = { ...cur };
+    // ±180° 를 넘어 이어진 묶음도 있으니 폭은 감아서 잰다
+    if (!bestRun || spanDeg(cur.a0, cur.a1) > spanDeg(bestRun.a0, bestRun.a1)) bestRun = { ...cur };
   }
-  const a0 = quantize(bestRun!.a0 + wrapDeg(bestRun!.a1 - bestRun!.a0) / 2);
+  const a0 = quantize(wrapDeg(bestRun!.a0 + spanDeg(bestRun!.a0, bestRun!.a1) / 2));
 
   const cells = new Map<number, number[]>();
   for (let phi = -180; phi < 180; phi += PHI_STEP) {
@@ -1148,3 +1149,5 @@ function generateDockOne(
 }
 
 function wrapDeg(d: number): number { return d - 360 * Math.round(d / 360); }
+/** a0 에서 a1 까지 양의 방향으로 잰 폭(0~360). ±180° 를 넘는 묶음도 바르게 잰다 */
+function spanDeg(a0: number, a1: number): number { return ((a1 - a0) % 360 + 360) % 360; }

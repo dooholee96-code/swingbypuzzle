@@ -174,8 +174,14 @@ export class Sim {
   /** 한 스텝. '' = 계속. */
   step(): Outcome | '' {
     if (this.n - this.dockedSteps >= this.maxN) return 'drift';
+    // 기록된 나가기·분사는 지나간 것까지 소비한다. 스텝이 맞아도 그때 붙잡혀 있지 않은
+    // 나가기는 버린다 — 깃발을 남겨 두면 다음에 붙잡히자마자 나가 버린다
     while (this.relAt < this.relPlan.length && this.relPlan[this.relAt]! <= this.n) {
-      if (this.relPlan[this.relAt++] === this.n) this.relQueued = true;
+      if (this.relPlan[this.relAt++] === this.n && this.docked) this.relQueued = true;
+    }
+    while (this.planAt < this.plan.length && this.plan[this.planAt]!.step <= this.n) {
+      const p = this.plan[this.planAt++]!;
+      if (p.step === this.n) this.queued = p.dir;
     }
     if (this.docked) {
       // 탭했거나 두 바퀴가 지나면 지금 자리의 접선으로 나간다. 속도는 이미 접선이다
@@ -187,9 +193,10 @@ export class Sim {
       }
       this.relQueued = false;
     }
-    if (this.docked) return this.orbitStep();
-    while (this.planAt < this.plan.length && this.plan[this.planAt]!.step === this.n) {
-      this.queued = this.plan[this.planAt++]!.dir;
+    if (this.docked) {
+      // 도는 중에는 분사하지 않는다(게임에서는 도는 중 탭이 나가기라 생기지도 않는다)
+      this.queued = null;
+      return this.orbitStep();
     }
     if (this.queued !== null) {
       applyTurn(this.ship, this.queued);
@@ -281,7 +288,7 @@ export class Sim {
   predictRelease(L: Level, from: ShipState, t0: number, seconds: number, G?: Grav[]): Preview {
     const g = G ?? gravs(L);
     const s: ShipState = { ...from };
-    const leaving = this.docked?.dock ?? null;
+    let leaving = this.docked?.dock ?? null;
     let t = t0;
     const points: number[] = [];
     const max = Math.round(seconds / DT);
@@ -291,6 +298,8 @@ export class Sim {
       t += DT;
       points.push(s.x, s.y);
       if (outcome) break;
+      // 실제 비행(step)과 같은 규칙: 나온 링에서 충분히 멀어지면 다시 붙잡을 수 있다
+      if (leaving && dist(leaving.x, leaving.y, s.x, s.y) > leaving.cr + DOCK_LEAVE) leaving = null;
       if (dockAt(L, s.x, s.y, leaving)) break;
     }
     return { points, outcome };

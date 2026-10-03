@@ -11,6 +11,7 @@ import { inArc } from '../src/core/angle.js';
 import { angles, mainRuns, widthOf } from '../src/tools-shared/scan.js';
 import { PAD_R, SHIP_R } from '../src/core/constants.js';
 import { INTRO_KEYS, MODE_KEYS, introFor, seenKey } from '../src/ui/intro.js';
+import { LEVEL_KEYS, SAVE_KEYS } from '../src/levels/loader.js';
 import { t } from '../src/i18n/index.js';
 import type { IntroKey } from '../src/ui/intro.js';
 
@@ -34,6 +35,12 @@ const WINDOWS = [
   { id: '4-1', step: 800, from: -48.5, to: -39.25, width: 9.5 },
   { id: '5-1', step: 0, from: -15.5, to: -8.5, width: 7.25 },
 ] as const;
+
+describe('저장 키 (§6.1, 에디터)', () => {
+  it('에디터가 저장하는 키가 스키마가 받는 키를 모두 담는다 — 빠지면 저장 때 지워진다', () => {
+    expect([...SAVE_KEYS].sort()).toEqual([...LEVEL_KEYS].sort());
+  });
+});
 
 describe('회귀 (§16.5)', () => {
   const sim = new Sim();

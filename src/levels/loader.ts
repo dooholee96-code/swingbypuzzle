@@ -31,8 +31,22 @@ const OPTIONAL: Record<string, string[]> = {
   hole: ['role'],
   meta: ['intro', 'metrics'],
 };
+/**
+ * 단계 JSON 을 저장할 때의 키 순서(§6.1). 에디터가 이 순서로 다듬어 쓴다 — 좌표 변경이
+ * git diff 에서 바로 읽히게. **스키마가 받는 키를 모두 담아야 한다**(빠지면 저장할 때
+ * 지워진다). tests/levels.test.ts 가 REQUIRED·OPTIONAL 과 맞는지 본다.
+ */
+export const SAVE_KEYS = [
+  'id', 'name', 'w', 'h', 'speed', 'preview', 'start', 'goal',
+  'planets', 'holes', 'rocks', 'ufos', 'docks', 'hint', 'turns', 'meta',
+] as const;
+
+/** 레벨 최상위에 올 수 있는 키 전부 (SAVE_KEYS 검사용) */
+export const LEVEL_KEYS: readonly string[] = [];
+
 const ROLES = ['required', 'optional', 'gate'];
 const SOURCES = ['verified', 'generated', 'editor'];
+(LEVEL_KEYS as string[]).push(...REQUIRED['level']!, ...OPTIONAL['level']!);
 const INTROS = ['planet', 'rock', 'hole', 'ufo', 'orbit', 'wide', 'turn', 'infinity', 'dock'];
 
 export function validateSchema(raw: unknown, id: string): string[] {

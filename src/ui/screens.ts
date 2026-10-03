@@ -88,7 +88,7 @@ export class Screens {
         <div class="pair">
           <button class="btn" data-a="settings" type="button">${t('title.settings')}</button>
           <button class="btn" data-a="language" type="button">${t('set.language')}${
-            t('set.language') === 'Language' ? '' : '<small>Language</small>'}</button>
+            isEnglishUi() ? '' : `<small>${t('set.languageEn')}</small>`}</button>
         </div>
       </div>
       <div class="spacer"></div>`;
@@ -319,5 +319,10 @@ export class Screens {
 
 /** "언어 · Language". 못 읽는 언어로 바뀌어도 자기 언어를 찾아 돌아올 수 있게 영어를 곁들인다 */
 function langLabel(): string {
-  return t('set.language') === 'Language' ? 'Language' : `${t('set.language')} · Language`;
+  return isEnglishUi() ? t('set.language') : `${t('set.language')} · ${t('set.languageEn')}`;
+}
+
+/** 지금 화면이 영어인가 — 영어면 "Language" 를 덧붙일 필요가 없다 */
+function isEnglishUi(): boolean {
+  return t('set.language') === t('set.languageEn');
 }

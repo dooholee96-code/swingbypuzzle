@@ -10,7 +10,8 @@ import { PAD_R } from '../core/constants.js';
 import { padAngle } from '../core/angle.js';
 import { allIds } from '../levels/chapters.js';
 import { loadLevel } from '../levels/registry.js';
-import { validateSchema } from '../levels/loader.js';
+import { SAVE_KEYS, validateSchema } from '../levels/loader.js';
+import { metaMetrics } from '../tools-shared/metrics.js';
 import { EDITOR as C } from '../render/palette.js';
 import type { Hole, Level, Planet, Rock, Ufo } from '../core/types.js';
 import type { FanPath, Req, Res } from './verify.worker.js';
@@ -465,8 +466,9 @@ async function loadCandidates(): Promise<void> {
  */
 function normalize(lv: Level): Level {
   const out: Record<string, unknown> = {};
-  for (const k of ['id', 'name', 'w', 'h', 'speed', 'preview', 'start', 'goal',
-    'planets', 'holes', 'rocks', 'ufos', 'hint', 'meta'] as const) {
+  // 단계 데이터에 키를 더하면 여기에도 더한다 — 빠뜨리면 저장할 때 조용히 지워진다
+  // (분사 turns·궤도 행성 docks 가 그랬다. SAVE_KEYS 는 loader.ts, 검사는 tests/levels.test.ts)
+  for (const k of SAVE_KEYS) {
     const v = (lv as unknown as Record<string, unknown>)[k];
     if (v === undefined) continue;
     if (Array.isArray(v) && v.length === 0) continue;
@@ -508,20 +510,9 @@ async function save(): Promise<void> {
     : `저장 실패: ${out.error}`);
 }
 
+/** CLI(`npm run validate --write`)와 같은 함수로 기록한다 — 두 벌이면 항목이 어긋난다 */
 function metaOf(m: NonNullable<typeof report>['metrics']): Level['meta']['metrics'] {
-  const r2 = (v: number): number => Math.round(v * 100) / 100;
-  const out = {
-    main_window: r2(m.main_window_at_solution),
-    flight_time: r2(m.flight_time),
-    clearance: r2(m.clearance),
-    difficulty: r2(m.difficulty),
-  } as NonNullable<Level['meta']['metrics']>;
-  if (r2(m.main_window) !== r2(m.main_window_at_solution)) {
-    out.main_window_best = r2(m.main_window);
-    out.best_launch_step = m.best_launch_step;
-  }
-  if (m.timing_fraction !== undefined) out.timing_fraction = r2(m.timing_fraction);
-  return out;
+  return metaMetrics(m) as unknown as Level['meta']['metrics'];
 }
 
 // ── 초기화 ──────────────────────────────────────────────────────────

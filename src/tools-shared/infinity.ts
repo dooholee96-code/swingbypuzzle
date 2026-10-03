@@ -51,6 +51,15 @@ function chunkSeed(seed: number, cx: number, cy: number): number {
   return (h ^ (h >>> 13)) | 0;
 }
 
+/**
+ * 소행성 모양 시드. **여덟 가지만** 쓴다 — 그림은 (반경, 시드, 프레임)마다 한 번 구워
+ * 판이 끝날 때까지 두는데, 칸마다 다른 시드를 주면 오래 날수록 구운 그림이 끝없이 쌓였다
+ * (코드 검토에서 찾았다). 모양은 판정과 상관없다(§5.4 의 원).
+ */
+function rockShape(seed: number, cx: number, cy: number, k: number): number {
+  return 1 + (((chunkSeed(seed, cx, cy) >>> 0) + k) % 8);
+}
+
 export function chunkOf(x: number, y: number): [number, number] {
   return [Math.floor((x - ORIGIN + CHUNK / 2) / CHUNK), Math.floor((y - ORIGIN + CHUNK / 2) / CHUNK)];
 }
@@ -130,7 +139,7 @@ export function makeChunk(seed: number, cx: number, cy: number): Chunk {
       return;
     }
     if (rnd() < rockP(ring) && clear(30)) {
-      out.rocks.push({ x, y, r: Math.round(pick(13, 22)), seed: (chunkSeed(seed, cx, cy) >>> 0) % 9973 + k });
+      out.rocks.push({ x, y, r: Math.round(pick(13, 22)), seed: rockShape(seed, cx, cy, k) });
     }
   });
 
@@ -143,7 +152,7 @@ export function makeChunk(seed: number, cx: number, cy: number): Chunk {
     // 작은 칸 가운데(±50)에서 모서리까지 141 − 71 − 21 = 49 ≥ 행성 28 + 파편 14 + 6
     const x = Math.round(px + pick(-15, 15)), y = Math.round(py + pick(-15, 15));
     if (dist(x, y, ORIGIN, ORIGIN) <= START_CLEAR + 20) continue;
-    out.rocks.push({ x, y, r: Math.round(pick(9, 14)), seed: (chunkSeed(seed, cx, cy) >>> 0) % 9973 + 7 });
+    out.rocks.push({ x, y, r: Math.round(pick(9, 14)), seed: rockShape(seed, cx, cy, 7) });
   }
   return out;
 }

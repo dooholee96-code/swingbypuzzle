@@ -179,7 +179,7 @@ export class Session {
       const n = this.world.eat(x, y);
       if (n) {
         this.itemsEaten += n;
-        this.turnsLeft = Math.min(MAX_TURNS, this.turnsLeft + n);
+        this.turnsLeft = Math.min(this.turnSlots, this.turnsLeft + n);   // ?turns 몫까지 담는다
       }
     }
     if (this.sim.flightStep % TRAIL_EVERY === 0) {

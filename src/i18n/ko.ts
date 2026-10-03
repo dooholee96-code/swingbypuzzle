@@ -117,6 +117,8 @@ export const ko = {
   'set.haptics': '진동',
   'set.reduceMotion': '모션 줄이기',
   'set.language': '언어',
+  // 못 읽는 언어로 바뀌어도 언어 칸을 찾을 수 있게 모든 언어에서 영어로 둔다 (§13.7)
+  'set.languageEn': 'Language',
   'set.langAuto': '자동',
   'set.privacyOptions': '개인정보 옵션',
   'set.open': '열기',

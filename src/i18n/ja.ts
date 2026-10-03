@@ -108,6 +108,8 @@ export const ja: Dict = {
   'set.haptics': '振動',
   'set.reduceMotion': 'モーションを減らす',
   'set.language': '言語',
+  // 못 읽는 언어로 바뀌어도 언어 칸을 찾을 수 있게 모든 언어에서 영어로 둔다 (§13.7)
+  'set.languageEn': 'Language',
   'set.langAuto': '自動',
   'set.privacyOptions': 'プライバシー設定',
   'set.open': '開く',
