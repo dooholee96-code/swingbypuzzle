@@ -1,0 +1,81 @@
+{
+  "id": "6-1",
+  "name": "첫 분사",
+  "w": 400,
+  "h": 760,
+  "speed": 150,
+  "preview": 1.8,
+  "start": {
+    "x": 80,
+    "y": 630
+  },
+  "goal": {
+    "x": 305,
+    "y": 115,
+    "r": 24
+  },
+  "planets": [
+    {
+      "x": 80,
+      "y": 415,
+      "r": 21,
+      "g": 860,
+      "R": 160,
+      "sides": 8
+    }
+  ],
+  "turns": 1,
+  "meta": {
+    "chapter": 6,
+    "slot": 1,
+    "role": "도입",
+    "intro": "turn",
+    "solution": {
+      "angle": -107.5,
+      "launch_step": 0,
+      "turns": [
+        {
+          "step": 694,
+          "dir": -70.51
+        }
+      ]
+    },
+    "source": "generated",
+    "updated": "2026-10-03",
+    "metrics": {
+      "main_window": 8.75,
+      "flight_time": 3.55,
+      "clearance": 12.85,
+      "difficulty": 0.8,
+      "turn_timing": 0.43,
+      "turn_delta": 151
+    }
+  },
+  "rocks": [
+    {
+      "x": 245,
+      "y": 170,
+      "r": 18,
+      "seed": 1
+    },
+    {
+      "x": 255,
+      "y": 280,
+      "r": 18,
+      "seed": 2
+    },
+    {
+      "x": 340,
+      "y": 670,
+      "r": 21,
+      "seed": 3
+    },
+    {
+      "x": 280,
+      "y": 360,
+      "r": 15,
+      "seed": 4
+    }
+  ],
+  "hint": "날아가는 중에 탭하면 그쪽으로 꺾여요"
+}

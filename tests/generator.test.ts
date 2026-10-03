@@ -23,8 +23,8 @@ const load = (f: string): Recipe =>
 describe('레시피 형식 (§8.3)', () => {
   const files = readdirSync(RECIPES).filter((f) => f.endsWith('.json')).sort();
 
-  it('레시피 파일이 5개 있다', () => {
-    expect(files).toEqual(['ch1.json', 'ch2.json', 'ch3.json', 'ch4.json', 'ch5.json']);
+  it('레시피 파일이 6개 있다 (6장 분사, §22.2)', () => {
+    expect(files).toEqual(['ch1.json', 'ch2.json', 'ch3.json', 'ch4.json', 'ch5.json', 'ch6.json']);
   });
 
   for (const f of files) {
@@ -133,9 +133,34 @@ describe('생성기 불변식 (§8.4 8단계)', () => {
     }
     expect(reasons.size).toBeGreaterThan(0);
     for (const x of reasons) {
-      expect(['place', 'goal', 'shortcut', 'rocks', 'timing', 'rules', 'nowin']).toContain(x);
+      expect(['place', 'goal', 'shortcut', 'rocks', 'timing', 'rules', 'nowin', 'turn']).toContain(x);
     }
   }, 30_000);
+});
+
+describe('분사 단계 생성기 (§22.2)', () => {
+  const r = load('ch6.json');
+  const s = slotOf(r, 1)!;
+
+  it('내놓은 후보는 스키마·§8.5·규칙 10·11 을 통과하고, 분사 없이는 안 풀린다', () => {
+    let checked = 0;
+    for (let seed = 1; seed <= 12 && checked < 2; seed++) {
+      const g = generateOne(r, s, seed);
+      if (!('ok' in g)) continue;
+      checked++;
+      const lv = g.ok.level;
+      expect(validateSchema(JSON.parse(JSON.stringify(lv)), lv.id), lv.id).toEqual([]);
+      const m = computeMetrics(lv);
+      const rep = checkLevel(lv, m, { window: s.window, timing: null });
+      expect(rep.failures, `seed ${seed}: ${rep.failures.join(' / ')}`).toEqual([]);
+      expect(lv.turns).toBe(1);
+      expect(lv.meta.solution.turns).toHaveLength(1);
+      expect(m.turn!.no_turn_width).toBe(0);
+      // 0.6초 전 분사는 정답으로 쓰지 않는다 (generator.ts TURN_FROM)
+      expect(lv.meta.solution.turns![0]!.step).toBeGreaterThanOrEqual(120);
+    }
+    expect(checked, '분사 후보를 하나도 못 만들었다').toBeGreaterThan(0);
+  }, 120_000);
 });
 
 describe('레시피 제약 검사 (§8.5 규칙 1·6, 너무 쉬움 경고)', () => {

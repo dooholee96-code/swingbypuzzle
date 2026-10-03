@@ -56,12 +56,22 @@ describe('등록된 단계 (§19)', () => {
     expect(loadAll(allIds()).size).toBe(allIds().length);
   });
 
-  it('meta.solution이 모두 win이다', () => {
+  it('meta.solution이 모두 win이다 (분사 단계는 분사 기록째 — §22.1)', () => {
     const sim = new Sim();
     for (const id of allIds()) {
       const L = loadLevel(id);
+      const { angle, launch_step, turns } = L.meta.solution;
+      expect(sim.simulate(L, angle, launch_step, undefined, turns), `${id}`).toBe('win');
+    }
+  });
+
+  it('분사 단계는 분사 없이는 정답 각도로 풀리지 않는다 (§22.2 규칙 10)', () => {
+    const sim = new Sim();
+    for (const id of allIds()) {
+      const L = loadLevel(id);
+      if (!L.turns) continue;
       const { angle, launch_step } = L.meta.solution;
-      expect(sim.simulate(L, angle, launch_step), `${id}`).toBe('win');
+      expect(sim.simulate(L, angle, launch_step), `${id}`).not.toBe('win');
     }
   });
 

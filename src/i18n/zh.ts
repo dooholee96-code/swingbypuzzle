@@ -67,6 +67,8 @@ export const zh: Dict = {
   'intro.orbit.body': '沿着固定的圆周运行。等待合适的发射时机吧。',
   'intro.wide': '大地图',
   'intro.wide.body': '一屏看不全。点击角落的小地图查看航线。',
+  'intro.turn': '喷射',
+  'intro.turn.body': '飞行中点击屏幕，就会朝那一侧转向。剩余次数显示在左上角。',
   'intro.wideExtra': '这次横向也很宽。',
   'intro.ok': '确定',
 

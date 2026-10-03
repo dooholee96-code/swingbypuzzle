@@ -1,0 +1,80 @@
+{
+  "id": "6-2",
+  "name": "행성에 맡기기",
+  "w": 400,
+  "h": 760,
+  "speed": 150,
+  "preview": 1.6,
+  "start": {
+    "x": 135,
+    "y": 660
+  },
+  "goal": {
+    "x": 165,
+    "y": 75,
+    "r": 24
+  },
+  "planets": [
+    {
+      "x": 185,
+      "y": 275,
+      "r": 23,
+      "g": 830,
+      "R": 160,
+      "sides": 13
+    }
+  ],
+  "turns": 1,
+  "meta": {
+    "chapter": 6,
+    "slot": 2,
+    "role": "연습",
+    "solution": {
+      "angle": -84,
+      "launch_step": 0,
+      "turns": [
+        {
+          "step": 394,
+          "dir": -43.88
+        }
+      ]
+    },
+    "source": "generated",
+    "updated": "2026-10-03",
+    "metrics": {
+      "main_window": 6.25,
+      "flight_time": 3.49,
+      "clearance": 15.25,
+      "difficulty": 1.99,
+      "turn_timing": 0.41,
+      "turn_delta": 142
+    }
+  },
+  "rocks": [
+    {
+      "x": 135,
+      "y": 130,
+      "r": 15,
+      "seed": 1
+    },
+    {
+      "x": 265,
+      "y": 240,
+      "r": 17,
+      "seed": 2
+    },
+    {
+      "x": 295,
+      "y": 505,
+      "r": 21,
+      "seed": 3
+    },
+    {
+      "x": 55,
+      "y": 325,
+      "r": 22,
+      "seed": 4
+    }
+  ],
+  "hint": "점선 원에 들어설 때 꺾으면 행성이 굴로 데려다줘요"
+}

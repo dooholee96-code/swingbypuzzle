@@ -294,13 +294,17 @@ function replayDemo(): void {
   session.launch();
 }
 
-/** 개발 서버에서 `?turns=N` 이면 모든 단계에 분사를 N번 더 준다 (§22.1 시험용). 배포에는 없다 */
-const DEV_TURNS = import.meta.env.DEV
-  ? Math.max(0, Number(new URLSearchParams(location.search).get('turns')) || 0) : 0;
+/**
+ * 숨은 시험 옵션(§22.1): 주소에 `?turns=N` 이 있으면 모든 단계에 분사를 N번(최대 9) 더 준다.
+ * 사용자가 폰에서 분사 손맛을 보려고 배포 사이트에도 켰다. 화면 어디에도 안내하지 않는다.
+ * 옵션 자체는 저장하지 않는다(주소를 빼면 꺼진다). 그 상태로 깬 단계는 평소처럼 클리어로 남는다.
+ */
+const TEST_TURNS = Math.min(9, Math.max(0,
+  Math.floor(Number(new URLSearchParams(location.search).get('turns')) || 0)));
 
 function startPlay(id: string): void {
   demo = false;
-  session.bonusTurns = DEV_TURNS;
+  session.bonusTurns = TEST_TURNS;
   loadInto(id);
   beginGlide();
   screens.syncChapter(id);

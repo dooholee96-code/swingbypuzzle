@@ -21,6 +21,7 @@ export const REJECT_LABEL: Record<string, string> = {
   timing: '공전 타이밍 비율이 범위 밖',
   nowin: '성공 각도 없음',
   rules: '검증 규칙(§8.5) 불통과',
+  turn: '분사 정답을 다듬지 못함',
 };
 
 export interface RunResult {

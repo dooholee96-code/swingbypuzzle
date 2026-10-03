@@ -10,8 +10,11 @@ import { ARC, DT, PAD_R, REF_H, REF_W, SHIP_R } from '../core/constants.js';
 import { inArc, padAngle, quantize } from '../core/angle.js';
 import { bodyPos, dist, gravs } from '../core/physics.js';
 import { Sim } from '../core/simulate.js';
-import type { Grav, Hole, Level, Planet, Role } from '../core/types.js';
+import type { Grav, Hole, Level, Planet, Role, Turn } from '../core/types.js';
 import { type Run, angles, launchSteps, orbiter, widthOf } from './scan.js';
+import {
+  MIN_TURN_DELTA, MIN_TURN_TIMING, arcRuns, relTurns, turnAngleRuns, turnTolerance,
+} from './turns.js';
 
 /** 검증기와 생성기의 발사 시점 등분 수 (§8.4 6단계, §8.9.1). */
 export const DIVISIONS = 24;
@@ -61,6 +64,12 @@ export interface LevelMetrics {
   /** 충돌 판정 안에 들어간 돔 표면 각도(°). 비어 있으면 규칙 8 통과 */
   dome_blocked: number[];
   difficulty: number;
+  /**
+   * 분사 단계(§22.2)만. 이때 main_window·flukes 는 **정답의 분사를 건 채** 잰 값이다.
+   *   no_turn_width — 분사 없이 성공하는 각도 폭 합계. 0 이어야 한다(규칙 10)
+   *   timing / delta — 분사 타이밍(초)·탭 방향(°)의 연속 성공 폭(규칙 11)
+   */
+  turn?: { used: number; no_turn_width: number; timing: number; delta: number };
 }
 
 // ── 역할 ────────────────────────────────────────────────────────────
@@ -100,9 +109,11 @@ export function marginAt(L: Level, x: number, y: number, t: number): number {
 export interface FlightMeasure { clearance: number; flight_time: number; outcome: string }
 
 /** 정답 경로를 한 번 날려 `clearance` 와 비행 시간을 잰다 (§8.5). */
-export function measureFlight(L: Level, angle: number, launchStep: number, G?: Grav[]): FlightMeasure {
+export function measureFlight(
+  L: Level, angle: number, launchStep: number, G?: Grav[], turns?: Turn[],
+): FlightMeasure {
   const sim = new Sim();
-  sim.begin(L, angle, launchStep, G);
+  sim.begin(L, angle, launchStep, G, turns);
   // 출발점도 경로의 일부다
   let best = marginAt(L, sim.ship.x, sim.ship.y, sim.time);
   let r: '' | string = '';
@@ -214,6 +225,7 @@ export function difficultyOf(
   L: Level,
   mainWindow: number,
   timingFraction: number | undefined,
+  turn?: { used: number; timing: number },
 ): number {
   const required = gravEntries(L).filter((e) => roleOf(e.b) === 'required').length;
   const optionalHoles = (L.holes ?? []).filter((h) => roleOf(h as Hole) !== 'required').length;
@@ -223,7 +235,9 @@ export function difficultyOf(
   const C = Math.min(((L.ufos ?? []).length + optionalHoles) * 0.4, 1.2);
   const E = clamp01((1.8 - L.preview) / 1.3) * 1.5;
   const F = timingFraction === undefined ? 0 : clamp01((0.5 - timingFraction) / 0.3) * 1.5;
-  return A + B + C + E + F + sizeTerm(L);
+  // 분사(§22.2): 한 번에 0.8, 타이밍이 빠듯할수록 최대 1.0 더
+  const T = turn ? turn.used * 0.8 + clamp01((0.4 - turn.timing) / 0.25) * 1.0 : 0;
+  return A + B + C + E + F + T + sizeTerm(L);
 }
 
 // ── 전체 계산 ────────────────────────────────────────────────────────
@@ -248,7 +262,7 @@ export function computeMetrics(L: Level): LevelMetrics {
     : undefined;
 
   const sol = L.meta.solution;
-  const flight = measureFlight(L, sol.angle, sol.launch_step, G);
+  const flight = measureFlight(L, sol.angle, sol.launch_step, G, sol.turns);
   const dome = checkDome(L);
 
   const essential = gravEntries(L).map((e) => ({
@@ -257,6 +271,37 @@ export function computeMetrics(L: Level): LevelMetrics {
     role: roleOf(e.b),
     essential: isEssential(L, e),
   }));
+
+  // 분사 단계: 위의 스캔은 "분사 없이"였다. 규칙 10 은 그걸 보고,
+  // 폭·우연은 정답의 분사를 건 채 다시 잰다 (§22.2)
+  if ((L.turns ?? 0) > 0 && sol.turns?.length) {
+    // 분사 없이 걸을 수 있는 범위 안에서 성공하는 폭. 범위 밖은 쏠 수 없으니 세지 않는다
+    const no_turn_width = Math.max(...scans.map((s) => {
+      const all = [...(s.main ? [s.main] : []), ...s.flukes.runs];
+      return arcRuns(L, all).reduce((sum, r) => sum + widthOf(r), 0);
+    }));
+    const rel = relTurns(L, sol.angle, sol.launch_step, sol.turns, G);
+    const { main, flukes } = splitRuns(turnAngleRuns(L, sol.launch_step, rel, G));
+    const tol = turnTolerance(L, sol.angle, sol.launch_step, rel, G);
+    const width = main ? widthOf(main) : 0;
+    const turn = { used: rel.length, no_turn_width, timing: tol.timing, delta: tol.delta };
+    return {
+      main_window: width,
+      main_window_at_solution: width,
+      best_launch_step: sol.launch_step,
+      center_angle: main ? quantize((main[0] + main[1]) / 2) : null,
+      main_run: main,
+      flukes,
+      essential,
+      flight_time: flight.flight_time,
+      clearance: flight.clearance,
+      launch_accel: launchAccel(L, sol.angle, sol.launch_step, G),
+      dome_accel_max: dome.accelMax,
+      dome_blocked: dome.blocked,
+      difficulty: difficultyOf(L, width, undefined, turn),
+      turn,
+    };
+  }
 
   const atSolution = sol.launch_step === best.launchStep
     ? best
@@ -322,13 +367,14 @@ export function checkLevel(L: Level, m = computeMetrics(L), limits?: RecipeLimit
     failures.push(`규칙1 성공 폭 ${m.main_window.toFixed(2)}° < ${floor}°`);
   }
 
-  // 2. 우연한 성공
-  for (const r of m.flukes.runs) {
+  // 2. 우연한 성공. 분사 단계에는 걸지 않는다 — 다른 각도·다른 순간의 분사로 푸는
+  //    길이 있는 것은 우연이 아니라 그 단계의 자유다 (§22.2)
+  if (!m.turn) for (const r of m.flukes.runs) {
     if (widthOf(r) >= FLUKE_EACH) {
       failures.push(`규칙2 주 구간 외 ${r[0]}..${r[1]} 이 ${widthOf(r).toFixed(2)}° (1° 이상)`);
     }
   }
-  if (m.flukes.total >= FLUKE_TOTAL) {
+  if (!m.turn && m.flukes.total >= FLUKE_TOTAL) {
     failures.push(`규칙2 주 구간 외 합계 ${m.flukes.total.toFixed(2)}° (2° 이상)`);
   }
 
@@ -375,6 +421,22 @@ export function checkLevel(L: Level, m = computeMetrics(L), limits?: RecipeLimit
       failures.push(
         `규칙6 timing_fraction ${m.timing_fraction.toFixed(2)} 가 레시피 범위`
         + ` ${limits.timing.minFraction}~${limits.timing.maxFraction} 밖이다`);
+    }
+  }
+
+  // 10·11. 분사 단계 (§22.2)
+  if ((L.turns ?? 0) > 0 && !m.turn) {
+    failures.push('규칙10 분사 단계인데 정답에 분사가 없다');
+  }
+  if (m.turn) {
+    if (m.turn.no_turn_width > 0) {
+      failures.push(`규칙10 분사 없이도 풀린다 (폭 ${m.turn.no_turn_width.toFixed(2)}°)`);
+    }
+    if (m.turn.timing < MIN_TURN_TIMING) {
+      failures.push(`규칙11 분사 타이밍 폭 ${m.turn.timing.toFixed(3)}초 < ${MIN_TURN_TIMING}초`);
+    }
+    if (m.turn.delta < MIN_TURN_DELTA) {
+      failures.push(`규칙11 탭 방향 폭 ${m.turn.delta}° < ${MIN_TURN_DELTA}°`);
     }
   }
 
@@ -429,6 +491,10 @@ export function metaMetrics(m: LevelMetrics): Record<string, number> {
     out['best_launch_step'] = m.best_launch_step;
   }
   if (m.timing_fraction !== undefined) out['timing_fraction'] = round2(m.timing_fraction);
+  if (m.turn) {
+    out['turn_timing'] = round2(m.turn.timing);
+    out['turn_delta'] = m.turn.delta;
+  }
   return out;
 }
 

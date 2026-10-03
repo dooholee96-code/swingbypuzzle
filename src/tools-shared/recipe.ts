@@ -36,6 +36,8 @@ export interface SlotRecipe {
   /** 공전 단계의 발사 가능 시점 비율 (§8.5 규칙 6) */
   timing?: { minFraction: number; maxFraction: number } | null;
   seedCount?: number;
+  /** 분사 횟수 (§22.2). 있으면 분사 없이는 못 푸는 단계를 만든다 */
+  turns?: number;
 }
 
 export interface Recipe {
@@ -81,7 +83,13 @@ export function checkRecipe(raw: unknown): string[] {
     if (!s.name) e.push(`${at}: name 이 없습니다 (§13 문구)`);
     if (!s.map || !s.map.w || !s.map.h) e.push(`${at}: map 이 없습니다`);
     if (typeof s.preview !== 'number') e.push(`${at}: preview 가 없습니다`);
-    if (!Array.isArray(s.required) || !s.required.length) e.push(`${at}: required 가 비었습니다`);
+    if (!Array.isArray(s.required) || (!s.required.length && !s.turns)) {
+      e.push(`${at}: required 가 비었습니다`);
+    }
+    if (s.turns !== undefined && !(Number.isInteger(s.turns) && s.turns > 0)) {
+      e.push(`${at}: turns 는 1 이상의 정수여야 합니다`);
+    }
+    if (s.turns && s.timing) e.push(`${at}: 분사 단계에는 공전 행성을 아직 쓰지 않습니다 (§22.2)`);
     if (!s.window || !(s.window.min < s.window.max)) e.push(`${at}: window 가 min < max 가 아닙니다`);
     if (!s.hazards) e.push(`${at}: hazards 가 없습니다`);
     const orbit = [...(s.required ?? []), ...(s.optional ?? [])].some((b) => b.type === 'orbit');

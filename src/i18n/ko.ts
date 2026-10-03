@@ -73,6 +73,8 @@ export const ko = {
   'intro.orbit.body': '정해진 원을 따라 돌아요. 발사할 때를 기다려 보세요.',
   'intro.wide': '넓은 맵',
   'intro.wide.body': '한눈에 안 들어와요. 구석의 미니맵을 눌러 항로를 살펴보세요.',
+  'intro.turn': '분사',
+  'intro.turn.body': '날아가는 중에 화면을 탭하면 그쪽으로 꺾여요. 쓸 수 있는 횟수는 왼쪽 위에 있어요.',
   // §7.4: 5-1 에만 덧붙인다. 앞 공백까지 문구의 일부다 — 띄어 쓰는 언어만 넣는다
   'intro.wideExtra': ' 이제 가로로도 넓어요.',
   'intro.ok': '확인',

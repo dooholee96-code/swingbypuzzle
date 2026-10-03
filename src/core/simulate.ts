@@ -62,15 +62,15 @@ export class Sim {
   /** 진행 중인 비행의 현재 시각. 화면이 공전 행성을 같은 자리에 그리려면 이걸 쓴다. */
   get time(): number { return this.t; }
 
-  /** 발사 준비. 이후 step() 을 반복 호출한다. */
-  begin(L: Level, angleDeg: number, launchStep: number, G?: Grav[]): void {
+  /** 발사 준비. 이후 step() 을 반복 호출한다. turns 는 되풀이할 분사 기록 (§22.1) */
+  begin(L: Level, angleDeg: number, launchStep: number, G?: Grav[], turns?: Turn[]): void {
     this.L = L;
     this.G = G ?? gravs(L);
     this.state = { bullets: [], nextFire: (L.ufos ?? []).map((u) => u.delay) };
     this.path.length = 0;
     this.turns = [];
     this.queued = null;
-    this.plan = [];
+    this.plan = turns?.length ? [...turns].sort((a, b) => a.step - b.step) : [];
     this.planAt = 0;
 
     const a = angleDeg * Math.PI / 180;
@@ -120,8 +120,7 @@ export class Sim {
 
   /** 전체 비행. 결과 문자열을 반환한다. turns 는 정답·리플레이의 분사 기록 (§22.1). */
   simulate(L: Level, angleDeg: number, launchStep: number, G?: Grav[], turns?: Turn[]): Outcome {
-    this.begin(L, angleDeg, launchStep, G);
-    if (turns?.length) this.plan = [...turns].sort((a, b) => a.step - b.step);
+    this.begin(L, angleDeg, launchStep, G, turns);
     let r: Outcome | '' = '';
     while (!r) r = this.step();
     return r;

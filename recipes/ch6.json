@@ -1,0 +1,234 @@
+{
+  "chapter": 6,
+  "defaults": {
+    "speed": 150,
+    "startZone": "bottom",
+    "goalZone": "top"
+  },
+  "slots": [
+    {
+      "slot": 1,
+      "role": "도입",
+      "name": "첫 분사",
+      "hint": "날아가는 중에 탭하면 그쪽으로 꺾여요",
+      "map": {
+        "w": 400,
+        "h": 760
+      },
+      "preview": 1.8,
+      "turns": 1,
+      "required": [
+        {
+          "type": "planet",
+          "count": 1
+        }
+      ],
+      "hazards": {
+        "ufos": 0,
+        "rocksMax": 4
+      },
+      "window": {
+        "min": 6,
+        "max": 16
+      },
+      "seedCount": 400,
+      "intro": "turn"
+    },
+    {
+      "slot": 2,
+      "role": "연습",
+      "name": "행성에 맡기기",
+      "hint": "점선 원에 들어설 때 꺾으면 행성이 굴로 데려다줘요",
+      "map": {
+        "w": 400,
+        "h": 760
+      },
+      "preview": 1.6,
+      "turns": 1,
+      "required": [
+        {
+          "type": "planet",
+          "count": 1
+        }
+      ],
+      "hazards": {
+        "ufos": 0,
+        "rocksMax": 4
+      },
+      "window": {
+        "min": 5,
+        "max": 14
+      },
+      "seedCount": 400
+    },
+    {
+      "slot": 3,
+      "role": "변형",
+      "name": "두 행성 사이",
+      "hint": "두 번째 점선 원에 들어설 때 꺾어 보세요",
+      "map": {
+        "w": 400,
+        "h": 760
+      },
+      "preview": 1.4,
+      "turns": 1,
+      "required": [
+        {
+          "type": "planet",
+          "count": 2
+        }
+      ],
+      "hazards": {
+        "ufos": 0,
+        "rocksMax": 4
+      },
+      "window": {
+        "min": 4,
+        "max": 11
+      },
+      "seedCount": 400
+    },
+    {
+      "slot": 4,
+      "role": "휴식",
+      "name": "한숨 돌리기",
+      "hint": "행성 옆을 지날 때 굴 쪽으로 꺾어요",
+      "map": {
+        "w": 400,
+        "h": 760
+      },
+      "preview": 1.8,
+      "turns": 1,
+      "required": [
+        {
+          "type": "planet",
+          "count": 1
+        }
+      ],
+      "hazards": {
+        "ufos": 0,
+        "rocksMax": 4
+      },
+      "window": {
+        "min": 7,
+        "max": 16
+      },
+      "seedCount": 400
+    },
+    {
+      "slot": 5,
+      "role": "조합",
+      "name": "블랙홀 옆길",
+      "hint": "블랙홀 쪽으로 꺾으면 안 돼요",
+      "map": {
+        "w": 400,
+        "h": 760
+      },
+      "preview": 1.2,
+      "turns": 1,
+      "required": [
+        {
+          "type": "planet",
+          "count": 1
+        }
+      ],
+      "hazards": {
+        "ufos": 0,
+        "rocksMax": 4
+      },
+      "window": {
+        "min": 4,
+        "max": 10
+      },
+      "seedCount": 400,
+      "optional": [
+        {
+          "type": "hole",
+          "count": 1,
+          "role": "optional"
+        }
+      ]
+    },
+    {
+      "slot": 6,
+      "role": "조합 심화",
+      "name": "소행성 틈",
+      "hint": "크게 돌아 왼쪽 위 끝에서 꺾어요",
+      "map": {
+        "w": 400,
+        "h": 760
+      },
+      "preview": 1.0,
+      "turns": 1,
+      "required": [
+        {
+          "type": "planet",
+          "count": 2
+        }
+      ],
+      "hazards": {
+        "ufos": 0,
+        "rocksMax": 6
+      },
+      "window": {
+        "min": 3.5,
+        "max": 9
+      },
+      "seedCount": 400
+    },
+    {
+      "slot": 7,
+      "role": "도전",
+      "name": "감시망 돌파",
+      "hint": "붉은 원 가장자리를 지나 맨 위에서 꺾어요",
+      "map": {
+        "w": 400,
+        "h": 760
+      },
+      "preview": 0.9,
+      "turns": 1,
+      "required": [
+        {
+          "type": "planet",
+          "count": 1
+        }
+      ],
+      "hazards": {
+        "ufos": 1,
+        "rocksMax": 4
+      },
+      "window": {
+        "min": 3,
+        "max": 8
+      },
+      "seedCount": 400
+    },
+    {
+      "slot": 8,
+      "role": "마무리",
+      "name": "당근 로켓 비행",
+      "hint": "두 행성의 끌림 사이에서 꺾어요",
+      "map": {
+        "w": 440,
+        "h": 860
+      },
+      "preview": 1.2,
+      "turns": 1,
+      "required": [
+        {
+          "type": "planet",
+          "count": 2
+        }
+      ],
+      "hazards": {
+        "ufos": 0,
+        "rocksMax": 4
+      },
+      "window": {
+        "min": 5,
+        "max": 12
+      },
+      "seedCount": 400
+    }
+  ]
+}

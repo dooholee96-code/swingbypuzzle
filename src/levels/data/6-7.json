@@ -1,0 +1,84 @@
+{
+  "id": "6-7",
+  "name": "감시망 돌파",
+  "w": 400,
+  "h": 760,
+  "speed": 150,
+  "preview": 0.9,
+  "start": {
+    "x": 190,
+    "y": 625
+  },
+  "goal": {
+    "x": 185,
+    "y": 55,
+    "r": 24
+  },
+  "planets": [
+    {
+      "x": 265,
+      "y": 135,
+      "r": 21,
+      "g": 700,
+      "R": 170,
+      "sides": 12
+    }
+  ],
+  "ufos": [
+    {
+      "x": 160,
+      "y": 360,
+      "range": 185,
+      "interval": 1.2,
+      "delay": 0.7,
+      "bs": 230
+    }
+  ],
+  "turns": 1,
+  "meta": {
+    "chapter": 6,
+    "slot": 7,
+    "role": "도전",
+    "solution": {
+      "angle": -71.5,
+      "launch_step": 0,
+      "turns": [
+        {
+          "step": 890,
+          "dir": -177.43
+        }
+      ]
+    },
+    "source": "generated",
+    "updated": "2026-10-03",
+    "metrics": {
+      "main_window": 5,
+      "flight_time": 4.09,
+      "clearance": 34.55,
+      "difficulty": 4.01,
+      "turn_timing": 0.37,
+      "turn_delta": 153
+    }
+  },
+  "rocks": [
+    {
+      "x": 110,
+      "y": 345,
+      "r": 23,
+      "seed": 1
+    },
+    {
+      "x": 95,
+      "y": 490,
+      "r": 19,
+      "seed": 2
+    },
+    {
+      "x": 215,
+      "y": 295,
+      "r": 21,
+      "seed": 3
+    }
+  ],
+  "hint": "붉은 원 가장자리를 지나 맨 위에서 꺾어요"
+}

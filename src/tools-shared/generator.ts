@@ -6,13 +6,14 @@
 //
 // 게임·CLI·에디터와 같은 core/ 스테퍼를 쓴다. DOM·Node API 는 쓰지 않는다 (§0.3).
 
-import { PAD_R } from '../core/constants.js';
+import { ARC, PAD_R, TURN_MAX } from '../core/constants.js';
 import { inArc, quantize } from '../core/angle.js';
 import { bodyPos, dist, gravs } from '../core/physics.js';
 import { mulberry32 } from '../core/rng.js';
 import { Sim } from '../core/simulate.js';
 import type { Grav, Hole, Level, Planet, Rock, Ufo } from '../core/types.js';
 import { FROM, STEP, TO, launchSteps, widthOf } from './scan.js';
+import { type RelTurn, arcRuns, flyRel, turnAngleRuns } from './turns.js';
 import {
   DIVISIONS, MIN_WINDOW, checkLevel, computeMetrics, roleOf,
 } from './metrics.js';
@@ -349,7 +350,7 @@ function nearPaths(paths: number[][], x: number, y: number): number {
 // ── 후보 하나 만들기 ─────────────────────────────────────────────────
 
 export type Reject =
-  | 'place' | 'goal' | 'shortcut' | 'rocks' | 'timing' | 'rules' | 'nowin';
+  | 'place' | 'goal' | 'shortcut' | 'rocks' | 'timing' | 'rules' | 'nowin' | 'turn';
 
 /**
  * 시드를 장·칸과 섞는다.
@@ -366,6 +367,7 @@ export function seedOf(chapter: number, slot: number, seed: number): number {
 export function generateOne(
   r: Recipe, s: SlotRecipe, seed: number,
 ): { ok: Candidate } | { reject: Reject } {
+  if ((s.turns ?? 0) > 0) return generateTurnOne(r, s, seed);
   const rnd = mulberry32(seedOf(r.chapter, s.slot, seed));
   const { speed, startZone, goalZone } = resolve(r, s);
   const { w, h } = s.map;
@@ -596,3 +598,291 @@ function blockSpot(
 }
 
 
+
+// ── 분사 단계 (§22.2) ────────────────────────────────────────────────
+//
+// 분사 없이는 못 가는 자리에 목적지를 둔다. 순서:
+//   1. 배치는 보통 단계와 같다.
+//   2. 분사 없이 걸을 수 있는 각도(1°)를 날려, 칸마다 "분사 없이 닿는 각도 수"를 센다.
+//      행성만으로는 그늘이 생기지 않는다 — 인력은 행성 뒤로 궤적을 모은다. 그래서
+//      0 인 칸을 찾지 않고, 적은 칸을 고른 뒤 그 몇 갈래를 소행성으로 막는다(6단계).
+//   3. 걸을 수 있는 각도(2°)마다, 0.1초 간격의 순간마다, 왼쪽·오른쪽 최대 분사로
+//      갈래를 날려 분사 뒤 궤적이 지나간 칸을 모은다.
+//   4. 각도 폭과 타이밍 폭이 넉넉하고, 분사 없이 닿는 갈래가 적은 칸을 목적지로.
+//   5. 정답을 다듬는다(타이밍 가운데 → 각도 가운데).
+//   6. 분사 없이 가는 길을 소행성으로 막는다. 정답 궤적에서는 BLOCK_GAP 떨어진 곳에만.
+//   마지막은 언제나 §8.5 + 규칙 10·11 검증이다.
+
+/** 생성 진단 (개발용) */
+export const DEBUG_TURN = { on: false, log: (_m: string): void => {} };
+
+const TURN_EVERY = 24;          // 분사 순간 후보 간격(스텝) = 0.1초
+// 0.6초 전에 꺾는 정답은 "걸을 수 있는 범위 밖으로 쏘기"와 다르지 않다 — 분사가
+// 퍼즐이 되려면 날아가며 상황을 본 뒤에 꺾어야 한다
+const TURN_FROM = 144;
+const TURN_UNTIL = 960;         // 4초까지만 — 늦은 분사는 사람이 노리기 어렵다
+const BRANCH_STEP = 2;          // 갈래를 날리는 발사 각도 간격(°)
+const MAX_NO_TURN_HITS = 24;    // 분사 없이 닿는 갈래(1°)가 이보다 많은 칸은 막기 어렵다
+
+function generateTurnOne(
+  r: Recipe, s: SlotRecipe, seed: number,
+): { ok: Candidate } | { reject: Reject } {
+  const rnd = mulberry32(seedOf(r.chapter, s.slot, seed));
+  const { speed, startZone, goalZone } = resolve(r, s);
+  const { w, h } = s.map;
+
+  // 1. 배치
+  const [zx0, zy0, zx1, zy1] = zoneBox(startZone, w, h);
+  const sx = snap(pick(rnd, [zx0, zx1])), sy = snap(pick(rnd, [zy0, zy1]));
+  const placed = placeBodies(rnd, s, sx, sy);
+  if (!placed) return { reject: 'place' };
+  const planets = placed.planets;
+  const holes = placed.holes.map((p) => asHole(p as unknown as Planet));
+  const base: Level = {
+    id: levelId(r, s), name: s.name, w, h, speed, preview: s.preview,
+    start: { x: sx, y: sy }, goal: { ...NO_GOAL },
+    ...(planets.length ? { planets } : {}),
+    ...(holes.length ? { holes } : {}),
+    ...(placed.ufos.length ? { ufos: placed.ufos } : {}),
+    turns: s.turns!,
+    meta: {
+      chapter: r.chapter, slot: s.slot, role: s.role,
+      ...(s.intro ? { intro: s.intro } : {}),
+      solution: { angle: 0, launch_step: 0 },
+      source: 'generated', updated: '',
+    },
+  };
+  const G = gravs(base);
+  const cols = Math.ceil(w / GRID), rows = Math.ceil(h / GRID);
+  const cellOf = (x: number, y: number): number => Math.floor(y / GRID) * cols + Math.floor(x / GRID);
+  const mark = (pts: number[], from: number, radius: number, into: (k: number) => void): void => {
+    const reach = Math.ceil(radius / GRID);
+    for (let i = from; i < pts.length; i += 2 * PATH_SUBSAMPLE) {
+      const px = pts[i]!, py = pts[i + 1]!;
+      const cx = Math.floor(px / GRID), cy = Math.floor(py / GRID);
+      for (let dx = -reach; dx <= reach; dx++) {
+        for (let dy = -reach; dy <= reach; dy++) {
+          const gx = cx + dx, gy = cy + dy;
+          if (gx < 0 || gy < 0 || gx >= cols || gy >= rows) continue;
+          if (dist(gx * GRID + GRID / 2, gy * GRID + GRID / 2, px, py) > radius) continue;
+          into(gy * cols + gx);
+        }
+      }
+    }
+  };
+
+  // 2. 분사 없이 닿는 갈래 수. 목적지 영역 쪽 ±ARC(조금 넉넉히)
+  const [gx0, gy0, gx1, gy1] = zoneBox(goalZone, w, h);
+  const toward = Math.round(Math.atan2((gy0 + gy1) / 2 - sy, (gx0 + gx1) / 2 - sx) * 180 / Math.PI);
+  const sim = new Sim();
+  sim.recordPath = true;
+  const noTurn = new Map<number, number>();
+  const flightLen = new Map<number, number>();
+  for (let a = toward - ARC - 10; a <= toward + ARC + 10; a += 1) {
+    const aa = ((a + 540) % 360) - 180;
+    sim.simulate(base, aa, 0, G);
+    flightLen.set(aa, sim.flightStep);
+    const seen = new Set<number>();
+    mark(sim.path, 0, GOAL_R, (k) => seen.add(k));
+    for (const k of seen) noTurn.set(k, (noTurn.get(k) ?? 0) + 1);
+  }
+
+  // 3. 갈래. 정답은 걸을 수 있는 범위 안이어야 한다(규칙 9)
+  type Hit = { a: number; k: number; sign: number };
+  const cells = new Map<number, Hit[]>();
+  for (let a = toward - ARC; a <= toward + ARC; a += BRANCH_STEP) {
+    const aa = ((a + 540) % 360) - 180;
+    const n0 = flightLen.get(aa) ?? 0;
+    for (let k = TURN_FROM; k < Math.min(n0 - 12, TURN_UNTIL); k += TURN_EVERY) {
+      for (const sign of [1, -1]) {
+        flyRel(sim, base, aa, 0, G, [{ step: k, delta: sign * TURN_MAX }]);
+        const seen = new Set<number>();
+        mark(sim.path, 2 * k, GOAL_R - 4, (c) => {
+          if ((noTurn.get(c) ?? 0) <= MAX_NO_TURN_HITS) seen.add(c);
+        });
+        for (const c of seen) (cells.get(c) ?? cells.set(c, []).get(c)!).push({ a: aa, k, sign });
+      }
+    }
+  }
+  if (DEBUG_TURN.on) {
+    let free = 0, freeZone = 0, hitZone = 0;
+    for (let c = 0; c < cols * rows; c++) {
+      if ((noTurn.get(c) ?? 0) > MAX_NO_TURN_HITS) continue;
+      free++;
+      const x = (c % cols) * GRID + GRID / 2, y = Math.floor(c / cols) * GRID + GRID / 2;
+      if (inZone(goalZone, w, h, x, y)) { freeZone++; if (cells.has(c)) hitZone++; }
+    }
+    DEBUG_TURN.log(`free ${free}/${cols * rows} zone ${freeZone} hit ${hitZone} cells ${cells.size}`);
+  }
+  if (!cells.size) return { reject: 'goal' };
+
+  // 4. 목적지 칸. 같은 (순간, 방향) 안에서 연속한 각도 폭이 레시피 범위에 들고,
+  //    같은 각도·방향에서 연속한 순간이 2개(0.2초) 이상인 칸
+  const diag = Math.sqrt(w * w + h * h);
+  const mid = (s.window.min + s.window.max) / 2;
+  let best: { x: number; y: number; a: number; k: number; sign: number; score: number } | null = null;
+  for (const [c, hits] of cells) {
+    const x = (c % cols) * GRID + GRID / 2, y = Math.floor(c / cols) * GRID + GRID / 2;
+    if (!inZone(goalZone, w, h, x, y)) continue;
+    if (dist(x, y, sx, sy) < diag * GOAL_MIN_FRACTION) continue;
+    if (x < GOAL_R + 6 || y < GOAL_R + 6 || x > w - GOAL_R - 6 || y > h - GOAL_R - 6) continue;
+    if (G.some((b) => {
+      const [bx, by] = centerOf(b);
+      return dist(x, y, bx, by) < Math.max(b.R * 0.5, bodyRadius(b) + GOAL_R + 8);
+    })) continue;
+
+    const groups = new Map<string, number[]>();
+    for (const hh of hits) {
+      const key = `${hh.k}:${hh.sign}`;
+      (groups.get(key) ?? groups.set(key, []).get(key)!).push(hh.a);
+    }
+    for (const [key, list] of groups) {
+      list.sort((p, q) => p - q);
+      let run: [number, number] = [list[0]!, list[0]!], wide = run;
+      for (let i = 1; i < list.length; i++) {
+        if (Math.abs(list[i]! - run[1] - BRANCH_STEP) < 1e-6) run = [run[0], list[i]!];
+        else run = [list[i]!, list[i]!];
+        if (run[1] - run[0] > wide[1] - wide[0]) wide = run;
+      }
+      const width = wide[1] - wide[0] + BRANCH_STEP;
+      if (width < Math.max(MIN_WINDOW, s.window.min) || width > s.window.max + BRANCH_STEP) continue;
+      const [kk, sg] = key.split(':').map(Number) as [number, number];
+      const center = quantize((wide[0] + wide[1]) / 2);
+      const probe = { start: { x: sx, y: sy }, goal: { x, y, r: GOAL_R } } as Level;
+      if (!inArc(probe, center)) continue;
+      // 이웃한 순간(±0.1초)도 같은 각도 근처로 닿는가
+      const near = (dk: number): boolean => hits.some((hh) =>
+        hh.k === kk + dk && hh.sign === sg && Math.abs(hh.a - center) <= BRANCH_STEP);
+      const timing = (near(-TURN_EVERY) ? 1 : 0) + (near(TURN_EVERY) ? 1 : 0);
+      if (timing < 1) continue;
+      const score = -Math.abs(width - mid) + timing * 1.5 - (noTurn.get(c) ?? 0) * 0.25 + rnd() * 0.5;
+      if (!best || score > best.score) best = { x, y, a: center, k: kk, sign: sg, score };
+    }
+  }
+  if (!best) return { reject: 'goal' };
+  const lv: Level = { ...base, goal: { x: best.x, y: best.y, r: GOAL_R } };
+
+  // 5. 정답 다듬기: 타이밍 가운데 → 각도 가운데 → 타이밍 가운데
+  const tsim = new Sim();
+  const wins = (a: number, k: number): boolean =>
+    flyRel(tsim, lv, a, 0, G, [{ step: k, delta: best!.sign * TURN_MAX }]) === 'win';
+  const centerK = (a: number, k0: number): number | null => {
+    if (!wins(a, k0)) {
+      // 거친 격자의 칸이라 정확한 각도에서는 한두 스텝 어긋날 수 있다
+      let found: number | null = null;
+      for (let d = 2; d <= TURN_EVERY && found === null; d += 2) {
+        if (wins(a, k0 - d)) found = k0 - d; else if (wins(a, k0 + d)) found = k0 + d;
+      }
+      if (found === null) return null;
+      k0 = found;
+    }
+    let lo = k0, hi = k0;
+    while (lo - 2 >= TURN_FROM - TURN_EVERY && wins(a, lo - 2)) lo -= 2;
+    while (hi + 2 < TURN_UNTIL && wins(a, hi + 2)) hi += 2;
+    return Math.round((lo + hi) / 4) * 2;
+  };
+  const centerA = (a0: number, k: number): number | null => {
+    const rel: RelTurn[] = [{ step: k, delta: best!.sign * TURN_MAX }];
+    const runs = turnAngleRuns(lv, 0, rel, G);
+    const hit = runs.find((rr) => a0 >= rr[0] - 1 && a0 <= rr[1] + 1)
+      ?? runs.reduce<[number, number] | null>((m, rr) =>
+        (!m || Math.abs((rr[0] + rr[1]) / 2 - a0) < Math.abs((m[0] + m[1]) / 2 - a0) ? rr : m), null);
+    return hit ? quantize((hit[0] + hit[1]) / 2) : null;
+  };
+  let k = centerK(best.a, best.k);
+  if (k === null) return { reject: 'turn' };
+  let a = centerA(best.a, k);
+  if (a === null) return { reject: 'turn' };
+  k = centerK(a, k);
+  if (k === null) return { reject: 'turn' };
+
+  // 절대 방향으로 기록한다 — 게임과 같은 형식(§22.1)
+  const absTurn = (L: Level): { step: number; dir: number } => {
+    tsim.begin(L, a!, 0, G);
+    while (tsim.flightStep < k! && !tsim.step()) { /* 분사 순간까지 */ }
+    const hd = Math.atan2(tsim.ship.vy, tsim.ship.vx) * 180 / Math.PI;
+    return { step: k!, dir: Math.round((hd + best!.sign * TURN_MAX) * 100) / 100 };
+  };
+  const solPath = (L: Level): number[] => {
+    const ps = new Sim();
+    ps.recordPath = true;
+    ps.simulate(L, a!, 0, G, [absTurn(L)]);
+    return ps.path.slice();
+  };
+
+  // 6. 분사 없이 가는 지름길을 소행성으로 막는다 (보통 단계의 5단계와 같은 방법)
+  const rocks: Rock[] = [];
+  let seedN = 1;
+  for (let round = 0; round <= s.hazards.rocksMax; round++) {
+    const cur: Level = { ...lv, ...(rocks.length ? { rocks } : {}) };
+    const bad = arcRuns(cur, scanRuns(cur));
+    if (!bad.length) break;
+    if (rocks.length >= s.hazards.rocksMax) return { reject: 'rocks' };
+    const spot = blockSpot(cur, bad[0]!, [solPath(cur)], rnd);
+    if (!spot) return { reject: 'shortcut' };
+    rocks.push({ x: snap(spot[0]), y: snap(spot[1]), r: pickInt(rnd, RANGE.rock.r), seed: seedN++ });
+  }
+  const blocked: Level = { ...lv, ...(rocks.length ? { rocks } : {}) };
+
+  // 7. 장식 소행성 — 정답 궤적과 출발·목적지에서 떨어진 곳에
+  const mainPaths = [solPath(blocked)];
+  const decor = Math.round(pick(rnd, [2, 4]));
+  for (let i = 0; i < decor; i++) {
+    for (let attempt = 0; attempt < 60; attempt++) {
+      const x = snap(pick(rnd, [0.08 * w, 0.92 * w]));
+      const y = snap(pick(rnd, [0.08 * h, 0.92 * h]));
+      const rr = pickInt(rnd, RANGE.rock.r);
+      if (nearPaths(mainPaths, x, y) < DECOR_GAP + rr) continue;
+      if (dist(x, y, sx, sy) < 80 || dist(x, y, best.x, best.y) < 80) continue;
+      if (rocks.some((q) => dist(q.x, q.y, x, y) < q.r + rr + 10)) continue;
+      if (G.some((b) => {
+        const [bx, by] = centerOf(b);
+        return dist(x, y, bx, by) < bodyRadius(b) + rr + 20;
+      })) continue;
+      rocks.push({ x, y, r: rr, seed: seedN++ });
+      break;
+    }
+  }
+
+  const final: Level = {
+    ...blocked,
+    ...(rocks.length ? { rocks } : {}),
+    ...(s.hint ? { hint: s.hint } : {}),
+  };
+  final.meta = {
+    ...final.meta,
+    solution: { angle: a, launch_step: 0, turns: [absTurn(final)] },
+    updated: today(),
+  };
+
+  // 8. 검증 (§8.5 + 규칙 10·11)
+  const metrics = computeMetrics(final);
+  const report = checkLevel(final, metrics, { window: s.window, timing: null });
+  if (DEBUG_TURN.on && report.failures.length) DEBUG_TURN.log(report.failures.join(' | '));
+  if (report.failures.length) return { reject: 'rules' };
+  if (metrics.main_window > s.window.max) return { reject: 'rules' };
+
+  final.meta = {
+    ...final.meta,
+    metrics: {
+      main_window: r2(metrics.main_window_at_solution),
+      flight_time: r2(metrics.flight_time),
+      clearance: r2(metrics.clearance),
+      difficulty: r2(metrics.difficulty),
+      ...(metrics.turn ? { turn_timing: r2(metrics.turn.timing), turn_delta: metrics.turn.delta } : {}),
+    },
+  };
+  const ps = new Sim();
+  ps.recordPath = true;
+  ps.simulate(final, a, 0, G, final.meta.solution.turns);
+  return {
+    ok: {
+      level: final, seed,
+      difficulty: metrics.difficulty,
+      main_window: metrics.main_window_at_solution,
+      flight_time: metrics.flight_time,
+      clearance: metrics.clearance,
+      solutionPath: ps.path.filter((_, i) => Math.floor(i / 2) % 6 === 0),
+    },
+  };
+}

@@ -28,12 +28,15 @@ export interface Metrics {
   clearance: number;
   timing_fraction?: number;
   timing_range?: [number, number];
+  /** 분사 단계(§22.2): 분사 타이밍(초)·탭 방향(°)의 연속 성공 폭 */
+  turn_timing?: number;
+  turn_delta?: number;
   difficulty: number;
 }
 
 export interface Meta {
   chapter: number; slot: number; role: string;
-  intro?: 'planet' | 'rock' | 'hole' | 'ufo' | 'orbit' | 'wide';
+  intro?: 'planet' | 'rock' | 'hole' | 'ufo' | 'orbit' | 'wide' | 'turn';
   /** turns: 분사 기록 (§22.1). 6장부터. 없으면 분사 없이 풀리는 단계다 */
   solution: { angle: number; launch_step: number; turns?: Turn[] };
   metrics?: Metrics;

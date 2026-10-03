@@ -4,7 +4,7 @@
 
 import { type Key, t } from '../i18n/index.js';
 
-export type IntroKey = 'planet' | 'rock' | 'hole' | 'ufo' | 'orbit' | 'wide';
+export type IntroKey = 'planet' | 'rock' | 'hole' | 'ufo' | 'orbit' | 'wide' | 'turn';
 
 /** 요소 키 → 제목·본문 문구 키 (§13.2.1) */
 const TEXT: Readonly<Record<IntroKey, readonly [Key, Key]>> = {
@@ -15,6 +15,8 @@ const TEXT: Readonly<Record<IntroKey, readonly [Key, Key]>> = {
   orbit: ['intro.orbit', 'intro.orbit.body'],
   // v4.1 에서 빈 곳 드래그 이동을 없앴다(§10.3). 미니맵이 유일한 수단이다.
   wide: ['intro.wide', 'intro.wide.body'],
+  // §22.1 분사. 6-1
+  turn: ['intro.turn', 'intro.turn.body'],
 };
 
 export const INTRO_KEYS = Object.keys(TEXT) as IntroKey[];

@@ -67,6 +67,8 @@ export const en: Dict = {
   'intro.orbit.body': 'It travels around a fixed circle. Wait for the right moment to launch.',
   'intro.wide': 'Wide Map',
   'intro.wide.body': "It doesn't fit on one screen. Tap the minimap in the corner to look over the route.",
+  'intro.turn': 'Boost',
+  'intro.turn.body': 'Tap the screen mid-flight to veer toward that side. Boosts left are shown at the top left.',
   'intro.wideExtra': " Now it's wide sideways, too.",
   'intro.ok': 'OK',
 

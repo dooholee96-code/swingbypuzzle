@@ -67,6 +67,8 @@ export const ja: Dict = {
   'intro.orbit.body': '決まった円に沿って回っています。発射のタイミングを待ちましょう。',
   'intro.wide': '広いマップ',
   'intro.wide.body': 'ひと目では見渡せません。隅のミニマップをタップして航路を確かめましょう。',
+  'intro.turn': 'ブースト',
+  'intro.turn.body': '飛んでいる最中に画面をタップすると、その方向へ曲がります。残り回数は左上に出ます。',
   'intro.wideExtra': '今度は横にも広いです。',
   'intro.ok': 'OK',
 

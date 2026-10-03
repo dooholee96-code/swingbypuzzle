@@ -1,0 +1,86 @@
+{
+  "id": "6-4",
+  "name": "한숨 돌리기",
+  "w": 400,
+  "h": 760,
+  "speed": 150,
+  "preview": 1.8,
+  "start": {
+    "x": 145,
+    "y": 680
+  },
+  "goal": {
+    "x": 325,
+    "y": 85,
+    "r": 24
+  },
+  "planets": [
+    {
+      "x": 280,
+      "y": 255,
+      "r": 24,
+      "g": 900,
+      "R": 160,
+      "sides": 11
+    }
+  ],
+  "turns": 1,
+  "meta": {
+    "chapter": 6,
+    "slot": 4,
+    "role": "휴식",
+    "solution": {
+      "angle": -69,
+      "launch_step": 0,
+      "turns": [
+        {
+          "step": 540,
+          "dir": -31.34
+        }
+      ]
+    },
+    "source": "generated",
+    "updated": "2026-10-03",
+    "metrics": {
+      "main_window": 7.5,
+      "flight_time": 3.67,
+      "clearance": 18.59,
+      "difficulty": 1.07,
+      "turn_timing": 0.43,
+      "turn_delta": 143
+    }
+  },
+  "rocks": [
+    {
+      "x": 275,
+      "y": 120,
+      "r": 14,
+      "seed": 1
+    },
+    {
+      "x": 370,
+      "y": 290,
+      "r": 18,
+      "seed": 2
+    },
+    {
+      "x": 120,
+      "y": 560,
+      "r": 15,
+      "seed": 3
+    },
+    {
+      "x": 320,
+      "y": 435,
+      "r": 21,
+      "seed": 4
+    },
+    {
+      "x": 130,
+      "y": 325,
+      "r": 24,
+      "seed": 5
+    }
+  ],
+  "hint": "행성 옆을 지날 때 굴 쪽으로 꺾어요"
+}

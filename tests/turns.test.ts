@@ -78,8 +78,11 @@ describe('단계 데이터와 검증기', () => {
     const L = structuredClone(loadLevel('1-1')) as Level;
     L.meta.solution.turns = [{ step: 100000, dir: 0 }];     // 비행이 끝난 뒤라 궤도에는 영향 없음
     const fails = checkLevel(L).failures;
-    expect(fails.some((f) => f.includes('분사'))).toBe(true);
+    expect(fails.some((f) => f.startsWith('규칙7') && f.includes('분사를'))).toBe(true);
     L.turns = 1;
-    expect(checkLevel(L).failures.some((f) => f.includes('분사'))).toBe(false);
+    const after = checkLevel(L).failures;
+    expect(after.some((f) => f.startsWith('규칙7') && f.includes('분사를'))).toBe(false);
+    // 분사 단계가 되었는데 분사 없이도 풀리므로 규칙 10 에 걸린다
+    expect(after.some((f) => f.startsWith('규칙10'))).toBe(true);
   });
 });

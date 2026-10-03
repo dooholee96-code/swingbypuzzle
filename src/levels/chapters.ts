@@ -15,6 +15,7 @@ export const CHAPTERS: readonly Chapter[] = [
   { chapter: 3, name: '외계인', levels: ['3-1', '3-2', '3-3', '3-4', '3-5', '3-6', '3-7', '3-8'] },
   { chapter: 4, name: '공전 행성', levels: ['4-1', '4-2', '4-3', '4-4', '4-5', '4-6', '4-7', '4-8'] },
   { chapter: 5, name: '넓은 항로', levels: ['5-1', '5-2', '5-3', '5-4', '5-5', '5-6', '5-7', '5-8'] },
+  { chapter: 6, name: '분사', levels: ['6-1', '6-2', '6-3', '6-4', '6-5', '6-6', '6-7', '6-8'] },
 ];
 
 export function allIds(): string[] {

@@ -55,6 +55,14 @@ export const LEVEL_TEXT: Readonly<Record<Other, Readonly<Record<string, Text>>>>
     '5-6': ['Long Chain'],
     '5-7': ['Precision Combo'],
     '5-8': ['Opening Finale'],
+    '6-1': ['First Boost', 'Tap mid-flight to veer toward that side'],
+    '6-2': ['Let the Planet Steer', 'Turn as you enter the dotted circle and the planet carries you to the burrow'],
+    '6-3': ['Between Two Planets', 'Turn as you enter the second dotted circle'],
+    '6-4': ['Catch Your Breath', 'Turn toward the burrow as you pass the planet'],
+    '6-5': ['Past the Black Hole', 'Don\'t turn toward the black hole'],
+    '6-6': ['Gap in the Rocks', 'Swing wide and turn at the top-left corner'],
+    '6-7': ['Through the Watch', 'Skirt the red circle\'s edge and turn at the very top'],
+    '6-8': ['Carrot Rocket Flight', 'Turn between the pulls of the two planets'],
   },
   ja: {
     '1-1': ['はじめてのスイングバイ', '画面のどこでもドラッグして方向を決め、指を離すと発射'],
@@ -97,6 +105,14 @@ export const LEVEL_TEXT: Readonly<Record<Other, Readonly<Record<string, Text>>>>
     '5-6': ['長い連携'],
     '5-7': ['精密コンビネーション'],
     '5-8': ['序盤の総まとめ'],
+    '6-1': ['はじめてのブースト', '飛んでいる最中にタップすると、その方向へ曲がります'],
+    '6-2': ['惑星にまかせる', '点線の円に入るときに曲がれば、惑星が巣穴へ運んでくれます'],
+    '6-3': ['ふたつの惑星のあいだ', 'ふたつ目の点線の円に入るときに曲がってみましょう'],
+    '6-4': ['ひと休み', '惑星の横を通るときに巣穴のほうへ曲がりましょう'],
+    '6-5': ['ブラックホールのわき道', 'ブラックホールのほうへ曲がってはいけません'],
+    '6-6': ['小惑星のすきま', '大きく回って、左上の端で曲がりましょう'],
+    '6-7': ['監視網突破', '赤い円のふちを通って、いちばん上で曲がりましょう'],
+    '6-8': ['にんじんロケット飛行', 'ふたつの惑星の引力のあいだで曲がりましょう'],
   },
   zh: {
     '1-1': ['第一次引力弹弓', '在屏幕任意位置拖动来瞄准，松手即发射'],
@@ -139,14 +155,22 @@ export const LEVEL_TEXT: Readonly<Record<Other, Readonly<Record<string, Text>>>>
     '5-6': ['长距离连环'],
     '5-7': ['精准组合'],
     '5-8': ['前期总复习'],
+    '6-1': ['第一次喷射', '飞行中点击屏幕，就会朝那一侧转向'],
+    '6-2': ['交给行星', '进入虚线圆时转向，行星会把你带到洞口'],
+    '6-3': ['两颗行星之间', '进入第二个虚线圆时转向试试'],
+    '6-4': ['喘口气', '经过行星旁边时，朝洞口转向'],
+    '6-5': ['黑洞旁的小路', '别朝黑洞那边转'],
+    '6-6': ['小行星缝隙', '绕一大圈，在左上角转向'],
+    '6-7': ['突破警戒网', '沿着红圈边缘飞过，在最上方转向'],
+    '6-8': ['胡萝卜火箭飞行', '在两颗行星的引力之间转向'],
   },
 };
 
 /** 장 이름. 한국어 원문은 chapters.ts (tools/register.ts 의 NAMES) */
 export const CHAPTER_NAME: Readonly<Record<Other, Readonly<Record<number, string>>>> = {
-  en: { 1: 'Planets', 2: 'Black Holes', 3: 'Aliens', 4: 'Orbiting Planets', 5: 'Wide Routes' },
-  ja: { 1: '惑星', 2: 'ブラックホール', 3: 'エイリアン', 4: '公転する惑星', 5: '広い航路' },
-  zh: { 1: '行星', 2: '黑洞', 3: '外星人', 4: '公转行星', 5: '广阔航线' },
+  en: { 1: 'Planets', 2: 'Black Holes', 3: 'Aliens', 4: 'Orbiting Planets', 5: 'Wide Routes', 6: 'Boost' },
+  ja: { 1: '惑星', 2: 'ブラックホール', 3: 'エイリアン', 4: '公転する惑星', 5: '広い航路', 6: 'ブースト' },
+  zh: { 1: '行星', 2: '黑洞', 3: '外星人', 4: '公转行星', 5: '广阔航线', 6: '喷射' },
 };
 
 /** 지금 언어의 단계 이름. 번역이 없으면 원문 */

@@ -27,6 +27,7 @@ export function introArt(key: IntroKey): string {
         : key === 'hole' ? blackhole(holeArtRadius(14), 2)
           : key === 'ufo' ? ufo(0)
             : key === 'orbit' ? planet(16, 1, { ring: true })
+              : key === 'turn' ? rocket('fly', { flame: 0, ears: 'back' })
               : moon(18),
   ));
 }

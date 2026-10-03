@@ -27,7 +27,7 @@ export class Session {
   aimFar = false;                   // 예측선 표시 여부 (§10.2)
   /** 남은 분사 (§22.1). 단계의 turns + bonusTurns */
   turnsLeft = 0;
-  /** 개발용: 분사가 없는 단계에서도 시험해 볼 수 있게 더 준다 (main.ts 의 ?turns=N, DEV 전용) */
+  /** 시험용: 분사가 없는 단계에서도 써 볼 수 있게 더 준다 (main.ts 의 숨은 옵션 ?turns=N) */
   bonusTurns = 0;
 
   trail: number[] = [];
