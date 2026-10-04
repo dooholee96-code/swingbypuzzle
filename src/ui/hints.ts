@@ -84,6 +84,15 @@ export class HintSheet {
     const st = hintStatus(kind, h);
     if (st.state !== 'ready') return;
 
+    // 광고가 없는 빌드(itch.io)는 조건만 맞으면 그냥 준다 (§15.6)
+    if (this.ads.adFree) {
+      if (kind === 'skip') { this.close(); this.host.skip(); return; }
+      this.host.grant(kind);
+      this.note = '';
+      this.render();
+      return;
+    }
+
     // 무료 1회는 광고 없이 준다 (§14.3)
     if (st.free) {
       this.host.grant(kind);
@@ -123,7 +132,8 @@ export class HintSheet {
       else if (st.state === 'locked') {
         label = t(kind === 'skip' ? 'hint.lockSkip' : 'hint.lockDirection');
         disabled = true;
-      } else if (st.free) label = t('hint.getFree');
+      } else if (this.ads.adFree) label = t(kind === 'skip' ? 'hint.skipNow' : 'hint.getFree');
+      else if (st.free) label = t('hint.getFree');
       else label = t(kind === 'skip' ? 'hint.watchSkip' : 'hint.watchGet');
 
       return `<div class="hintrow">

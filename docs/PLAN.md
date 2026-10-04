@@ -1262,6 +1262,16 @@ v4의 Godot 익스포트 자리다. Capacitor는 웹 자산을 WebView로 감싸
   개인정보처리방침(§15.5)이 단순해진다. 중국어 글꼴은 중국어 글자가 화면에 나올 때만 받는다(`unicode-range`).
 - 목표: 중급 Android 기기에서 60fps, 저사양 기기(CPU 4배 감속 기준) 50fps 안팎.
 
+### 15.6 itch.io (v5 이후 추가)
+
+웹 빌드를 itch.io 에도 올린다. 비용 0, 피드백 통로. 절차·설정·문구는 `store/itch/README.md`.
+- `npm run build:itch` → `build/itch/swingby-itch.zip`. `VITE_TARGET=itch` 빌드는 두 가지가 다르다:
+  - **힌트를 광고 없이 준다**(`FreeHintProvider`). itch 는 자기 도메인(itch.zone)의 iframe 에서 돌려 H5 광고(우리 도메인만 승인)가 뜨지 않는다. 그대로 두면 힌트가 "광고를 불러올 수 없어요" 로 영영 잠긴다. 실패 횟수 조건(§14.3)은 그대로다.
+  - **서비스 워커를 쓰지 않는다**(sw.js 도 빼고 묶는다).
+- 다른 출처의 iframe 에 띄워 확인했다: 화면, 저장(localStorage), 서비스 워커 0개, 두 번 실패 후 힌트가 "무료로 받기" → 광고 없이 적용.
+- 페이지 표지(630×500)는 게임 스프라이트로 따로 그렸고, 스크린샷 다섯 장과 함께 `store/itch/` 에 있다.
+- 수익은 "$0 or donate" 정도다. 광고 수익은 우리 웹·앱에서 낸다.
+
 ### 15.5 출시 준비물 (`store/` 폴더)
 
 Claude Code가 초안을 만들고 사용자가 확인한다.

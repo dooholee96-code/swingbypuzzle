@@ -2,7 +2,7 @@
 //
 // 게임 코드는 "웹인가 앱인가"를 직접 묻지 않는다. 여기가 알려 주는 것만 본다.
 
-import { type AdProvider, NoAdProvider } from './ads.js';
+import { type AdProvider, FreeHintProvider, NoAdProvider } from './ads.js';
 import { MockAdProvider, mockModeFromQuery } from './ads-mock.js';
 import { H5AdProvider, type H5Hooks } from './ads-h5.js';
 
@@ -39,6 +39,8 @@ export function detect(): Capabilities {
 export async function pickAdProvider(cap: Capabilities, hooks: H5Hooks): Promise<AdProvider> {
   const mode = mockModeFromQuery(location.search);
   if (mode === 'none') return new NoAdProvider();
+  // itch.io 빌드: 광고 없이 힌트를 준다 (§15.6)
+  if (buildTarget() === 'itch') return new FreeHintProvider();
 
   if (import.meta.env.DEV) {
     const p = new MockAdProvider(mode);
@@ -62,6 +64,11 @@ export async function pickAdProvider(cap: Capabilities, hooks: H5Hooks): Promise
  * 존재하지 않고, 정적 import 로 두면 빌드가 깨진다. 값이 없으면 광고 없음으로
  * 동작한다 — 그게 정상 상태다(§14.1).
  */
+/** 빌드 대상. `VITE_TARGET=itch` 로 itch.io 용을 만든다(`npm run build:itch`). 없으면 우리 웹 */
+export function buildTarget(): 'web' | 'itch' {
+  return (import.meta.env as Record<string, string | undefined>)['VITE_TARGET'] === 'itch' ? 'itch' : 'web';
+}
+
 function h5Client(): string {
   return (import.meta.env as Record<string, string | undefined>)['VITE_H5_CLIENT'] ?? '';
 }

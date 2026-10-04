@@ -21,7 +21,7 @@ import { Screens } from './ui/screens.js';
 import { Save } from './save/save.js';
 import { Audio } from './audio/sfx.js';
 import { type AdProvider, NoAdProvider } from './platform/ads.js';
-import { detect, pickAdProvider } from './platform/capabilities.js';
+import { buildTarget, detect, pickAdProvider } from './platform/capabilities.js';
 import {
   afterClear, afterInterstitial, afterRewarded, forNewSession, shouldShowInterstitial,
 } from './monetization/ad-policy.js';
@@ -118,6 +118,8 @@ const cap = detect();
 const hints = new HintSheet({
   isRewardedReady: () => ads.isRewardedReady(),
   showRewarded: (p) => ads.showRewarded(p),
+  // 제공자는 나중에(pickAdProvider) 갈아 끼워지므로 값이 아니라 그때그때 읽는다
+  get adFree() { return ads.adFree ?? false; },
 } as AdProvider, {
   state: () => {
     const l = save.level(session.level.id);
@@ -632,7 +634,8 @@ if (cap.prefersReducedMotion && !save.data.settings.reduce_motion_set) {
 }
 
 // 서비스 워커 — 재방문 시 오프라인 동작 (§15.1). 개발 서버에서는 걸지 않는다.
-if (!import.meta.env.DEV && 'serviceWorker' in navigator) {
+// itch.io 빌드는 서비스 워커를 쓰지 않는다 — itch 가 iframe 안에서 돌리고 캐시도 itch 가 맡는다 (§15.6)
+if (!import.meta.env.DEV && buildTarget() !== 'itch' && 'serviceWorker' in navigator) {
   addEventListener('load', () => {
     navigator.serviceWorker.register(
       new URL('sw.js', location.href).pathname,

@@ -17,7 +17,8 @@
     "gen": "tsx tools/generate.ts",
     "build-chapter": "tsx tools/build-chapter.ts",
     "check": "tsc --noEmit && node tools/check-core.mjs && node tools/check-colors.mjs",
-    "fonts": "python3 tools/subset-fonts.py"
+    "fonts": "python3 tools/subset-fonts.py",
+    "build:itch": "node tools/build-itch.mjs"
   },
   "devDependencies": {
     "@types/node": "^26.6.1",

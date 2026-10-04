@@ -96,6 +96,7 @@ export const zh: Dict = {
   'hint.lockSkip': '失败5次后解锁',
   'hint.lockDirection': '失败2次后解锁',
   'hint.getFree': '免费领取',
+  'hint.skipNow': '跳过',
   'hint.watchSkip': '看广告跳过',
   'hint.watchGet': '看广告领取',
   'hint.close': '关闭',

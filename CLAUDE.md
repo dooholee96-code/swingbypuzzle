@@ -53,6 +53,7 @@ npm run dev       Vite 개발 서버 (--host, 같은 Wi-Fi 폰에서 접속)
 npm test          회귀 테스트 (§16.5)
 npm run check     tsc + core/ 의 DOM 사용 검사
 npm run build     타입 검사 후 dist/ 생성
+npm run build:itch  itch.io 업로드 zip (광고 없는 힌트, 서비스 워커 없음) — store/itch/README.md
 npm run solve     전 각도 스캔 (§16.1)
 npm run bench     성능 측정 (§8.9) — 1-1 0.061초 / 5-1 0.517초
 npm run preview   빌드 결과 서빙. **배포 전 확인은 dev 가 아니라 이것으로**
@@ -165,6 +166,8 @@ Settings → Pages → Source 는 **"GitHub Actions"** 로 되어 있다 (확인
       **8단계 모두 브라우저에서 나가기로 도착 확인** (§22.4)
 - [x] **코드 검토 2** — 10건 수정: 에디터 저장이 분사·궤도 행성을 지움, 기록 되풀이 두 가장자리,
       인피니티 그림 캐시 누수·위상 튐, 당근 상한, 예측선 불일치, 생성기 ±180°, 문구 하드코딩 (§17)
+- [x] **itch.io 준비** — `npm run build:itch`, 광고 없는 힌트·서비스 워커 끔, 표지·스크린샷·문구 (§15.6).
+      올리는 것은 사용자 계정으로
 - [ ] **M12** 스토어 출시 — Capacitor 앱 셸, AdMob, 서명, 심사 (계정 대기 중)
 
 테스트 218개. 빌드 gzip JS 47.0KB + CSS 3.3KB + 글꼴 56KB(한국어 첫 화면) (§18 예산 안).

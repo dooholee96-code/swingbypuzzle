@@ -18,6 +18,11 @@ export interface AdProvider {
   showInterstitial(): Promise<'shown' | 'failed'>;
   canOpenPrivacyOptions(): boolean;
   openPrivacyOptions(): Promise<void>;
+  /**
+   * 광고가 없는 곳(itch.io 빌드)에서 힌트를 **광고 없이 그냥** 주는가. 참이면 힌트 시트가
+   * 광고를 부르지 않고 바로 준다. 실패 횟수 조건(§14.3)은 그대로다.
+   */
+  readonly adFree?: boolean;
 }
 
 /** 호출 측이 반드시 거는 타임아웃(ms). §14.2 */
@@ -43,4 +48,13 @@ export async function withTimeout<T>(p: Promise<T>, fallback: T, ms = AD_TIMEOUT
   } finally {
     if (timer !== undefined) clearTimeout(timer);
   }
+}
+
+/**
+ * 광고 없이 힌트를 주는 제공자 — itch.io 빌드(§15.6). itch 는 게임을 자기 도메인의
+ * iframe 에서 돌려서 H5 광고(우리 도메인만 승인)가 뜨지 않는다. 그대로 두면 힌트가
+ * "광고를 불러올 수 없어요" 로 영영 잠긴다.
+ */
+export class FreeHintProvider extends NoAdProvider {
+  readonly adFree = true;
 }

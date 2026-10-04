@@ -96,6 +96,7 @@ export const en: Dict = {
   'hint.lockSkip': 'Unlocks after 5 failures',
   'hint.lockDirection': 'Unlocks after 2 failures',
   'hint.getFree': 'Get for Free',
+  'hint.skipNow': 'Skip',
   'hint.watchSkip': 'Watch Ad to Skip',
   'hint.watchGet': 'Watch Ad to Get',
   'hint.close': 'Close',

@@ -96,6 +96,7 @@ export const ja: Dict = {
   'hint.lockSkip': '5回失敗すると開きます',
   'hint.lockDirection': '2回失敗すると開きます',
   'hint.getFree': '無料で受け取る',
+  'hint.skipNow': 'スキップ',
   'hint.watchSkip': '広告を見てスキップ',
   'hint.watchGet': '広告を見て受け取る',
   'hint.close': '閉じる',

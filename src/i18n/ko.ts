@@ -104,6 +104,7 @@ export const ko = {
   'hint.lockSkip': '다섯 번 실패하면 열려요',
   'hint.lockDirection': '두 번 실패하면 열려요',
   'hint.getFree': '무료로 받기',
+  'hint.skipNow': '건너뛰기',
   'hint.watchSkip': '광고 보고 건너뛰기',
   'hint.watchGet': '광고 보고 받기',
   'hint.close': '닫기',
