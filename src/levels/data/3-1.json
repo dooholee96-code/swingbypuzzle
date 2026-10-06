@@ -58,6 +58,11 @@
     }
   ],
   "hint": "붉은 원 안에 들어가면 외계인이 쏴요",
+  "messier": {
+    "n": 8,
+    "x": 128,
+    "y": 180
+  },
   "meta": {
     "chapter": 3,
     "slot": 1,
@@ -68,12 +73,13 @@
       "launch_step": 0
     },
     "source": "verified",
-    "updated": "2026-09-18",
+    "updated": "2026-10-06",
     "metrics": {
       "main_window": 7,
       "flight_time": 3.75,
       "clearance": 10.12,
-      "difficulty": 2.58
+      "difficulty": 2.58,
+      "messier_window": 1.5
     }
   }
 }

@@ -21,6 +21,8 @@ import { type Grid, grid, set } from './sprites/pixel.js';
 import { type Face, type SmallName, dir16, rocketDir, small, ufo } from './sprites/rocket.js';
 import { blackhole, dockRing, moon, mothership, planet, portal, rock, starTile } from './sprites/world.js';
 import { ARENA_H, ARENA_W, DIE_T } from '../core/boss.js';
+import { messierArt } from './sprites/messier.js';
+import { COLLECT_R, messierOf } from '../tools-shared/messier.js';
 
 /** 달(발사대)의 그림 반경. PAD_R(22) 보다 작다 — 우주선이 표면 바깥에 선다 (§12.3) */
 export const DOME_DRAW_R = 18;
@@ -97,6 +99,10 @@ export class FieldRenderer {
   /** 궤도 행성에서 나간 순간 */
   onRelease(): void { if (!this.reduceMotion) this.shipS.kick(4.5); }
 
+  // 메시에 천체를 스친 순간 (§22.7): 그 자리에 반짝임이 퍼진다
+  private foundFx: { t: number; x: number; y: number } | null = null;
+  onFound(x: number, y: number): void { this.foundFx = { t: this.lastT, x, y }; if (!this.reduceMotion) this.shipS.kick(2.5); }
+
   // 방패로 튕긴 순간 (§22.5): 우주선이 출렁이고 둘레에 반짝임
   private absorbAt = -1;
   onAbsorb(): void { this.absorbAt = this.lastT; if (!this.reduceMotion) this.shipS.kick(5); }
@@ -115,6 +121,7 @@ export class FieldRenderer {
     this.puff = null;
     this.absorbAt = -1;
     this.dyingAt = -1;
+    this.foundFx = null;
   }
 
   /** 상태가 바뀐 순간과 중력 범위에 들어선 순간에 용수철을 튕긴다 */
@@ -220,6 +227,7 @@ export class FieldRenderer {
     this.holes(ctx, L, t);
     this.ufos(ctx, L, t);
     this.goal(ctx, L, t);
+    this.messiers(ctx, s, t);
     if (s.world) this.items(ctx, s.world.items, t);
     this.bullets(ctx, s);
     this.pad(ctx, s);
@@ -228,6 +236,33 @@ export class FieldRenderer {
     this.turnPuff(ctx, t);
     this.ship(ctx, s, t);
     this.shield(ctx, s, t);
+  }
+
+  /**
+   * 메시에 천체 (§22.7): 그림 + 모으는 반경의 점선 링(라벤더, 천천히 깜빡임) + 반짝임.
+   * 스테이지는 하나(이미 모았으면 없음), 인피니티는 창 안의 것들. 스친 자리에는 0.6초 반짝임
+   */
+  private messiers(ctx: CanvasRenderingContext2D, s: Session, t: number): void {
+    const spots = s.world ? s.world.messiers
+      : s.level.messier && !s.messierDone ? [s.level.messier] : [];
+    // 링은 하늘색 점선, 1.5초에 한 번 흰색으로. 그림은 1.5배 — 20px 그대로는 별 사이에 묻혔다
+    const lit = !this.reduceMotion && Math.floor(t * 2) % 3 === 0;
+    for (const m of spots) {
+      if (!this.seen(m.x, m.y, COLLECT_R + 6)) continue;
+      put(ctx, this.sprite(`mring:${lit ? 'W' : 'B'}`, () => dottedRing(COLLECT_R, lit ? 'W' : 'B', 3, 4)), m.x, m.y);
+      putScaled(ctx, this.sprite(`messier:${m.n}`, () => messierArt(m.n, messierOf(m.n).type, 20)), m.x, m.y, 1.5, 1.5);
+      if (!this.reduceMotion && Math.floor(t * 2 + m.n) % 4 === 0) put(ctx, this.fx('sparkle1'), m.x + 14, m.y - 14);
+    }
+    const f = this.foundFx;
+    if (f) {
+      const age = t - f.t;
+      if (age > 0.6) { this.foundFx = null; return; }
+      const sp = this.fx(Math.floor(age * 16) % 2 ? 'sparkle0' : 'sparkle1');
+      for (let i = 0; i < 8; i++) {
+        const q = i * Math.PI / 4 + age * 3, d = 8 + age * 60;
+        put(ctx, sp, f.x + Math.cos(q) * d, f.y + Math.sin(q) * d);
+      }
+    }
   }
 
   /** 앞길 보기 (§22.5): 날면서 지금 상태에서 몇 초 앞까지. 조준 예측선과 같은 함수, 물러난 색 */

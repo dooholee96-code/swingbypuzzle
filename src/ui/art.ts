@@ -6,6 +6,8 @@ import { toDataUrl } from '../render/sprites/bake.js';
 import { type Face, rocket, small, ufo } from '../render/sprites/rocket.js';
 import { fromRows } from '../render/sprites/pixel.js';
 import type { OfferKind } from '../tools-shared/perks.js';
+import { messierArt } from '../render/sprites/messier.js';
+import { messierOf } from '../tools-shared/messier.js';
 import { blackhole, dockArt, moon, planet, rock } from '../render/sprites/world.js';
 import type { IntroKey } from './intro.js';
 
@@ -87,4 +89,9 @@ export function perkIcon(kind: OfferKind): string {
 /** 보스전 목숨 (§22.6) */
 export function heartIcon(): string {
   return once('heart', () => toDataUrl(small('heart')));
+}
+
+/** 도감의 메시에 천체 그림 (§22.7). 칸은 20, 상세는 32 */
+export function messierIcon(n: number, size = 20): string {
+  return once(`messier:${n}:${size}`, () => toDataUrl(messierArt(n, messierOf(n).type, size)));
 }

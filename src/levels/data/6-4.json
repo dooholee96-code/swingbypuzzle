@@ -24,32 +24,6 @@
       "sides": 11
     }
   ],
-  "turns": 1,
-  "meta": {
-    "chapter": 6,
-    "slot": 4,
-    "role": "휴식",
-    "solution": {
-      "angle": -69,
-      "launch_step": 0,
-      "turns": [
-        {
-          "step": 540,
-          "dir": -31.34
-        }
-      ]
-    },
-    "source": "generated",
-    "updated": "2026-10-03",
-    "metrics": {
-      "main_window": 7.5,
-      "flight_time": 3.67,
-      "clearance": 18.59,
-      "difficulty": 1.07,
-      "turn_timing": 0.43,
-      "turn_delta": 143
-    }
-  },
   "rocks": [
     {
       "x": 275,
@@ -82,5 +56,37 @@
       "seed": 5
     }
   ],
-  "hint": "행성 옆을 지날 때 굴 쪽으로 꺾어요"
+  "hint": "행성 옆을 지날 때 굴 쪽으로 꺾어요",
+  "turns": 1,
+  "messier": {
+    "n": 63,
+    "x": 248,
+    "y": 340
+  },
+  "meta": {
+    "chapter": 6,
+    "slot": 4,
+    "role": "휴식",
+    "solution": {
+      "angle": -69,
+      "launch_step": 0,
+      "turns": [
+        {
+          "step": 540,
+          "dir": -31.34
+        }
+      ]
+    },
+    "source": "generated",
+    "updated": "2026-10-06",
+    "metrics": {
+      "main_window": 7.5,
+      "flight_time": 3.67,
+      "clearance": 18.59,
+      "difficulty": 1.07,
+      "turn_timing": 0.43,
+      "turn_delta": 143,
+      "messier_window": 4.25
+    }
+  }
 }

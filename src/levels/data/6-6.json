@@ -32,32 +32,6 @@
       "sides": 9
     }
   ],
-  "turns": 1,
-  "meta": {
-    "chapter": 6,
-    "slot": 6,
-    "role": "조합 심화",
-    "solution": {
-      "angle": -70.5,
-      "launch_step": 0,
-      "turns": [
-        {
-          "step": 748,
-          "dir": -53.57
-        }
-      ]
-    },
-    "source": "generated",
-    "updated": "2026-10-03",
-    "metrics": {
-      "main_window": 7,
-      "flight_time": 4.51,
-      "clearance": 12.84,
-      "difficulty": 3,
-      "turn_timing": 0.37,
-      "turn_delta": 146
-    }
-  },
   "rocks": [
     {
       "x": 270,
@@ -90,5 +64,37 @@
       "seed": 5
     }
   ],
-  "hint": "크게 돌아 왼쪽 위 끝에서 꺾어요"
+  "hint": "크게 돌아 왼쪽 위 끝에서 꺾어요",
+  "turns": 1,
+  "messier": {
+    "n": 87,
+    "x": 220,
+    "y": 68
+  },
+  "meta": {
+    "chapter": 6,
+    "slot": 6,
+    "role": "조합 심화",
+    "solution": {
+      "angle": -70.5,
+      "launch_step": 0,
+      "turns": [
+        {
+          "step": 748,
+          "dir": -53.57
+        }
+      ]
+    },
+    "source": "generated",
+    "updated": "2026-10-06",
+    "metrics": {
+      "main_window": 7,
+      "flight_time": 4.51,
+      "clearance": 12.84,
+      "difficulty": 3,
+      "turn_timing": 0.37,
+      "turn_delta": 146,
+      "messier_window": 1.75
+    }
+  }
 }

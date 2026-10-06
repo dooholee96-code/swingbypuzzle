@@ -38,6 +38,8 @@ export interface Metrics {
   turn_delta?: number;
   /** 궤도 행성 단계(§22.4): 나가기 타이밍(초)의 연속 성공 폭 */
   release_timing?: number;
+  /** 메시에 천체(§22.7)를 지나며 도착하는 각도 폭 */
+  messier_window?: number;
   difficulty: number;
 }
 
@@ -71,6 +73,11 @@ export interface Level {
   hint?: string;
   /** 쓸 수 있는 분사 횟수 (§22.1). 없으면 0 — 1~5장 */
   turns?: number;
+  /**
+   * 메시에 천체 (§22.7). 정답 길에서 비켜난 곳에 하나. 스쳐 지나가면 도감에 모은다 —
+   * 충돌도 중력도 없다. 좌표는 tools/place-messier.ts 가 놓고 규칙 14 가 본다
+   */
+  messier?: { n: number; x: number; y: number };
   meta: Meta;
 }
 

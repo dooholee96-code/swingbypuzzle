@@ -99,6 +99,11 @@
     }
   ],
   "hint": "미니맵을 끌어 전체 항로를 먼저 살펴보세요",
+  "messier": {
+    "n": 33,
+    "x": 620,
+    "y": 260
+  },
   "meta": {
     "chapter": 5,
     "slot": 1,
@@ -109,12 +114,13 @@
       "launch_step": 0
     },
     "source": "verified",
-    "updated": "2026-09-18",
+    "updated": "2026-10-06",
     "metrics": {
       "main_window": 7.25,
       "flight_time": 5.88,
       "clearance": 8.13,
-      "difficulty": 4.56
+      "difficulty": 4.56,
+      "messier_window": 1.75
     }
   }
 }

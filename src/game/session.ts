@@ -10,6 +10,8 @@ import { Sim, launchPos } from '../core/simulate.js';
 import type { Preview } from '../core/simulate.js';
 import type { Level, Outcome, ShipState } from '../core/types.js';
 import type { InfinityWorld } from '../tools-shared/infinity.js';
+import { COLLECT_R } from '../tools-shared/messier.js';
+import { dist } from '../core/physics.js';
 import {
   CARROT_XP, type OfferKind, type PerkLevels, type PerkValues, noPerks, offerPerks, perkValues,
   raise, threatOf, xpForLevel,
@@ -60,6 +62,11 @@ export class Session {
   bossOrigin: [number, number] = [0, 0];
   private bossTarget: [number, number] = [ARENA_W / 2, ARENA_H - 90];
   private bossReturn: ShipState | null = null;
+  // ── 메시에 천체 (§22.7) ──
+  /** 이번 프레임에 스친 천체 번호. 화면이 꺼내 간다(저장·토스트) */
+  found: number[] = [];
+  /** 스테이지의 천체를 이미 모았는가(도감에 있거나 이번 방문에 스쳤다). 참이면 그리지 않는다 */
+  messierDone = false;
 
   trail: number[] = [];
   prevTrail: number[] = [];
@@ -139,6 +146,21 @@ export class Session {
     return this.checkLevel();
   }
 
+  /** 스친 메시에 천체를 found 에 쌓는다. 인피니티는 당근 하나만큼 경험치도 준다 */
+  private collectMessier(): void {
+    const { x, y } = this.sim.ship;
+    if (this.world) {
+      const got = this.world.collect(x, y);
+      if (got.length) { this.found.push(...got); this.itemsEaten += got.length; }
+      return;
+    }
+    const m = this.level.messier;
+    if (m && !this.messierDone && dist(m.x, m.y, x, y) < COLLECT_R) {
+      this.messierDone = true;
+      this.found.push(m.n);
+    }
+  }
+
   /** 경험치 문턱을 넘었으면 레벨을 올리고 이번 프레임을 멈춘다 */
   private checkLevel(): boolean {
     const xp = this.xp;
@@ -154,6 +176,8 @@ export class Session {
     this.bossSteps = 0;
     this.sim.endless = false;
     this.sim.mods = defaultMods();         // 스테이지는 보정값 없이 (§22.5)
+    this.found = [];
+    this.messierDone = false;
     this.perks = noPerks();
     this.values = perkValues(this.perks);
     this.pendingLevels = 0;
@@ -316,6 +340,8 @@ export class Session {
       this.endElapsed = 0;
       return true;
     }
+    // 메시에 천체 (§22.7): 스치면 모은다 — 실패로 끝나는 비행이어도(사용자 결정)
+    this.collectMessier();
     if (this.world) {
       // 칸을 넘었으면 창을 갈아 끼우고, 지나가며 당근을 먹는다 (§22.3). 당근은 경험치다 (§22.5)
       const { x, y } = this.sim.ship;

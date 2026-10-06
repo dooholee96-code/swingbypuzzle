@@ -24,42 +24,6 @@
       "sides": 12
     }
   ],
-  "ufos": [
-    {
-      "x": 160,
-      "y": 360,
-      "range": 185,
-      "interval": 1.2,
-      "delay": 0.7,
-      "bs": 230
-    }
-  ],
-  "turns": 1,
-  "meta": {
-    "chapter": 6,
-    "slot": 7,
-    "role": "도전",
-    "solution": {
-      "angle": -71.5,
-      "launch_step": 0,
-      "turns": [
-        {
-          "step": 890,
-          "dir": -177.43
-        }
-      ]
-    },
-    "source": "generated",
-    "updated": "2026-10-03",
-    "metrics": {
-      "main_window": 5,
-      "flight_time": 4.09,
-      "clearance": 34.55,
-      "difficulty": 4.01,
-      "turn_timing": 0.37,
-      "turn_delta": 153
-    }
-  },
   "rocks": [
     {
       "x": 110,
@@ -80,5 +44,47 @@
       "seed": 3
     }
   ],
-  "hint": "붉은 원 가장자리를 지나 맨 위에서 꺾어요"
+  "ufos": [
+    {
+      "x": 160,
+      "y": 360,
+      "range": 185,
+      "interval": 1.2,
+      "delay": 0.7,
+      "bs": 230
+    }
+  ],
+  "hint": "붉은 원 가장자리를 지나 맨 위에서 꺾어요",
+  "turns": 1,
+  "messier": {
+    "n": 7,
+    "x": 324,
+    "y": 56
+  },
+  "meta": {
+    "chapter": 6,
+    "slot": 7,
+    "role": "도전",
+    "solution": {
+      "angle": -71.5,
+      "launch_step": 0,
+      "turns": [
+        {
+          "step": 890,
+          "dir": -177.43
+        }
+      ]
+    },
+    "source": "generated",
+    "updated": "2026-10-06",
+    "metrics": {
+      "main_window": 5,
+      "flight_time": 4.09,
+      "clearance": 34.55,
+      "difficulty": 4.01,
+      "turn_timing": 0.37,
+      "turn_delta": 153,
+      "messier_window": 1.75
+    }
+  }
 }

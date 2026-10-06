@@ -9,6 +9,7 @@
 // 스키마 규칙이 한 곳에만 있어야 둘이 어긋나지 않는다.
 
 import type { Level } from '../core/types.js';
+import { MESSIER_COUNT } from '../tools-shared/messier.js';
 
 const REQUIRED: Record<string, string[]> = {
   level: ['id', 'name', 'w', 'h', 'speed', 'preview', 'start', 'goal', 'meta'],
@@ -23,10 +24,12 @@ const REQUIRED: Record<string, string[]> = {
   solution: ['angle', 'launch_step'],
   turn: ['step', 'dir'],
   dock: ['x', 'y', 'r', 'cr', 'sides'],
+  messier: ['n', 'x', 'y'],
 };
 const OPTIONAL: Record<string, string[]> = {
-  level: ['planets', 'holes', 'rocks', 'ufos', 'docks', 'hint', 'turns'],
+  level: ['planets', 'holes', 'rocks', 'ufos', 'docks', 'hint', 'turns', 'messier'],
   start: [], goal: [], orbit: [], solution: ['turns', 'releases'], rock: [], ufo: [], turn: [], dock: [],
+  messier: [],
   planet: ['ring', 'role', 'orbit'],
   hole: ['role'],
   meta: ['intro', 'metrics'],
@@ -38,7 +41,7 @@ const OPTIONAL: Record<string, string[]> = {
  */
 export const SAVE_KEYS = [
   'id', 'name', 'w', 'h', 'speed', 'preview', 'start', 'goal',
-  'planets', 'holes', 'rocks', 'ufos', 'docks', 'hint', 'turns', 'meta',
+  'planets', 'holes', 'rocks', 'ufos', 'docks', 'hint', 'turns', 'messier', 'meta',
 ] as const;
 
 /** 레벨 최상위에 올 수 있는 키 전부 (SAVE_KEYS 검사용) */
@@ -89,6 +92,13 @@ export function validateSchema(raw: unknown, id: string): string[] {
   const nt = L['turns'];
   if (nt !== undefined && !(Number.isInteger(nt) && (nt as number) >= 0)) {
     errors.push(`${id}: turns가 0 이상의 정수가 아닙니다`);
+  }
+  if (L['messier'] !== undefined) {
+    check(L['messier'], 'messier', `${id} messier`);
+    const n = (L['messier'] as Record<string, unknown>)['n'];
+    if (!(Number.isInteger(n) && (n as number) >= 1 && (n as number) <= MESSIER_COUNT)) {
+      errors.push(`${id}: messier.n 이 1~${MESSIER_COUNT} 의 정수가 아닙니다`);
+    }
   }
 
   const meta = L['meta'] as Record<string, unknown> | undefined;

@@ -41,23 +41,6 @@
       "role": "optional"
     }
   ],
-  "meta": {
-    "chapter": 5,
-    "slot": 2,
-    "role": "연습",
-    "solution": {
-      "angle": 80.5,
-      "launch_step": 0
-    },
-    "source": "generated",
-    "updated": "2026-09-19",
-    "metrics": {
-      "main_window": 8.5,
-      "flight_time": 3.98,
-      "clearance": 8.6,
-      "difficulty": 2.25
-    }
-  },
   "rocks": [
     {
       "x": 580,
@@ -84,5 +67,28 @@
       "seed": 4
     }
   ],
-  "hint": "미니맵으로 좌우를 살펴보세요"
+  "hint": "미니맵으로 좌우를 살펴보세요",
+  "messier": {
+    "n": 101,
+    "x": 592,
+    "y": 436
+  },
+  "meta": {
+    "chapter": 5,
+    "slot": 2,
+    "role": "연습",
+    "solution": {
+      "angle": 80.5,
+      "launch_step": 0
+    },
+    "source": "generated",
+    "updated": "2026-10-06",
+    "metrics": {
+      "main_window": 8.5,
+      "flight_time": 3.98,
+      "clearance": 8.6,
+      "difficulty": 2.25,
+      "messier_window": 2.5
+    }
+  }
 }

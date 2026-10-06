@@ -24,23 +24,6 @@
       "sides": 10
     }
   ],
-  "meta": {
-    "chapter": 1,
-    "slot": 3,
-    "role": "변형",
-    "solution": {
-      "angle": -68.5,
-      "launch_step": 0
-    },
-    "source": "generated",
-    "updated": "2026-09-19",
-    "metrics": {
-      "main_window": 8,
-      "flight_time": 3.14,
-      "clearance": 23.27,
-      "difficulty": 0.23
-    }
-  },
   "rocks": [
     {
       "x": 60,
@@ -67,5 +50,28 @@
       "seed": 4
     }
   ],
-  "hint": "가까이 지날수록 크게 꺾여요"
+  "hint": "가까이 지날수록 크게 꺾여요",
+  "messier": {
+    "n": 42,
+    "x": 168,
+    "y": 276
+  },
+  "meta": {
+    "chapter": 1,
+    "slot": 3,
+    "role": "변형",
+    "solution": {
+      "angle": -68.5,
+      "launch_step": 0
+    },
+    "source": "generated",
+    "updated": "2026-10-06",
+    "metrics": {
+      "main_window": 8,
+      "flight_time": 3.14,
+      "clearance": 23.27,
+      "difficulty": 0.23,
+      "messier_window": 3
+    }
+  }
 }

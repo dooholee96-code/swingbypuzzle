@@ -56,6 +56,18 @@ export const ko = {
   'result.ended': '비행이 끝났어요',
   // §22.6 보스전
   'result.boss': '보스에게 당했어요',
+  // §22.7 메시에 도감
+  'title.catalog': '도감',
+  'cat.title': '메시에 도감',
+  'cat.count': '{n}/{max}',
+  'cat.unknown': '???',
+  'cat.found': '{name} 발견!',
+  'cat.again': '{name} — 이미 도감에 있어요',
+  'cat.where': '처음 찾은 곳: {where}',
+  'cat.whereInf': '인피니티',
+  'cat.notYet': '아직 못 찾았어요. 스테이지의 정답 길 옆, 인피니티의 먼 곳에 숨어 있어요.',
+  'cat.close': '닫기',
+  'cat.intro': '천체를 스쳐 지나가면 도감에 모여요. 110개를 다 찾아 보세요.',
   'hud.boss': '보스',
   'hud.bossIn': '보스까지 {sec}초',
   'hud.bossNow': '보스 출현!',

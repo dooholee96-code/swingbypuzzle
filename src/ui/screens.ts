@@ -12,7 +12,9 @@ import { MAX_STARS, starText } from '../levels/stars.js';
 import { introFor, seenKey } from './intro.js';
 import { LANGS, LANG_NAME, type LangSetting, t } from '../i18n/index.js';
 import { chapterName } from '../i18n/levels.js';
-import { img, introArt, rabbitIcon } from './art.js';
+import { img, introArt, messierIcon, rabbitIcon } from './art.js';
+import { MESSIER, MESSIER_COUNT } from '../tools-shared/messier.js';
+import { messierLabel, messierLineOf } from '../i18n/messier.js';
 import type { IntroKey } from './intro.js';
 import type { Level } from '../core/types.js';
 
@@ -47,6 +49,8 @@ export interface ScreenDeps {
   onInfinity(mode: InfinityMode): void;
   /** 오늘의 우주 고르기 판에 보일 것: 오늘 날짜(짧게)와 오늘 최고(없으면 0) */
   dailyInfo(): { date: string; best: number };
+  /** 메시에 도감 (§22.7): 번호 → 처음 찾은 곳 */
+  catalog(): Readonly<Record<string, string>>;
   /** 타이틀이 보일 때마다. 뒤의 데모가 돌고 있지 않으면 다시 돌린다 (§13.1) */
   onTitle?(): void;
   /** 인피니티가 열렸는가. 6-1 을 깨면 열린다 (§22.3) */
@@ -60,6 +64,7 @@ export class Screens {
   private pickerEl = $('picker');
   private settingsEl = $('settings');
   private introEl = $('intro');
+  private catalogEl = $('catalog');
   private chapter = 1;
   /** 설정을 어디서 열었는가. 뒤로 가기가 그리로 돌아간다 */
   private settingsFrom: Screen = 'select';
@@ -74,13 +79,14 @@ export class Screens {
 
   get overlayOpen(): boolean {
     return !this.titleEl.hidden || !this.pickerEl.hidden
-      || !this.settingsEl.hidden || !this.introEl.hidden;
+      || !this.settingsEl.hidden || !this.introEl.hidden || !this.catalogEl.hidden;
   }
 
   private hideAll(): void {
     this.titleEl.hidden = true;
     this.pickerEl.hidden = true;
     this.settingsEl.hidden = true;
+    this.catalogEl.hidden = true;
   }
 
   // ── §13.1 타이틀 ──────────────────────────────────────────────────────
@@ -94,6 +100,8 @@ export class Screens {
         ${this.d.infinityOpen()
           ? `<button class="btn next" data-a="infinity" type="button">${t('title.infinity')}</button>`
           : `<button class="btn" type="button" disabled>${t('title.infinity')}<small>${t('title.infLocked')}</small></button>`}
+        <button class="btn" data-a="catalog" type="button">${t('title.catalog')}<small>${
+          t('cat.count', { n: Object.keys(this.d.catalog()).length, max: MESSIER_COUNT })}</small></button>
         <div class="pair">
           <button class="btn" data-a="settings" type="button">${t('title.settings')}</button>
           <button class="btn" data-a="language" type="button">${t('set.language')}${
@@ -104,6 +112,7 @@ export class Screens {
     this.bind(this.titleEl, {
       start: () => this.d.onStart(),
       infinity: () => this.showInfinityPick(),
+      catalog: () => this.showCatalog(),
       settings: () => this.showSettings(),
       language: () => this.showLanguage(),
     });
@@ -132,8 +141,48 @@ export class Screens {
     });
     this.introEl.hidden = false;
   }
-  /** 소개 판을 닫으면 어디로 — 고르기 판은 타이틀로, 새 요소 카드는 그 자리에 */
-  private introBack: 'title' | null = null;
+  /** 소개 판을 닫으면 어디로 — 고르기 판은 타이틀로, 도감 상세는 도감으로, 새 요소 카드는 그 자리에 */
+  private introBack: 'title' | 'catalog' | null = null;
+
+  // ── §22.7 메시에 도감 ───────────────────────────────────────────────
+  showCatalog(): void {
+    this.hideAll();
+    const got = this.d.catalog();
+    const cells = MESSIER.map((m) => {
+      const has = String(m.n) in got;
+      return `<button class="cell${has ? ' has' : ''}" data-n="${m.n}" type="button" aria-label="M${m.n}">
+        ${has ? img(messierIcon(m.n)) : `<span class="q">?</span>`}<span class="n">${m.n}</span></button>`;
+    }).join('');
+    this.catalogEl.innerHTML = `
+      <div class="bar"><button class="btn" data-a="back" type="button">${t('set.back')}</button>
+        <div class="spacer"></div></div>
+      <h2>${t('cat.title')}<span class="sum">${t('cat.count', { n: Object.keys(got).length, max: MESSIER_COUNT })}</span></h2>
+      <p class="catnote">${t('cat.intro')}</p>
+      <div class="cells">${cells}</div>`;
+    this.bind(this.catalogEl, { back: () => this.showTitle() });
+    for (const c of this.catalogEl.querySelectorAll<HTMLButtonElement>('.cell')) {
+      c.addEventListener('click', () => this.showMessier(Number(c.dataset['n'])));
+    }
+    this.catalogEl.hidden = false;
+  }
+
+  /** 도감 상세: 그림·이름·한 줄·처음 찾은 곳. 못 찾은 것은 "???" 와 안내 */
+  private showMessier(n: number): void {
+    const where = this.d.catalog()[String(n)];
+    const has = where !== undefined;
+    this.introBack = 'catalog';
+    // 시트(#intro)는 DOM 에서 화면들보다 앞이라 도감 화면이 위에 그려진다 — 도감을 숨겼다 닫을 때 다시 연다
+    this.catalogEl.hidden = true;
+    this.introEl.className = 'sheet';
+    this.introEl.innerHTML = `<div class="panel messier">
+      <div class="art">${has ? img(messierIcon(n, 32), `M${n}`) : `<span class="q">?</span>`}</div>
+      <h2>${has ? messierLabel(n) : `M${n} ${t('cat.unknown')}`}</h2>
+      <p>${has ? messierLineOf(n) : t('cat.notYet')}</p>
+      ${has ? `<p class="dim">${t('cat.where', { where: where === 'infinity' ? t('cat.whereInf') : where })}</p>` : ''}
+      <button class="btn primary" data-a="ok" type="button">${t('cat.close')}</button></div>`;
+    this.bind(this.introEl, { ok: () => { this.introEl.hidden = true; this.showCatalog(); } });
+    this.introEl.hidden = false;
+  }
 
   // ── §13.2 단계 선택 ───────────────────────────────────────────────────
   showSelect(chapter?: number): void {
@@ -344,6 +393,7 @@ export class Screens {
   private hideAllButSettings(): void {
     this.titleEl.hidden = true;
     this.pickerEl.hidden = true;
+    this.catalogEl.hidden = true;
   }
 
   /** 뒤로 가기 한 단계. 처리했으면 true (§15.2 의 뒤로 버튼 흐름). */
@@ -351,8 +401,10 @@ export class Screens {
     if (!this.introEl.hidden) {
       this.introEl.hidden = true;
       if (this.introBack === 'title') this.showTitle();
+      else if (this.introBack === 'catalog') this.showCatalog();
       return true;
     }
+    if (!this.catalogEl.hidden) { this.showTitle(); return true; }
     if (!this.settingsEl.hidden) { this.closeSettings(); return true; }
     if (!this.pickerEl.hidden) { this.showTitle(); return true; }
     return false;

@@ -36,6 +36,7 @@ import {
   HTML_LANG, LANG_NAME, type Key, detectLang, isLangSetting, resolveLang, setLang, t,
 } from './i18n/index.js';
 import { levelName } from './i18n/levels.js';
+import { messierLabel } from './i18n/messier.js';
 
 const MAX_DPR = 2.5;               // §15.3
 const DEMO_LEVEL = '1-1';          // §13.1 타이틀 뒤에서 도는 데모
@@ -124,6 +125,7 @@ const screens = new Screens({
   },
   onInfinity: (mode) => startInfinity(mode),
   dailyInfo: () => { const d = dailyRecord(); return { date: shortDate(d.day), best: d.best }; },
+  catalog: () => save.data.messier,
   // 타이틀이 보이면 뒤에서 데모가 돌아야 한다 (§13.1). 단계 선택·설정에서 타이틀로
   // 돌아올 때 전에는 멈춘 단계가 그대로 비쳤다
   onTitle: () => { if (!demo) replayDemo(); },
@@ -308,6 +310,8 @@ function stepGlide(dt: number): void {
 
 function loadInto(id: string): void {
   session.setup(loadLevel(id));
+  // 도감에 이미 있는 천체는 그리지 않는다 (§22.7)
+  if (session.level.messier && String(session.level.messier.n) in save.data.messier) session.messierDone = true;
   basePreview = session.level.preview;
   field.rebuild(session.level);
   hud.hideResult();
@@ -740,6 +744,17 @@ function frame(now: number): void {
       if (bossAlarm !== mark) { bossAlarm = mark; sfx.play('alarm'); buzz([40, 60, 40]); }
     } else bossAlarm = -1;
   }
+  // 메시에 천체를 스친 순간 (§22.7): 저장·토스트·소리
+  if (session.found.length) {
+    const [sx, sy] = session.shipPos();
+    for (const n of session.found.splice(0)) {
+      const isNew = !(String(n) in save.data.messier);
+      if (isNew) { save.data.messier[String(n)] = session.world ? 'infinity' : session.level.id; save.touch(); }
+      hud.toast(t(isNew ? 'cat.found' : 'cat.again', { name: messierLabel(n) }));
+      field.onFound(sx, sy);
+    }
+    sfx.play('found'); buzz([15, 30, 15]);
+  }
   // 방패로 튕긴 순간 (§22.5)
   if (session.sim.absorbs !== absorbs) {
     absorbs = session.sim.absorbs;
@@ -826,7 +841,7 @@ function draw(preview: { points: number[]; outcome: string } | null): void {
 
 // HUD 는 플레이 중에만 보인다.
 // 전에는 따로 도는 두 번째 rAF 루프가 매 프레임 스타일을 썼다. 바뀔 때만 쓴다.
-const hudEls = [document.querySelector('.hud.top'), hud.hint, hud.angle, hud.turns, hud.xp, hud.perks, hud.boss] as HTMLElement[];
+const hudEls = [document.querySelector('.hud.top'), hud.hint, hud.angle, hud.turns, hud.xp, hud.perks, hud.boss, hud.toastEl] as HTMLElement[];
 let hudShown: boolean | null = null;
 function syncHudVisibility(): void {
   const show = !demo && !screens.overlayOpen && !hints.open && !levelup.open;

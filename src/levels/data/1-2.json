@@ -24,24 +24,6 @@
       "sides": 13
     }
   ],
-  "meta": {
-    "chapter": 1,
-    "slot": 2,
-    "role": "연습",
-    "intro": "rock",
-    "solution": {
-      "angle": -72,
-      "launch_step": 0
-    },
-    "source": "generated",
-    "updated": "2026-09-19",
-    "metrics": {
-      "main_window": 9.5,
-      "flight_time": 3.38,
-      "clearance": 22.14,
-      "difficulty": 0
-    }
-  },
   "rocks": [
     {
       "x": 160,
@@ -62,5 +44,29 @@
       "seed": 3
     }
   ],
-  "hint": "행성의 어느 쪽을 지나느냐로 꺾이는 방향이 바뀌어요"
+  "hint": "행성의 어느 쪽을 지나느냐로 꺾이는 방향이 바뀌어요",
+  "messier": {
+    "n": 45,
+    "x": 364,
+    "y": 220
+  },
+  "meta": {
+    "chapter": 1,
+    "slot": 2,
+    "role": "연습",
+    "intro": "rock",
+    "solution": {
+      "angle": -72,
+      "launch_step": 0
+    },
+    "source": "generated",
+    "updated": "2026-10-06",
+    "metrics": {
+      "main_window": 9.5,
+      "flight_time": 3.38,
+      "clearance": 22.14,
+      "difficulty": 0,
+      "messier_window": 3.5
+    }
+  }
 }

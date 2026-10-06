@@ -33,23 +33,6 @@
       "role": "optional"
     }
   ],
-  "meta": {
-    "chapter": 1,
-    "slot": 5,
-    "role": "조합",
-    "solution": {
-      "angle": -133.5,
-      "launch_step": 0
-    },
-    "source": "generated",
-    "updated": "2026-09-19",
-    "metrics": {
-      "main_window": 8,
-      "flight_time": 3.47,
-      "clearance": 23.01,
-      "difficulty": 0.69
-    }
-  },
   "rocks": [
     {
       "x": 285,
@@ -70,5 +53,28 @@
       "seed": 3
     }
   ],
-  "hint": "모든 행성을 쓰는 게 정답은 아니에요"
+  "hint": "모든 행성을 쓰는 게 정답은 아니에요",
+  "messier": {
+    "n": 44,
+    "x": 88,
+    "y": 328
+  },
+  "meta": {
+    "chapter": 1,
+    "slot": 5,
+    "role": "조합",
+    "solution": {
+      "angle": -133.5,
+      "launch_step": 0
+    },
+    "source": "generated",
+    "updated": "2026-10-06",
+    "metrics": {
+      "main_window": 8,
+      "flight_time": 3.47,
+      "clearance": 23.01,
+      "difficulty": 0.69,
+      "messier_window": 3
+    }
+  }
 }

@@ -60,6 +60,11 @@
     }
   ],
   "hint": "블랙홀의 끌림도 잘 쓰면 도움이 돼요",
+  "messier": {
+    "n": 13,
+    "x": 104,
+    "y": 196
+  },
   "meta": {
     "chapter": 2,
     "slot": 1,
@@ -70,12 +75,13 @@
       "launch_step": 0
     },
     "source": "verified",
-    "updated": "2026-09-18",
+    "updated": "2026-10-06",
     "metrics": {
       "main_window": 9.75,
       "flight_time": 3.2,
       "clearance": 12.11,
-      "difficulty": 1.52
+      "difficulty": 1.52,
+      "messier_window": 3.25
     }
   }
 }

@@ -34,23 +34,6 @@
       "role": "optional"
     }
   ],
-  "meta": {
-    "chapter": 2,
-    "slot": 4,
-    "role": "휴식",
-    "solution": {
-      "angle": -125,
-      "launch_step": 0
-    },
-    "source": "generated",
-    "updated": "2026-09-19",
-    "metrics": {
-      "main_window": 11.25,
-      "flight_time": 3.76,
-      "clearance": 12.38,
-      "difficulty": 1.32
-    }
-  },
   "rocks": [
     {
       "x": 190,
@@ -89,5 +72,28 @@
       "seed": 6
     }
   ],
-  "hint": "블랙홀은 이번엔 피하기만 하면 돼요"
+  "hint": "블랙홀은 이번엔 피하기만 하면 돼요",
+  "messier": {
+    "n": 51,
+    "x": 48,
+    "y": 388
+  },
+  "meta": {
+    "chapter": 2,
+    "slot": 4,
+    "role": "휴식",
+    "solution": {
+      "angle": -125,
+      "launch_step": 0
+    },
+    "source": "generated",
+    "updated": "2026-10-06",
+    "metrics": {
+      "main_window": 11.25,
+      "flight_time": 3.76,
+      "clearance": 12.38,
+      "difficulty": 1.32,
+      "messier_window": 3.75
+    }
+  }
 }

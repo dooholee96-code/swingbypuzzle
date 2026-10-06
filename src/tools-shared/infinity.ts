@@ -12,6 +12,7 @@
 import { dist } from '../core/physics.js';
 import { mulberry32 } from '../core/rng.js';
 import type { Dock, Hole, Level, Planet, Rock, Ufo } from '../core/types.js';
+import { COLLECT_R, INFINITY_POOL } from './messier.js';
 
 /** 칸 한 변 */
 export const CHUNK = 400;
@@ -47,9 +48,13 @@ export interface ChunkOpts { threat?: number; dockScale?: number }
 /** 분사 아이템 (§22.3). 먹으면 분사 +1 */
 export interface Item { id: string; x: number; y: number }
 
+/** 메시에 천체 (§22.7). 스치면 도감에 모은다. 충돌도 중력도 없다 */
+export interface MessierSpot { id: string; n: number; x: number; y: number }
+
 export interface Chunk {
   cx: number; cy: number;
   planets: Planet[]; holes: Hole[]; rocks: Rock[]; ufos: Ufo[]; items: Item[]; docks: Dock[];
+  messier?: MessierSpot;
 }
 
 /** 칸 좌표 → 시드. 판 시드와 섞는다 */
@@ -172,6 +177,26 @@ export function makeChunk(seed: number, cx: number, cy: number, opts: ChunkOpts 
     if (dist(x, y, ORIGIN, ORIGIN) <= START_CLEAR + 20) continue;
     out.rocks.push({ x, y, r: Math.round(pick(9, 14)), seed: rockShape(seed, cx, cy, 7) });
   }
+
+  // 메시에 천체 (§22.7): 2번째 링부터 칸마다 10%. 이 칸의 물체에서 떨어진 빈 자리에 —
+  // 난수를 맨 끝에서 쓰므로 앞의 배치는 전과 같다. 번호는 인피니티 몫(82개)에서
+  if (ring >= 2 && rnd() < 0.1) {
+    const n = INFINITY_POOL[Math.floor(rnd() * INFINITY_POOL.length)]!;
+    const solids = [
+      ...out.planets.map((p) => (p.orbit ? { x: p.orbit.cx, y: p.orbit.cy, r: p.orbit.rad + p.r } : { x: p.x, y: p.y, r: p.r })),
+      ...out.holes.map((h) => ({ x: h.x, y: h.y, r: h.rH + 4 })),
+      ...out.rocks.map((q) => ({ x: q.x, y: q.y, r: q.r })),
+      ...out.ufos.map((u) => ({ x: u.x, y: u.y, r: 13 })),
+      ...out.docks.map((d) => ({ x: d.x, y: d.y, r: d.cr })),
+      ...out.items.map((it) => ({ x: it.x, y: it.y, r: 8 })),
+    ];
+    for (let tries = 0; tries < 3; tries++) {
+      const x = Math.round(x0 + 60 + rnd() * (CHUNK - 120)), y = Math.round(y0 + 60 + rnd() * (CHUNK - 120));
+      if (solids.some((s) => dist(s.x, s.y, x, y) < s.r + COLLECT_R + 22)) continue;
+      out.messier = { id: `m${cx},${cy}`, n, x, y };
+      break;
+    }
+  }
   return out;
 }
 
@@ -183,7 +208,10 @@ export class InfinityWorld {
   readonly level: Level;
   /** 창에 올라와 있는 아이템. 먹은 것은 빠진다 */
   items: Item[] = [];
+  /** 창에 올라와 있는 메시에 천체 (§22.7). 이번 판에 모은 것은 빠진다 */
+  messiers: MessierSpot[] = [];
   private eaten = new Set<string>();
+  private gathered = new Set<string>();
   private cache = new Map<string, Chunk>();
   private at: [number, number] | null = null;
   private last: [number, number] = [ORIGIN, ORIGIN];
@@ -236,17 +264,28 @@ export class InfinityWorld {
     const planets: Planet[] = [], holes: Hole[] = [], rocks: Rock[] = [], ufos: Ufo[] = [];
     const docks: Dock[] = [];
     const items: Item[] = [];
+    const messiers: MessierSpot[] = [];
     for (let dy = -WINDOW; dy <= WINDOW; dy++) {
       for (let dx = -WINDOW; dx <= WINDOW; dx++) {
         const c = this.chunk(cx + dx, cy + dy);
         planets.push(...c.planets); holes.push(...c.holes);
         rocks.push(...c.rocks); ufos.push(...c.ufos); docks.push(...c.docks);
         for (const it of c.items) if (!this.eaten.has(it.id)) items.push(it);
+        if (c.messier && !this.gathered.has(c.messier.id)) messiers.push(c.messier);
       }
     }
     L.planets = planets; L.holes = holes; L.rocks = rocks; L.ufos = ufos; L.docks = docks;
     this.items = items;
+    this.messiers = messiers;
     return true;
+  }
+
+  /** 우주선 자리에서 스친 메시에 천체의 번호들. 이번 판에서는 다시 나오지 않는다 */
+  collect(x: number, y: number): number[] {
+    const got: number[] = [];
+    for (const m of this.messiers) if (dist(m.x, m.y, x, y) < COLLECT_R) { got.push(m.n); this.gathered.add(m.id); }
+    if (got.length) this.messiers = this.messiers.filter((m) => !this.gathered.has(m.id));
+    return got;
   }
 
   /**

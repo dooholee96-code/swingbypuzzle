@@ -86,6 +86,11 @@
     }
   ],
   "hint": "행성이 움직여요. 발사 타이밍을 노려보세요",
+  "messier": {
+    "n": 1,
+    "x": 104,
+    "y": 332
+  },
   "meta": {
     "chapter": 4,
     "slot": 1,
@@ -96,7 +101,7 @@
       "launch_step": 800
     },
     "source": "verified",
-    "updated": "2026-09-18",
+    "updated": "2026-10-06",
     "metrics": {
       "main_window": 9.5,
       "flight_time": 5.71,
@@ -104,7 +109,8 @@
       "difficulty": 2.14,
       "main_window_best": 10,
       "best_launch_step": 960,
-      "timing_fraction": 0.5
+      "timing_fraction": 0.5,
+      "messier_window": 3.25
     }
   }
 }

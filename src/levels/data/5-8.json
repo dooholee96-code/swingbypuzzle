@@ -59,42 +59,6 @@
       "role": "optional"
     }
   ],
-  "ufos": [
-    {
-      "x": 190,
-      "y": 425,
-      "range": 165,
-      "interval": 1.2,
-      "delay": 0.4,
-      "bs": 245
-    },
-    {
-      "x": 615,
-      "y": 810,
-      "range": 170,
-      "interval": 1.1,
-      "delay": 0.5,
-      "bs": 240
-    }
-  ],
-  "meta": {
-    "chapter": 5,
-    "slot": 8,
-    "role": "초반부 최종",
-    "solution": {
-      "angle": -11.5,
-      "launch_step": 0
-    },
-    "source": "generated",
-    "updated": "2026-09-19",
-    "metrics": {
-      "main_window": 6.75,
-      "flight_time": 6.08,
-      "clearance": 13.89,
-      "difficulty": 4.57,
-      "timing_fraction": 0.42
-    }
-  },
   "rocks": [
     {
       "x": 375,
@@ -120,5 +84,47 @@
       "r": 19,
       "seed": 4
     }
-  ]
+  ],
+  "ufos": [
+    {
+      "x": 190,
+      "y": 425,
+      "range": 165,
+      "interval": 1.2,
+      "delay": 0.4,
+      "bs": 245
+    },
+    {
+      "x": 615,
+      "y": 810,
+      "range": 170,
+      "interval": 1.1,
+      "delay": 0.5,
+      "bs": 240
+    }
+  ],
+  "messier": {
+    "n": 97,
+    "x": 540,
+    "y": 292
+  },
+  "meta": {
+    "chapter": 5,
+    "slot": 8,
+    "role": "초반부 최종",
+    "solution": {
+      "angle": -11.5,
+      "launch_step": 0
+    },
+    "source": "generated",
+    "updated": "2026-10-06",
+    "metrics": {
+      "main_window": 6.75,
+      "flight_time": 6.08,
+      "clearance": 13.89,
+      "difficulty": 4.57,
+      "timing_fraction": 0.42,
+      "messier_window": 1.5
+    }
+  }
 }

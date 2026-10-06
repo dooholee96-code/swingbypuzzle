@@ -42,33 +42,6 @@
       "role": "optional"
     }
   ],
-  "ufos": [
-    {
-      "x": 315,
-      "y": 170,
-      "range": 145,
-      "interval": 1,
-      "delay": 0.7,
-      "bs": 235
-    }
-  ],
-  "meta": {
-    "chapter": 5,
-    "slot": 6,
-    "role": "조합 심화",
-    "solution": {
-      "angle": -109,
-      "launch_step": 0
-    },
-    "source": "generated",
-    "updated": "2026-09-19",
-    "metrics": {
-      "main_window": 6.75,
-      "flight_time": 4.53,
-      "clearance": 20.52,
-      "difficulty": 4.35
-    }
-  },
   "rocks": [
     {
       "x": 625,
@@ -94,5 +67,38 @@
       "r": 21,
       "seed": 4
     }
-  ]
+  ],
+  "ufos": [
+    {
+      "x": 315,
+      "y": 170,
+      "range": 145,
+      "interval": 1,
+      "delay": 0.7,
+      "bs": 235
+    }
+  ],
+  "messier": {
+    "n": 64,
+    "x": 312,
+    "y": 476
+  },
+  "meta": {
+    "chapter": 5,
+    "slot": 6,
+    "role": "조합 심화",
+    "solution": {
+      "angle": -109,
+      "launch_step": 0
+    },
+    "source": "generated",
+    "updated": "2026-10-06",
+    "metrics": {
+      "main_window": 6.75,
+      "flight_time": 4.53,
+      "clearance": 20.52,
+      "difficulty": 4.35,
+      "messier_window": 2.25
+    }
+  }
 }

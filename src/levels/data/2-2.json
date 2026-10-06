@@ -23,23 +23,6 @@
       "R": 190
     }
   ],
-  "meta": {
-    "chapter": 2,
-    "slot": 2,
-    "role": "연습",
-    "solution": {
-      "angle": -55.5,
-      "launch_step": 0
-    },
-    "source": "generated",
-    "updated": "2026-09-19",
-    "metrics": {
-      "main_window": 9.5,
-      "flight_time": 3.29,
-      "clearance": 27.75,
-      "difficulty": 0.92
-    }
-  },
   "rocks": [
     {
       "x": 220,
@@ -66,5 +49,28 @@
       "seed": 4
     }
   ],
-  "hint": "블랙홀만으로도 궤도를 꺾을 수 있어요"
+  "hint": "블랙홀만으로도 궤도를 꺾을 수 있어요",
+  "messier": {
+    "n": 57,
+    "x": 304,
+    "y": 336
+  },
+  "meta": {
+    "chapter": 2,
+    "slot": 2,
+    "role": "연습",
+    "solution": {
+      "angle": -55.5,
+      "launch_step": 0
+    },
+    "source": "generated",
+    "updated": "2026-10-06",
+    "metrics": {
+      "main_window": 9.5,
+      "flight_time": 3.29,
+      "clearance": 27.75,
+      "difficulty": 0.92,
+      "messier_window": 4
+    }
+  }
 }

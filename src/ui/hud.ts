@@ -51,6 +51,9 @@ export class Hud {
   /** 보스전 (§22.6): 체력 바와 목숨 */
   readonly boss = $('boss');
   private bossKey = '';
+  /** 짧은 알림 (§22.7 "M31 발견!") */
+  readonly toastEl = $('toast');
+  private toastTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly hintBtn = $('hintbtn');
   /** 인피니티(§22.3)의 최고 기록(초). main 이 판을 시작할 때 넣는다 */
   infBest = 0;
@@ -269,5 +272,14 @@ export class Hud {
   }
 
   hideResult(): void { this.result.hidden = true; }
+
+  /** 화면 위쪽에 잠깐 떴다 사라지는 한 줄. 연달아 오면 글자만 바꾼다 */
+  toast(text: string, ms = 2200): void {
+    this.toastEl.textContent = text;
+    this.toastEl.hidden = false;
+    this.toastEl.classList.remove('show'); void this.toastEl.offsetWidth; this.toastEl.classList.add('show');
+    if (this.toastTimer !== null) clearTimeout(this.toastTimer);
+    this.toastTimer = setTimeout(() => { this.toastEl.hidden = true; this.toastTimer = null; }, ms);
+  }
 
 }

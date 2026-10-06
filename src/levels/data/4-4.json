@@ -40,24 +40,6 @@
       }
     }
   ],
-  "meta": {
-    "chapter": 4,
-    "slot": 4,
-    "role": "휴식",
-    "solution": {
-      "angle": -149,
-      "launch_step": 2420
-    },
-    "source": "generated",
-    "updated": "2026-09-19",
-    "metrics": {
-      "main_window": 9.75,
-      "flight_time": 3.43,
-      "clearance": 15.19,
-      "difficulty": 1.04,
-      "timing_fraction": 0.75
-    }
-  },
   "rocks": [
     {
       "x": 210,
@@ -77,5 +59,29 @@
       "r": 23,
       "seed": 3
     }
-  ]
+  ],
+  "messier": {
+    "n": 81,
+    "x": 68,
+    "y": 416
+  },
+  "meta": {
+    "chapter": 4,
+    "slot": 4,
+    "role": "휴식",
+    "solution": {
+      "angle": -149,
+      "launch_step": 2420
+    },
+    "source": "generated",
+    "updated": "2026-10-06",
+    "metrics": {
+      "main_window": 9.75,
+      "flight_time": 3.43,
+      "clearance": 15.19,
+      "difficulty": 1.04,
+      "timing_fraction": 0.75,
+      "messier_window": 3.25
+    }
+  }
 }

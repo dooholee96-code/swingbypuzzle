@@ -42,6 +42,26 @@
       "role": "optional"
     }
   ],
+  "rocks": [
+    {
+      "x": 240,
+      "y": 570,
+      "r": 23,
+      "seed": 1
+    },
+    {
+      "x": 100,
+      "y": 565,
+      "r": 24,
+      "seed": 2
+    },
+    {
+      "x": 150,
+      "y": 315,
+      "r": 22,
+      "seed": 3
+    }
+  ],
   "ufos": [
     {
       "x": 200,
@@ -68,6 +88,11 @@
       "bs": 235
     }
   ],
+  "messier": {
+    "n": 17,
+    "x": 236,
+    "y": 252
+  },
   "meta": {
     "chapter": 3,
     "slot": 8,
@@ -77,32 +102,13 @@
       "launch_step": 0
     },
     "source": "generated",
-    "updated": "2026-09-19",
+    "updated": "2026-10-06",
     "metrics": {
       "main_window": 5.75,
       "flight_time": 4.31,
       "clearance": 19.67,
-      "difficulty": 4.68
+      "difficulty": 4.68,
+      "messier_window": 2
     }
-  },
-  "rocks": [
-    {
-      "x": 240,
-      "y": 570,
-      "r": 23,
-      "seed": 1
-    },
-    {
-      "x": 100,
-      "y": 565,
-      "r": 24,
-      "seed": 2
-    },
-    {
-      "x": 150,
-      "y": 315,
-      "r": 22,
-      "seed": 3
-    }
-  ]
+  }
 }

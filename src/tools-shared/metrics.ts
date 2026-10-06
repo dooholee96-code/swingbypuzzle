@@ -16,6 +16,8 @@ import {
   MIN_TURN_DELTA, MIN_TURN_TIMING, arcRuns, relTurns, turnAngleRuns, turnTolerance,
 } from './turns.js';
 import { MIN_RELEASE_TIMING, dockAngleRuns, releasePhis, releaseTolerance } from './docks.js';
+import { COLLECT_DETOUR, type CollectMetrics, MIN_COLLECT_WINDOW, collectMetrics } from './collect.js';
+import { COLLECT_R } from './messier.js';
 
 /** 검증기와 생성기의 발사 시점 등분 수 (§8.4 6단계, §8.9.1). */
 export const DIVISIONS = 24;
@@ -79,6 +81,8 @@ export interface LevelMetrics {
    *   release      — 나가기 타이밍(초)의 연속 성공 폭(규칙 13)
    */
   dock?: { used: number; no_tap_width: number; release: number };
+  /** 메시에 천체(§22.7)가 있는 단계만. 규칙 14 */
+  messier?: CollectMetrics;
 }
 
 // ── 역할 ────────────────────────────────────────────────────────────
@@ -276,6 +280,8 @@ export function computeMetrics(L: Level): LevelMetrics {
   const sol = L.meta.solution;
   const flight = measureFlight(L, sol.angle, sol.launch_step, G, sol.turns, sol.releases);
   const dome = checkDome(L);
+  // 메시에 천체(§22.7): 지나며 도착하는 폭. 세 갈래 모두에 끼운다
+  const messier = L.messier ? { messier: collectMetrics(L, G) } : {};
 
   const essential = gravEntries(L).map((e) => ({
     index: e.index,
@@ -312,6 +318,7 @@ export function computeMetrics(L: Level): LevelMetrics {
       dome_blocked: dome.blocked,
       difficulty: difficultyOf(L, width, undefined, turn),
       turn,
+      ...messier,
     };
   }
 
@@ -342,6 +349,7 @@ export function computeMetrics(L: Level): LevelMetrics {
       dome_blocked: dome.blocked,
       difficulty: difficultyOf(L, width, undefined, undefined, dock),
       dock,
+      ...messier,
     };
   }
 
@@ -365,6 +373,7 @@ export function computeMetrics(L: Level): LevelMetrics {
     dome_accel_max: dome.accelMax,
     dome_blocked: dome.blocked,
     difficulty: difficultyOf(L, main_window, timing_fraction),
+    ...messier,
   };
 }
 
@@ -495,6 +504,19 @@ export function checkLevel(L: Level, m = computeMetrics(L), limits?: RecipeLimit
     }
   }
 
+  // 14. 메시에 천체 (§22.7): 정답 길에서 비켜나 있고, 지나며 도착하는 길이 넉넉한가
+  if (L.messier && m.messier) {
+    const need = COLLECT_R + COLLECT_DETOUR;
+    if (m.messier.solution_dist < need) {
+      failures.push(`규칙14 M${L.messier.n} 이 정답 경로에서 ${m.messier.solution_dist.toFixed(1)} 유닛`
+        + ` — ${need} 이상 비켜나야 한다`);
+    }
+    if (m.messier.width < MIN_COLLECT_WINDOW) {
+      failures.push(`규칙14 M${L.messier.n} 을 지나며 도착하는 폭 ${m.messier.width.toFixed(2)}°`
+        + ` < ${MIN_COLLECT_WINDOW}°`);
+    }
+  }
+
   // 9. 정답 θ 가 걸을 수 있는 범위 안인가
   if (!inArc(L, sol.angle)) {
     failures.push(
@@ -551,6 +573,7 @@ export function metaMetrics(m: LevelMetrics): Record<string, number> {
     out['turn_delta'] = m.turn.delta;
   }
   if (m.dock) out['release_timing'] = round2(m.dock.release);
+  if (m.messier) out['messier_window'] = round2(m.messier.width);
   return out;
 }
 

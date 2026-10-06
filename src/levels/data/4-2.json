@@ -40,24 +40,6 @@
       }
     }
   ],
-  "meta": {
-    "chapter": 4,
-    "slot": 2,
-    "role": "연습",
-    "solution": {
-      "angle": -30.5,
-      "launch_step": 0
-    },
-    "source": "generated",
-    "updated": "2026-09-19",
-    "metrics": {
-      "main_window": 8.5,
-      "flight_time": 3.93,
-      "clearance": 16.88,
-      "difficulty": 1.04,
-      "timing_fraction": 0.67
-    }
-  },
   "rocks": [
     {
       "x": 235,
@@ -78,5 +60,29 @@
       "seed": 3
     }
   ],
-  "hint": "공전 행성이 제자리에 올 때를 기다리세요"
+  "hint": "공전 행성이 제자리에 올 때를 기다리세요",
+  "messier": {
+    "n": 104,
+    "x": 292,
+    "y": 160
+  },
+  "meta": {
+    "chapter": 4,
+    "slot": 2,
+    "role": "연습",
+    "solution": {
+      "angle": -30.5,
+      "launch_step": 0
+    },
+    "source": "generated",
+    "updated": "2026-10-06",
+    "metrics": {
+      "main_window": 8.5,
+      "flight_time": 3.93,
+      "clearance": 16.88,
+      "difficulty": 1.04,
+      "timing_fraction": 0.67,
+      "messier_window": 2.75
+    }
+  }
 }
