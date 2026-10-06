@@ -9,6 +9,8 @@ import {
 } from './levels/progress.js';
 import { starFlags, starsOf } from './levels/stars.js';
 import { Camera } from './game/camera.js';
+import { TURN_MAX } from './core/constants.js';
+import { clampArc, quantize } from './core/angle.js';
 import { AimInput } from './game/input.js';
 import { END_SECONDS, Session } from './game/session.js';
 import { DOME_DRAW_R, FieldRenderer } from './render/field.js';
@@ -479,6 +481,55 @@ function moveCamTo(x: number, y: number): void {
   cam.centerOn(session.level, (x - mini.x) / mini.k, (y - mini.y) / mini.k);
 }
 
+// ── 키보드 (§10.6). 데스크톱(itch.io)용. 손가락 입력과 같은 상태 머신을 두드린다 ──
+/** 진행 방향에서 ±delta° 로 분사 (§22.1). 연기는 그쪽 30 유닛 앞에 */
+function keyTurn(delta: number): void {
+  const a = session.shipHeading() * 180 / Math.PI + delta;
+  if (!session.turn(a)) return;
+  const [sx, sy] = session.shipPos();
+  field.onTurn(sx + Math.cos(a * Math.PI / 180) * 30, sy + Math.sin(a * Math.PI / 180) * 30);
+  sfx.play('boost');
+}
+addEventListener('keydown', (e) => {
+  if (e.ctrlKey || e.metaKey || e.altKey || e.repeat && e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+  const tag = (document.activeElement as HTMLElement | null)?.tagName;
+  if (tag === 'SELECT' || tag === 'INPUT' || tag === 'TEXTAREA') return;
+  if (demo || screens.overlayOpen || hints.open || !session.level) return;
+  const st = session.state;
+  let used = true;
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+    const sign = e.key === 'ArrowLeft' ? -1 : 1;
+    if (st === 'ready' || st === 'aiming') {
+      // 0.5° 씩(Shift 5°). 화살표를 누르면 조준 중으로 쳐서 예측선과 각도가 보인다
+      if (glide) snapToStart();
+      session.beginAim();
+      session.aimFar = true;
+      session.setAngle(clampArc(session.level, quantize(session.angle + sign * (e.shiftKey ? 5 : 0.5))));
+    } else if (st === 'flying' && !session.docked) keyTurn(sign * TURN_MAX);
+    else used = false;
+  } else if (e.key === ' ' || e.key === 'Enter') {
+    if (st === 'ready' || st === 'aiming') {
+      if (glide) snapToStart();
+      session.launch(); panning = false; sfx.play('launch');
+    } else if (st === 'flying') {
+      if (session.release()) { sfx.play('launch'); field.onRelease(); } else used = false;
+    } else if (st === 'ending' && !hud.result.hidden) {
+      // 시트가 떠 있으면 Enter 는 주 버튼(다음 단계 / 다시 시도)
+      (hud.result.querySelector<HTMLButtonElement>('[data-a=next]')
+        ?? hud.result.querySelector<HTMLButtonElement>('[data-a=retry]'))?.click();
+    } else if (st === 'ending' && !session.world && session.outcome !== 'win'
+      && session.endProgress() * END_SECONDS >= 0.3) {
+      hud.onRetry();                           // 실패 연출 중 — 탭과 같다
+    } else used = false;
+  } else if (e.key === 'Escape') {
+    if (st === 'aiming') { session.cancelAim(); aim.finish(); dragMode = null; dragPointer = -1; }
+    else used = false;
+  } else if (e.key === 'r' || e.key === 'R') {
+    hud.onRetry();
+  } else used = false;
+  if (used) e.preventDefault();
+});
+
 // 브라우저 뒤로 가기 → 화면 한 단계 뒤로 (§15.2 의 흐름을 웹으로)
 history.replaceState({ depth: 0 }, '');
 addEventListener('popstate', () => {
@@ -674,8 +725,20 @@ function frame(now: number): void {
 const world = document.createElement('canvas');
 const wctx = world.getContext('2d', { alpha: false })!;
 
+/**
+ * 충돌 흔들림 (§12.7). 부딪힌 직후 0.2초, 화면이 2~3 유닛 떨린다. 카메라 값은 건드리지
+ * 않고 찍을 때만 밀어서 물리·입력 좌표는 그대로다. 모션 줄이기면 끈다.
+ */
+const SHAKE_X = [3, -3, 2, -2, 1, -1, 0], SHAKE_Y = [-2, 2, -2, 1, -1, 0, 0];
+function crashShake(): [number, number] {
+  if (field.reduceMotion || session.state !== 'ending' || session.outcome === 'win' || session.outcome === 'drift') return [0, 0];
+  const i = Math.floor(session.endProgress() * END_SECONDS / 0.03);
+  return i < SHAKE_X.length ? [SHAKE_X[i]!, SHAKE_Y[i]!] : [0, 0];
+}
+
 function draw(preview: { points: number[]; outcome: string } | null): void {
-  const ox = Math.floor(cam.x), oy = Math.floor(cam.y);
+  const [kx, ky] = crashShake();
+  const ox = Math.floor(cam.x) + kx, oy = Math.floor(cam.y) + ky;
   const w = Math.ceil(cam.viewW) + 2, h = Math.ceil(cam.viewH) + 2;
   if (world.width !== w) world.width = w;
   if (world.height !== h) world.height = h;
