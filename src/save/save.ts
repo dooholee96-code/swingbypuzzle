@@ -12,6 +12,8 @@ const DEBOUNCE = 500;
 export interface LevelSave {
   cleared: boolean; skipped: boolean;
   attempts: number; fails: number; best_time: number | null;
+  /** 별 (§13.2). 깰 때마다 최고치를 남긴다. 옛 저장에는 없다 → 0 */
+  stars: number;
   hints: { preview: boolean; direction: boolean };
 }
 export interface SaveData {
@@ -50,7 +52,7 @@ const defaults = (): SaveData => ({
 });
 
 const levelDefaults = (): LevelSave => ({
-  cleared: false, skipped: false, attempts: 0, fails: 0, best_time: null,
+  cleared: false, skipped: false, attempts: 0, fails: 0, best_time: null, stars: 0,
   hints: { preview: false, direction: false },
 });
 
@@ -86,14 +88,20 @@ export class Save {
 
   cleared(id: string): boolean { return this.data.levels[id]?.cleared ?? false; }
 
-  record(id: string, outcome: string, seconds: number): void {
+  /** 비행 결과 하나. 성공이면 별과 최고 시간을 최고치로 남기고, 시간이 줄었는지 알려 준다 */
+  record(id: string, outcome: string, seconds: number, stars = 0): { newBest: boolean } {
     const l = this.level(id);
     l.attempts++;
+    let newBest = false;
     if (outcome === 'win') {
+      // 처음 깬 것은 "최고 기록 경신" 으로 치지 않는다 — 비교할 기록이 없다
+      newBest = l.best_time !== null && seconds < l.best_time;
       l.cleared = true;
+      l.stars = Math.max(l.stars, stars);
       if (l.best_time === null || seconds < l.best_time) l.best_time = seconds;
     } else l.fails++;
     this.touch();
+    return { newBest };
   }
 }
 

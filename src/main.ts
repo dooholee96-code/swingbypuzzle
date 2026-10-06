@@ -7,6 +7,7 @@ import { loadLevel } from './levels/registry.js';
 import {
   isChapterLast, nextLevel, resumeLevel,
 } from './levels/progress.js';
+import { starFlags, starsOf } from './levels/stars.js';
 import { Camera } from './game/camera.js';
 import { AimInput } from './game/input.js';
 import { END_SECONDS, Session } from './game/session.js';
@@ -96,6 +97,10 @@ const screens = new Screens({
     allOpen: TEST_OPEN,
   },
   levelName: (id) => levelName(loadLevel(id)),
+  levelStats: (id) => {
+    const l = save.data.levels[id];
+    return { stars: l ? starsOf(l) : 0, best: l?.best_time ?? null };
+  },
   settings: save.data.settings,
   autoLangName: () => LANG_NAME[detectLang(browserLangs())],
   // 스테이지: 이어서 할 단계가 있는 장의 단계 선택으로 (§13.1)
@@ -540,9 +545,16 @@ function recordOutcome(): void {
     infResult = { sec, best: inf.best, isBest };
     return;
   }
-  save.record(session.level.id, session.outcome, session.flightSeconds());
-  if (session.outcome === 'win') saveAdState(afterClear(adState()));
+  const l = save.level(session.level.id);
+  const win = session.outcome === 'win';
+  // 별 (§13.4): 이번 방문의 발사 횟수와 이 단계에 받은 힌트로
+  const flags = starFlags({ attempts: session.attempts, usedHint: l.hints.preview || l.hints.direction });
+  const { newBest } = save.record(session.level.id, session.outcome, session.flightSeconds(),
+    win ? flags.filter(Boolean).length : 0);
+  lastClear = win ? { stars: flags, newBest } : null;
+  if (win) saveAdState(afterClear(adState()));
 }
+let lastClear: { stars: [boolean, boolean, boolean]; newBest: boolean } | null = null;
 
 // ── 루프 ────────────────────────────────────────────────────────────────
 function frame(now: number): void {
@@ -600,6 +612,8 @@ function frame(now: number): void {
         chapterLast: isChapterLast(session.level.id),
         last: nextLevel(session.level.id, p) === null,
         canHint: save.level(session.level.id).fails >= 2,
+        stars: lastClear?.stars,
+        newBest: lastClear?.newBest ?? false,
       });
     }
   }

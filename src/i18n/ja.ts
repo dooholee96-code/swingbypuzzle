@@ -21,6 +21,9 @@ export const ja: Dict = {
   'mark.cleared': '✓ クリア',
   'mark.open': '未クリア',
   'mark.locked': 'ロック中',
+  'picker.unlockNote': 'あと{k}面クリアで第{n}章が開きます',
+  'picker.stars': '★ {n}/{max}',
+  'card.best': '{sec}秒',
 
   'hud.levels': 'ステージ',
   'hud.hint': 'ヒント',
@@ -55,6 +58,10 @@ export const ja: Dict = {
   'result.pick': 'ステージ選択',
   'result.tapRetry': '画面のどこをタップしてもリトライできます',
   'result.stats': '飛行時間 {sec}秒 · 挑戦 {n}回',
+  'result.newBest': '最高記録！',
+  'star.clear': 'クリア',
+  'star.quick': '3回以内',
+  'star.noHint': 'ヒントなし',
 
   'intro.planet': '惑星',
   'intro.planet.body': '点線の円に入ると惑星に引き寄せられます。近いほど強く引かれます。',

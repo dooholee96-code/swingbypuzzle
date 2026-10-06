@@ -6,8 +6,9 @@
 // 타이틀에서는 그 캔버스가 데모를 재생한다 (§13.1).
 
 import { CHAPTERS, allIds } from '../levels/chapters.js';
-import { chapterOf, isChapterUnlocked, isUnlocked } from '../levels/progress.js';
+import { chapterOf, isChapterUnlocked, isUnlocked, leftToOpenNext } from '../levels/progress.js';
 import type { Progress } from '../levels/progress.js';
+import { MAX_STARS, starText } from '../levels/stars.js';
 import { introFor, seenKey } from './intro.js';
 import { LANGS, LANG_NAME, type LangSetting, t } from '../i18n/index.js';
 import { chapterName } from '../i18n/levels.js';
@@ -28,6 +29,8 @@ const $ = (id: string): HTMLElement => {
 export interface ScreenDeps {
   progress: Progress;
   levelName(id: string): string;
+  /** 단계의 별과 최고 비행 시간 (§13.2). 안 깼으면 별 0, 시간 null */
+  levelStats(id: string): { stars: number; best: number | null };
   settings: {
     sfx: boolean; haptics: boolean;
     glow: 'normal' | 'low'; reduce_motion: boolean; reduce_motion_set?: boolean;
@@ -118,17 +121,30 @@ export class Screens {
     }).join('');
 
     const ch = CHAPTERS.find((c) => c.chapter === this.chapter) ?? CHAPTERS[0]!;
+    let starSum = 0;
     const cards = ch.levels.map((id, i) => {
       const open = isUnlocked(id, p);
       const done = p.cleared(id);
       const state = p.skipped(id) ? 'skipped' : done ? 'cleared' : open ? 'open' : 'locked';
       const mark = t(`mark.${state}` as const);
+      // 별과 최고 시간 (§13.2). 깬 단계에만 — 다시 와서 더 잘 깰 이유를 보여 준다
+      const st = this.d.levelStats(id);
+      starSum += st.stars;
+      const ex = done
+        ? `<span class="ex"><span class="stars">${starText(st.stars)}</span>${
+          st.best !== null ? `<span class="best">${t('card.best', { sec: st.best.toFixed(1) })}</span>` : ''}</span>`
+        : '';
       return `<button class="card" style="--i:${i}" data-id="${id}" data-state="${state}" type="button" ${open ? '' : 'disabled'}>
         <span class="id">${id}</span>
         <span class="nm">${open ? this.d.levelName(id) : '???'}</span>
         <span class="st${done ? ' done' : open ? '' : ' lock'}">${mark}</span>
+        ${ex}
       </button>`;
     }).join('');
+    // 다음 장이 아직 잠겼으면 몇 칸 남았는지 (§13.2)
+    const left = leftToOpenNext(ch.chapter, p);
+    const note = left > 0
+      ? `<p class="unlocknote">${t('picker.unlockNote', { k: left, n: ch.chapter + 1 })}</p>` : '';
 
     this.pickerEl.innerHTML = `
       <div class="bar">
@@ -137,8 +153,10 @@ export class Screens {
         <button class="btn" data-a="intro" type="button" aria-label="${t('picker.introAgain')}">?</button>
         <button class="btn" data-a="settings" type="button">${t('picker.settings')}</button>
       </div>
-      <h2>${img(rabbitIcon('idle'))}${t('picker.title')}</h2>
+      <h2>${img(rabbitIcon('idle'))}${t('picker.title')}<span class="sum">${
+        t('picker.stars', { n: starSum, max: ch.levels.length * MAX_STARS })}</span></h2>
       <div class="tabs">${tabs}</div>
+      ${note}
       <div class="grid">${cards}</div>`;
 
     this.bind(this.pickerEl, {

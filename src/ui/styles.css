@@ -199,6 +199,20 @@ img.px{image-rendering:pixelated;image-rendering:crisp-edges}
 .card[data-state="locked"]{background:var(--lav);cursor:default;transform:none}
 .card[data-state="locked"] .st{background:var(--gray);color:var(--white)}
 .card[data-state="locked"] .nm{color:var(--deep)}
+/* 별과 최고 시간 (§13.2): 이름 아래 한 줄. 깬 단계에만 */
+.card .ex{grid-area:3 / 1 / 4 / 3;display:flex;justify-content:space-between;align-items:baseline;
+          font:400 13px/1 var(--display);color:var(--deep)}
+.card .stars{color:var(--orange-dark);letter-spacing:1px}
+.card .best{font-size:12px}
+.screen h2 .sum{margin-left:auto;font:400 16px/1 var(--display);color:var(--yellow)}
+.unlocknote{margin:-6px 0 0;font:700 12px/1.4 var(--text);color:var(--paper)}
+
+/* 결과의 별 세 칸 (§13.4). 받은 것은 노랑, 못 받은 것은 회색 — 차례로 튀어나온다 */
+.sheet .stars{display:flex;gap:6px;flex-wrap:wrap}
+.sheet .star{font:700 12px/1 var(--text);padding:5px 7px;border:2px solid var(--ink);
+             background:var(--gray-light);color:var(--gray);
+             animation:pop .3s ease-out both;animation-delay:calc(.15s + var(--i,0) * 110ms)}
+.sheet .star.on{background:var(--yellow);color:var(--ink)}
 
 /* 설정 */
 .rows{max-width:420px;width:100%;display:flex;flex-direction:column;gap:0;

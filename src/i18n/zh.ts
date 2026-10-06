@@ -21,6 +21,9 @@ export const zh: Dict = {
   'mark.cleared': '✓ 已通关',
   'mark.open': '未通关',
   'mark.locked': '未解锁',
+  'picker.unlockNote': '再通关{k}关即可解锁第{n}章',
+  'picker.stars': '★ {n}/{max}',
+  'card.best': '{sec}秒',
 
   'hud.levels': '关卡',
   'hud.hint': '提示',
@@ -55,6 +58,10 @@ export const zh: Dict = {
   'result.pick': '选择关卡',
   'result.tapRetry': '点击屏幕任意位置即可重试',
   'result.stats': '飞行时间 {sec}秒 · 尝试 {n}次',
+  'result.newBest': '最佳纪录！',
+  'star.clear': '通关',
+  'star.quick': '3次以内',
+  'star.noHint': '无提示',
 
   'intro.planet': '行星',
   'intro.planet.body': '进入虚线圆圈就会被拉向行星。越近，引力越强。',

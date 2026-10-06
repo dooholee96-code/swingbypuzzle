@@ -24,6 +24,10 @@ export const ko = {
   'mark.cleared': '✓ 클리어',
   'mark.open': '미클리어',
   'mark.locked': '잠김',
+  // §13.2 별과 기록
+  'picker.unlockNote': '{k}칸 더 깨면 {n}장이 열려요',
+  'picker.stars': '★ {n}/{max}',
+  'card.best': '{sec}초',
 
   // §13.3 HUD
   'hud.levels': '단계',
@@ -60,6 +64,10 @@ export const ko = {
   'result.pick': '단계 선택',
   'result.tapRetry': '화면 아무 곳이나 눌러도 다시 시도해요',
   'result.stats': '비행 시간 {sec}초 · 시도 {n}회',
+  'result.newBest': '최고 기록!',
+  'star.clear': '클리어',
+  'star.quick': '3회 안에',
+  'star.noHint': '힌트 없이',
 
   // §13.2.1 새 요소 소개 카드
   'intro.planet': '행성',

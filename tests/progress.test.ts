@@ -1,7 +1,7 @@
 // 잠금 해제. docs/PLAN.md §13.2
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
-  isChapterLast, isChapterUnlocked, isUnlocked, nextLevel, resumeLevel,
+  CHAPTER_OPEN, isChapterLast, isChapterUnlocked, isUnlocked, leftToOpenNext, nextLevel, resumeLevel,
 } from '../src/levels/progress.js';
 import { CHAPTERS, allIds } from '../src/levels/chapters.js';
 import type { Progress } from '../src/levels/progress.js';
@@ -41,10 +41,32 @@ describe('장 잠금 (§13.2)', () => {
     expect(isChapterUnlocked(1, P())).toBe(true);
   });
 
-  it('이전 장을 다 끝내야 다음 장이 열린다', () => {
+  it('이전 장에서 CHAPTER_OPEN 칸을 끝내야 다음 장이 열린다 (코드 검토 3 에서 8 → 6)', () => {
     expect(isChapterUnlocked(2, P())).toBe(false);
-    expect(isChapterUnlocked(2, P([FIRST]))).toBe(false);      // 1장이 아직 안 끝났다
+    expect(isChapterUnlocked(2, P([FIRST]))).toBe(false);
+    expect(isChapterUnlocked(2, P(CH1.slice(0, CHAPTER_OPEN - 1)))).toBe(false);
+    expect(isChapterUnlocked(2, P(CH1.slice(0, CHAPTER_OPEN)))).toBe(true);
     expect(isChapterUnlocked(2, P([...CH1]))).toBe(true);
+  });
+
+  it('건너뛴 칸도 센다', () => {
+    expect(isChapterUnlocked(2, P(CH1.slice(0, CHAPTER_OPEN - 1), [CH1[CHAPTER_OPEN - 1]!]))).toBe(true);
+  });
+
+  it('장이 열리면 그 장의 첫 칸도 열린다 — 앞 장의 마지막 칸이 아직 남았어도', () => {
+    const p = P(CH1.slice(0, CHAPTER_OPEN));
+    expect(isUnlocked(CH2[0]!, p)).toBe(true);
+    expect(isUnlocked(CH2[1]!, p)).toBe(false);                // 그 장 안에서는 순서대로
+    expect(isUnlocked(CH1[CHAPTER_OPEN]!, p)).toBe(true);      // 남은 칸도 그대로 열려 있다
+    expect(isUnlocked(CH1_LAST, p)).toBe(false);
+  });
+
+  it('다음 장까지 남은 칸 수', () => {
+    expect(leftToOpenNext(1, P())).toBe(CHAPTER_OPEN);
+    expect(leftToOpenNext(1, P(CH1.slice(0, 2)))).toBe(CHAPTER_OPEN - 2);
+    expect(leftToOpenNext(1, P(CH1.slice(0, CHAPTER_OPEN)))).toBe(0);
+    const last = CHAPTERS[CHAPTERS.length - 1]!.chapter;
+    expect(leftToOpenNext(last, P())).toBe(0);                 // 다음 장이 없다
   });
 });
 

@@ -21,6 +21,9 @@ export const en: Dict = {
   'mark.cleared': '✓ Cleared',
   'mark.open': 'Not cleared',
   'mark.locked': 'Locked',
+  'picker.unlockNote': 'Clear {k} more to open Ch.{n}',
+  'picker.stars': '★ {n}/{max}',
+  'card.best': '{sec}s',
 
   'hud.levels': 'Levels',
   'hud.hint': 'Hint',
@@ -55,6 +58,10 @@ export const en: Dict = {
   'result.pick': 'Select Level',
   'result.tapRetry': 'Tap anywhere to try again',
   'result.stats': 'Flight time {sec}s · Attempts {n}',
+  'result.newBest': 'New best!',
+  'star.clear': 'Cleared',
+  'star.quick': 'In 3 tries',
+  'star.noHint': 'No hints',
 
   'intro.planet': 'Planet',
   'intro.planet.body': "Enter the dotted circle and you're pulled toward the planet. The closer you are, the stronger the pull.",

@@ -110,7 +110,13 @@ export class Hud {
 
   showResult(
     s: Session,
-    opts: { chapterLast?: boolean; last?: boolean; canHint?: boolean } = {},
+    opts: {
+      chapterLast?: boolean; last?: boolean; canHint?: boolean;
+      /** 이번에 받은 별 [클리어, 3회 안에, 힌트 없이] (§13.4) */
+      stars?: readonly [boolean, boolean, boolean];
+      /** 최고 비행 시간을 줄였는가 */
+      newBest?: boolean;
+    } = {},
   ): void {
     if (!this.result.hidden) return;
     const keys = RESULT[s.outcome as Outcome];
@@ -125,9 +131,18 @@ export class Hud {
     this.result.className = `sheet ${win ? 'win' : 'lose'}`;
     // §13.4. 시안: 아래쪽 판 + 토끼 얼굴. 표류는 잠든 얼굴, 그 밖의 실패는 시무룩한 얼굴
     const face = win ? 'win' : s.outcome === 'drift' ? 'sleep' : 'sad';
+    // 별 세 칸. 받은 것은 ★, 못 받은 것은 ☆ 로 조건을 보여 준다 — 다음에 노릴 것
+    const starKeys = ['star.clear', 'star.quick', 'star.noHint'] as const;
+    const stars = win && opts.stars
+      ? `<div class="stars">${starKeys.map((k, i) => {
+        const on = opts.stars![i];
+        return `<span class="star${on ? ' on' : ''}" style="--i:${i}">${on ? '★' : '☆'} ${t(k)}</span>`;
+      }).join('')}</div>`
+      : '';
     this.result.innerHTML = `<div class="panel">
       <div class="head">${img(rabbitIcon(face))}<h2></h2></div>
       <p class="msg"></p>
+      ${stars}
       <div class="row">
         ${win
           ? (nextLabel ? `<button class="btn next" data-a="next" type="button">${nextLabel}</button>` : '') +
@@ -140,7 +155,9 @@ export class Hud {
       ${win ? '' : `<p class="tapnote">${t('result.tapRetry')}</p>`}</div>`;
     this.result.querySelector('h2')!.textContent = title;
     this.result.querySelector('.msg')!.textContent = win
-      ? t('result.stats', { sec: s.flightSeconds().toFixed(1), n: s.attempts }) : tip;
+      ? t('result.stats', { sec: s.flightSeconds().toFixed(1), n: s.attempts })
+        + (opts.newBest ? ` · ${t('result.newBest')}` : '')
+      : tip;
     for (const b of this.result.querySelectorAll<HTMLButtonElement>('button')) {
       b.addEventListener('click', () => {
         const a = b.dataset['a'];
