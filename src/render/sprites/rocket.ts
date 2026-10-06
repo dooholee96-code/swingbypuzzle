@@ -101,6 +101,10 @@ export const SMALL = {
   dot2: ['SS', 'SS'],
   // 방패 (§22.5): 우주선 둘레의 점 — 링은 field 가 돌려 찍는다
   shieldDot: ['.B.', 'BWB', '.B.'],
+  // 보스전 (§22.6): 위로 나는 당근탄과 보스의 탄
+  carrotShot: ['.LL.', '.lL.', 'KOOK', 'KOoK', '.Oo.', '.Oo.', '.Ko.', '..K.'],
+  bossShot: ['.rrrr.', 'rYYYYr', 'rYWWYr', 'rYWWYr', 'rYYYYr', '.rrrr.'],
+  heart: ['.RR.RR.', 'RRRRRRR', 'RRRRRRR', '.RRRRR.', '..RRR..', '...R...'],
   trail: ['W'],
   xmark: ['R...R', '.R.R.', '..R..', '.R.R.', 'R...R'],
   zz: ['KKK.', '..K.', '.K..', 'KKK.'],

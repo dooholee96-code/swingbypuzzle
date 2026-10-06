@@ -195,3 +195,47 @@ export function dockArt(r = 14, kind = 4): Grid {
   }
   return ring;
 }
+
+/**
+ * 보스 모선 (§22.6). 100×44, 중심 (50, 28). 몸통 타원이 판정(BOSS_RX 48 × BOSS_RY 18)과 맞는다.
+ * 작은 비행접시(rocket.ts ufo)와 같은 빨강 계열에 큰 돔과 외계인 둘. flash 면 맞은 순간의 흰색.
+ */
+export function mothership(frame = 0, flash = false): Grid {
+  const g = grid(100, 44), cx = 50, cy = 28;
+  // 돔(조종석)
+  for (let y = 0; y < g.h; y++) {
+    for (let x = 0; x < g.w; x++) {
+      const dx = (x + 0.5 - cx) / 20, dy = (y + 0.5 - (cy - 6)) / 16;
+      if (dx * dx + dy * dy <= 1 && y < cy - 2) set(g, x, y, 'B');
+    }
+  }
+  for (const ex of [cx - 8, cx + 8]) {
+    fillCircle(g, ex, cy - 11, 3.4, 'm');
+    set(g, ex - 2, cy - 12, 'K'); set(g, ex + 1, cy - 12, 'K');
+  }
+  set(g, cx - 12, cy - 17, 'W'); set(g, cx - 13, cy - 16, 'W'); set(g, cx - 14, cy - 15, 'W');
+  // 몸통 타원
+  for (let y = 0; y < g.h; y++) {
+    for (let x = 0; x < g.w; x++) {
+      const dx = (x + 0.5 - cx) / 48, dy = (y + 0.5 - cy) / 13;
+      if (dx * dx + dy * dy <= 1) set(g, x, y, y >= cy + 3 ? 'r' : y >= cy ? 'R' : 'R');
+    }
+  }
+  // 아랫단 그림자와 포문 둘
+  for (let x = 8; x < 92; x++) if ((x + cy) % 2 === 0) set(g, x, cy + 9, 'K');
+  for (const px of [cx - 22, cx + 22]) {
+    for (let y = cy + 8; y <= cy + 13; y++) for (let x = px - 3; x <= px + 3; x++) set(g, x, y, y > cy + 11 ? 'K' : 'g');
+    set(g, px, cy + 12, (frame % 2) ? 'Y' : 'R');
+  }
+  // 테두리 불빛 12개
+  for (let i = 0; i < 12; i++) {
+    const a = Math.PI + Math.PI * (i + 0.5) / 12;
+    const x = Math.round(cx + Math.cos(a) * 42), y = Math.round(cy + Math.sin(a) * 9 + 2);
+    set(g, x, y, (i + frame) % 2 ? 'Y' : 'W');
+    set(g, x + 1, y, (i + frame) % 2 ? 'Y' : 'W');
+  }
+  outline(g);
+  if (flash) for (let i = 0; i < g.d.length; i++) if (g.d[i] !== '.' && g.d[i] !== 'K') g.d[i] = 'W';
+  g.ax = cx; g.ay = cy;
+  return g;
+}

@@ -8,7 +8,7 @@
 // 화면이 숨겨지면 음소거한다(§15.3).
 
 export type Sfx = 'launch' | 'enterField' | 'shoot' | 'explode' | 'arrive' | 'tick' | 'boost' | 'dock'
-  | 'shield' | 'levelup' | 'pick';
+  | 'shield' | 'levelup' | 'pick' | 'alarm' | 'hurt' | 'bossdown';
 
 export class Audio {
   enabled = true;
@@ -65,6 +65,14 @@ export class Audio {
       case 'levelup': return this.chord([523.25, 659.25, 1046.5], 0.35);
       // 카드 고름: 짧은 확인음
       case 'pick': return this.tone(880, 1320, 0.09, 'square', 0.3);
+      // 보스 경보 (§22.6): 두 음이 오르내리는 사이렌
+      case 'alarm': this.tone(440, 660, 0.18, 'square', 0.35);
+        return void setTimeout(() => this.tone(660, 440, 0.18, 'square', 0.35), 190);
+      // 보스전에서 맞음: 낮게 꺾이는 소리
+      case 'hurt': return this.tone(300, 90, 0.3, 'sawtooth', 0.5);
+      // 보스 격파: 긴 폭발 뒤 화음
+      case 'bossdown': this.noise(0.9);
+        return void setTimeout(() => this.chord([392, 523.25, 659.25, 783.99], 0.7), 500);
     }
   }
 

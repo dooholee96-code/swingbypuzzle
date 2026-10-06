@@ -19,7 +19,8 @@ import { type Baked, SpriteCache, put, putScaled } from './sprites/bake.js';
 import { Spring } from './spring.js';
 import { type Grid, grid, set } from './sprites/pixel.js';
 import { type Face, type SmallName, dir16, rocketDir, small, ufo } from './sprites/rocket.js';
-import { blackhole, dockRing, moon, planet, portal, rock, starTile } from './sprites/world.js';
+import { blackhole, dockRing, moon, mothership, planet, portal, rock, starTile } from './sprites/world.js';
+import { ARENA_H, ARENA_W, DIE_T } from '../core/boss.js';
 
 /** 달(발사대)의 그림 반경. PAD_R(22) 보다 작다 — 우주선이 표면 바깥에 선다 (§12.3) */
 export const DOME_DRAW_R = 18;
@@ -113,6 +114,7 @@ export class FieldRenderer {
     this.turnReq = null;
     this.puff = null;
     this.absorbAt = -1;
+    this.dyingAt = -1;
   }
 
   /** 상태가 바뀐 순간과 중력 범위에 들어선 순간에 용수철을 튕긴다 */
@@ -196,6 +198,7 @@ export class FieldRenderer {
     this.lastT = t;
     this.view = { x0: cam.x - 4, y0: cam.y - 4, x1: cam.x + cam.viewW + 4, y1: cam.y + cam.viewH + 4 };
     this.react(s, dt);
+    if (s.mode === 'boss' && s.boss) { this.drawBoss(ctx, cam, s, t); return; }
     if (this.turnReq) {
       const [x, y] = s.shipPos();
       // 연기는 새 진행 방향의 반대쪽으로 뿜는다
@@ -257,6 +260,61 @@ export class FieldRenderer {
     }
   }
 
+  /**
+   * 보스전 (§22.6). 별만 흐르는 아레나에 모선·탄·당근탄·우주선. 천체는 그리지 않는다 —
+   * 중력 비행은 얼어 있고, 끝나면 그 자리로 돌아온다.
+   */
+  private drawBoss(ctx: CanvasRenderingContext2D, cam: Camera, s: Session, t: number): void {
+    const b = s.boss!;
+    const [ox, oy] = s.bossOrigin;
+    this.sky(ctx, cam, s.level, this.reduceMotion ? 0 : b.t * 110);
+    // 아레나 테두리: 4px 간격 점선
+    ctx.fillStyle = C.dim;
+    for (let x = 0; x <= ARENA_W; x += 4) { ctx.fillRect(ox + x, oy, 1, 1); ctx.fillRect(ox + x, oy + ARENA_H, 1, 1); }
+    for (let y = 0; y <= ARENA_H; y += 4) { ctx.fillRect(ox, oy + y, 1, 1); ctx.fillRect(ox + ARENA_W, oy + y, 1, 1); }
+
+    // 당근탄·보스의 탄
+    const carrot = this.fx('carrotShot'), shot = this.fx('bossShot');
+    for (const c of b.carrots) put(ctx, carrot, ox + c.x, oy + c.y);
+    for (const q of b.shots) put(ctx, shot, ox + q.x, oy + q.y);
+    // 맞은 자리의 불꽃
+    for (const sp of b.sparks) put(ctx, this.fx(sp.age < 0.2 ? 'sparkle0' : 'sparkle1'), ox + sp.x, oy + sp.y);
+
+    // 모선. 맞으면 번쩍, 터지는 동안은 깜빡이며 작아지고 둘레에 먼지
+    const bx = ox + b.x, by = oy + b.y;
+    if (b.phase === 'dying') {
+      const dieU = this.dyingU(b);
+      const blink = this.reduceMotion ? false : Math.floor(t * 20) % 2 === 0;
+      const k = Math.max(0.2, 1 - dieU * 0.8);
+      putScaled(ctx, this.sprite(`boss:${blink ? 'f' : 0}`, () => mothership(0, blink)), bx, by, k, k);
+      const puff = this.fx(dieU < 0.5 ? 'dust0' : 'dust1');
+      for (let i = 0; i < 10; i++) {
+        const q = i * Math.PI / 5 + dieU * 2, d = 10 + dieU * 90 + (i % 2) * 14;
+        putScaled(ctx, puff, bx + Math.cos(q) * d * 1.6, by + Math.sin(q) * d * 0.7, 2 + dieU * 2, 2 + dieU * 2);
+      }
+    } else {
+      const f = this.reduceMotion ? 0 : Math.floor(t * 6) % 2;
+      const flash = b.flash > 0 && !this.reduceMotion;
+      put(ctx, this.sprite(`boss:${flash ? 'f' : f}`, () => mothership(f, flash)), bx, by);
+    }
+
+    // 우주선: 위를 보고 난다. 맞은 뒤 무적이면 깜빡. 진 뒤에는 부딪힌 연출
+    const sx = ox + b.ship.x, sy = oy + b.ship.y;
+    if (s.state === 'ending') { this.bump(ctx, sx, sy, -Math.PI / 2, s.endProgress(), s.outcome, t); return; }
+    if (b.invuln > 0 && !this.reduceMotion && Math.floor(t * 12) % 3 === 0) return;
+    const flame = this.reduceMotion ? 0 : Math.floor(t * 15) % 2;
+    const k = this.shipS.x;
+    putScaled(ctx, this.rocket('fly', -Math.PI / 2, { flame, ears: 'back' }), sx, sy, 1 + k, 1 - k * 0.6, -Math.PI / 2);
+  }
+
+  /** 터지는 진행도 0~1. BossSim 은 dieT 를 감추므로 단계 전환 시각으로 센다 */
+  private dyingAt = -1;
+  private dyingU(b: { t: number; phase: string }): number {
+    if (b.phase !== 'dying') { this.dyingAt = -1; return 0; }
+    if (this.dyingAt < 0) this.dyingAt = b.t;
+    return Math.min(1, (b.t - this.dyingAt) / DIE_T);
+  }
+
   /** 분사 연기(0.35초, 뒤로 퍼지며 커지는 네 덩이)와 탭 지점 반짝임(0.25초) */
   private turnPuff(ctx: CanvasRenderingContext2D, t: number): void {
     const p = this.puff;
@@ -277,14 +335,15 @@ export class FieldRenderer {
 
   // 밤하늘. 맵 바깥은 한 칸 어두운 색($03)으로 칠해 벽이 읽히게 한다.
   // 별은 반복 타일이고, 카메라 이동의 30%만 따라간다 (§12 시차)
-  private sky(ctx: CanvasRenderingContext2D, cam: Camera, L: Level): void {
+  private sky(ctx: CanvasRenderingContext2D, cam: Camera, L: Level, scroll = 0): void {
     ctx.fillStyle = C.void;
     ctx.fillRect(cam.x - 2, cam.y - 2, cam.viewW + 4, cam.viewH + 4);
     ctx.fillStyle = C.bg;
     ctx.fillRect(0, 0, L.w, L.h);
 
     const tile = this.sprite('stars', () => starTile(3, STAR_TILE, STAR_TILE));
-    const ox = Math.round(cam.x * (1 - STAR_PARALLAX)), oy = Math.round(cam.y * (1 - STAR_PARALLAX));
+    // scroll 은 보스전(§22.6)에서 별이 아래로 흐르게 — 위로 나는 느낌
+    const ox = Math.round(cam.x * (1 - STAR_PARALLAX)), oy = Math.round(cam.y * (1 - STAR_PARALLAX) + scroll);
     const x0 = Math.max(0, cam.x), y0 = Math.max(0, cam.y);
     const x1 = Math.min(L.w, cam.x + cam.viewW), y1 = Math.min(L.h, cam.y + cam.viewH);
     ctx.save();

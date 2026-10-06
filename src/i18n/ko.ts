@@ -54,6 +54,11 @@ export const ko = {
   'result.drift': '30초 안에 도착하지 못했어요',
   'result.drift.tip': '행성 주위를 맴돌지 않게 각도를 바꿔 보세요',
   'result.ended': '비행이 끝났어요',
+  // §22.6 보스전
+  'result.boss': '보스에게 당했어요',
+  'hud.boss': '보스',
+  'hud.bossIn': '보스까지 {sec}초',
+  'hud.bossNow': '보스 출현!',
   'result.nextChapter': '다음 장',
   'result.nextLevel': '다음 단계',
   'result.allCleared': '준비된 단계를 모두 클리어했어요',

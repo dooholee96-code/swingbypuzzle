@@ -7,7 +7,7 @@ import type { Outcome } from '../core/types.js';
 import type { Session } from '../game/session.js';
 import { type Key, t } from '../i18n/index.js';
 import { levelHint, levelName } from '../i18n/levels.js';
-import { img, perkIcon, rabbitIcon } from './art.js';
+import { heartIcon, img, perkIcon, rabbitIcon } from './art.js';
 import { PERK_KINDS } from '../tools-shared/perks.js';
 
 /** §13.4 결과 화면 문구의 키. 성공에는 조언이 없다 */
@@ -20,6 +20,7 @@ export const RESULT: Readonly<Record<Outcome, readonly [Key, Key | null]>> = {
   rock: ['result.rock', 'result.rock.tip'],
   wall: ['result.wall', 'result.wall.tip'],
   drift: ['result.drift', 'result.drift.tip'],
+  boss: ['result.boss', null],
 };
 
 /** 다를 때만 쓴다. */
@@ -47,6 +48,9 @@ export class Hud {
   readonly perks = $('perks');
   private xpKey = '';
   private perksKey = '';
+  /** 보스전 (§22.6): 체력 바와 목숨 */
+  readonly boss = $('boss');
+  private bossKey = '';
   private readonly hintBtn = $('hintbtn');
   /** 인피니티(§22.3)의 최고 기록(초). main 이 판을 시작할 때 넣는다 */
   infBest = 0;
@@ -97,10 +101,15 @@ export class Hud {
       this.stage.classList.add('pop');
     }
     if (!s.world) set(this.stageText, levelName(s.level));
-    // 아래 판: 조준 중이면 각도, 궤도 행성에서 돌고 있으면 "탭하면 출발" (§22.4)
+    // 아래 판: 조준 중이면 각도, 궤도 행성에서 돌고 있으면 "탭하면 출발" (§22.4),
+    // 보스가 다가오면 남은 초 (§22.6)
+    const cd = s.bossCountdown;
     set(this.angle, s.state === 'aiming' && s.aimFar
       ? t('hud.angle', { deg: toUi(s.angle).toFixed(1) })
-      : s.docked ? t('hud.dockTap') : '');
+      : s.docked ? t('hud.dockTap')
+        : cd !== null ? (cd <= 0.05 ? t('hud.bossNow') : t('hud.bossIn', { sec: Math.ceil(cd) }))
+          : '');
+    this.angle.classList.toggle('alarm', cd !== null && cd <= 10);
     // 남은 분사: 바뀔 때만 다시 쓴다. 글자도 키에 넣는다 — 언어를 바꾸면 따라 바뀌게
     const label = t('hud.turns');
     const key = `${s.turnsLeft}/${s.turnSlots}/${label}`;
@@ -116,6 +125,21 @@ export class Hud {
     // 첫 시도의 ready 상태에서만 레벨 hint (§13.3)
     set(this.hint, s.firstTry && s.state === 'ready' ? (levelHint(s.level) ?? '') : '');
     this.refreshPerks(s);
+    this.refreshBoss(s);
+  }
+
+  /** 보스 체력 바와 목숨. 바뀔 때만 쓴다 */
+  private refreshBoss(s: Session): void {
+    const b = s.boss;
+    if (!b) { if (!this.boss.hidden) this.boss.hidden = true; this.bossKey = ''; return; }
+    const pct = Math.round(Math.max(0, b.hp) / b.hpMax * 50) * 2;
+    const key = `${pct}/${b.lives}`;
+    if (key === this.bossKey) return;
+    this.bossKey = key;
+    this.boss.hidden = false;
+    (this.boss.querySelector('.hp b') as HTMLElement).style.width = `${pct}%`;
+    this.boss.querySelector('.lives')!.innerHTML =
+      Array.from({ length: Math.max(0, b.lives) }, () => `${img(heartIcon())}`).join('');
   }
 
   /** 경험치 바·레벨·패시브 줄. 바뀔 때만 DOM 에 쓴다 */

@@ -79,7 +79,9 @@ export interface Turn { step: number; dir: number }
 
 /** §5.4 의 결과 종류. '' 는 "아직 계속"을 뜻한다. */
 export type Outcome =
-  | 'planet' | 'hole' | 'rock' | 'ufo' | 'wall' | 'shot' | 'drift' | 'win';
+  | 'planet' | 'hole' | 'rock' | 'ufo' | 'wall' | 'shot' | 'drift' | 'win'
+  /** 인피니티 보스전(§22.6)에서 목숨을 다 잃음. 스테이지에서는 나오지 않는다 */
+  | 'boss';
 
 export interface ShipState { x: number; y: number; vx: number; vy: number }
 export interface Bullet { x: number; y: number; vx: number; vy: number; age: number }

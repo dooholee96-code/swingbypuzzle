@@ -83,3 +83,8 @@ const PERK_ROWS: Readonly<Record<OfferKind, readonly string[]>> = {
 export function perkIcon(kind: OfferKind): string {
   return once(`perk:${kind}`, () => toDataUrl(fromRows(PERK_ROWS[kind])));
 }
+
+/** 보스전 목숨 (§22.6) */
+export function heartIcon(): string {
+  return once('heart', () => toDataUrl(small('heart')));
+}

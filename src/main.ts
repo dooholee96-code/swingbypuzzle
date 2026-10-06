@@ -9,6 +9,7 @@ import {
 } from './levels/progress.js';
 import { starFlags, starsOf } from './levels/stars.js';
 import { Camera } from './game/camera.js';
+import { ARENA_H, ARENA_W } from './core/boss.js';
 import { TURN_MAX } from './core/constants.js';
 import { clampArc, quantize } from './core/angle.js';
 import { AimInput } from './game/input.js';
@@ -53,7 +54,12 @@ const sfx = new Audio();
 let cssW = 0, cssH = 0, dpr = 1;
 let mini: MiniRect | null = null;
 let panning = false;
-let dragMode: 'aim' | 'mini' | null = null;
+let dragMode: 'aim' | 'mini' | 'boss' | null = null;
+// 보스전 드래그 (§22.6): 손가락이 움직인 만큼 우주선이 움직인다(손가락이 우주선을 가리지 않게)
+let bossFrom: [number, number, number, number] = [0, 0, 0, 0];
+const BOSS_DRAG_K = 1.15;
+const heldKeys = new Set<string>();
+let bossShots = 0, bossHits = 0, bossAlarm = -1;
 let dragPointer = -1;              // 조준·미니맵을 잡고 있는 손가락
 let last = performance.now();
 let elapsed = 0;                   // 연출용 시계(초). 물리 시계와 따로 간다
@@ -376,6 +382,7 @@ function startInfinity(mode: InfinityMode = 'random'): void {
   hints.close();
   levelup.close();
   absorbs = 0;
+  bossShots = 0; bossHits = 0; bossAlarm = -1;
   panning = false;
   resize();
   snapToStart();
@@ -412,6 +419,15 @@ canvas.addEventListener('pointerdown', (e) => {
   // 발사되지 않게 한다. 조준은 한 손가락이다.
   if (!e.isPrimary || dragMode) return;
   if (demo || screens.overlayOpen || hints.open || levelup.open || !session.level) return;
+  if (session.state === 'flying' && session.boss) {
+    // 보스전 (§22.6): 드래그로 직접 이동. 누른 자리와 그때의 우주선 자리를 기억한다
+    const [x, y] = pos(e);
+    canvas.setPointerCapture(e.pointerId);
+    dragPointer = e.pointerId;
+    dragMode = 'boss';
+    bossFrom = [x, y, session.boss.ship.x, session.boss.ship.y];
+    return;
+  }
   if (session.state === 'flying') {
     // 궤도 행성에서 도는 중이면 탭은 "나가기"다 (§22.4). 분사를 쓰지 않는다
     if (session.release()) { sfx.play('launch'); buzz(15); field.onRelease(); return; }
@@ -447,7 +463,10 @@ canvas.addEventListener('pointermove', (e) => {
   if (!dragMode || e.pointerId !== dragPointer) return;
   const [x, y] = pos(e);
   if (dragMode === 'aim') updateAim(x, y);
-  else moveCamTo(x, y);
+  else if (dragMode === 'boss') {
+    session.bossAim(bossFrom[2] + (x - bossFrom[0]) / cam.scale * BOSS_DRAG_K,
+      bossFrom[3] + (y - bossFrom[1]) / cam.scale * BOSS_DRAG_K);
+  } else moveCamTo(x, y);
 });
 
 function endDrag(): void {
@@ -474,7 +493,8 @@ canvas.addEventListener('pointerup', (e) => {
 });
 canvas.addEventListener('pointercancel', (e) => {
   if (e.pointerId !== dragPointer) return;
-  session.cancelAim(); aim.finish(); dragMode = null; dragPointer = -1;
+  if (dragMode === 'aim') { session.cancelAim(); aim.finish(); }
+  dragMode = null; dragPointer = -1;
 });
 
 function updateAim(x: number, y: number): void {
@@ -499,7 +519,12 @@ function keyTurn(delta: number): void {
   field.onTurn(sx + Math.cos(a * Math.PI / 180) * 30, sy + Math.sin(a * Math.PI / 180) * 30);
   sfx.play('boost');
 }
+addEventListener('keyup', (e) => { heldKeys.delete(e.key); });
+addEventListener('blur', () => heldKeys.clear());
 addEventListener('keydown', (e) => {
+  if (e.key.startsWith('Arrow')) heldKeys.add(e.key);
+  // 보스전 (§22.6): 방향키는 누르고 있는 동안 프레임마다 읽는다(아래 frame)
+  if (session.boss && session.state === 'flying' && e.key.startsWith('Arrow')) { e.preventDefault(); return; }
   if (e.ctrlKey || e.metaKey || e.altKey || e.repeat && e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
   const tag = (document.activeElement as HTMLElement | null)?.tagName;
   if (tag === 'SELECT' || tag === 'INPUT' || tag === 'TEXTAREA') return;
@@ -693,9 +718,27 @@ function frame(now: number): void {
     levelup.show(session.offers(), session.perks, session.xpLevel);
     sfx.play('levelup'); buzz([20, 40, 20]);
   }
-  if (session.state === 'flying') {
+  if (session.boss) {
+    // 보스전 (§22.6): 카메라는 아레나 가운데에 고정. 방향키는 매 프레임
+    const [ox, oy] = session.bossOrigin;
+    cam.centerOn(session.level, ox + ARENA_W / 2, oy + ARENA_H / 2);
+    let kx = 0, ky = 0;
+    if (heldKeys.has('ArrowLeft')) kx -= 1; if (heldKeys.has('ArrowRight')) kx += 1;
+    if (heldKeys.has('ArrowUp')) ky -= 1; if (heldKeys.has('ArrowDown')) ky += 1;
+    if (kx || ky) session.bossNudge(kx * 60, ky * 60);
+    const b = session.boss;
+    if (b.fired !== bossShots) { if (b.fired % 3 === 0) sfx.play('shoot'); bossShots = b.fired; }
+    if (b.hitsTaken !== bossHits) { bossHits = b.hitsTaken; sfx.play('hurt'); buzz(50); field.onAbsorb(); }
+    if (b.phase === 'dying' && bossAlarm !== -2) { bossAlarm = -2; sfx.play('bossdown'); buzz([30, 40, 30, 40, 60]); }
+  } else if (session.state === 'flying') {
     const { x, y, vx, vy } = session.sim.ship;
     cam.follow(session.level, x, y, vx, vy, dt);
+    // 보스 경보: 60초와 10초 전에 사이렌 (§22.6)
+    const cd = session.bossCountdown;
+    if (cd !== null) {
+      const mark = cd <= 10 ? 10 : 60;
+      if (bossAlarm !== mark) { bossAlarm = mark; sfx.play('alarm'); buzz([40, 60, 40]); }
+    } else bossAlarm = -1;
   }
   // 방패로 튕긴 순간 (§22.5)
   if (session.sim.absorbs !== absorbs) {
@@ -783,7 +826,7 @@ function draw(preview: { points: number[]; outcome: string } | null): void {
 
 // HUD 는 플레이 중에만 보인다.
 // 전에는 따로 도는 두 번째 rAF 루프가 매 프레임 스타일을 썼다. 바뀔 때만 쓴다.
-const hudEls = [document.querySelector('.hud.top'), hud.hint, hud.angle, hud.turns, hud.xp, hud.perks] as HTMLElement[];
+const hudEls = [document.querySelector('.hud.top'), hud.hint, hud.angle, hud.turns, hud.xp, hud.perks, hud.boss] as HTMLElement[];
 let hudShown: boolean | null = null;
 function syncHudVisibility(): void {
   const show = !demo && !screens.overlayOpen && !hints.open && !levelup.open;

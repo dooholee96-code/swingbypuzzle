@@ -132,6 +132,21 @@ img.px{image-rendering:pixelated;image-rendering:crisp-edges}
 #perks .pk img{width:24px;height:24px;display:block}
 #perks .pk i{position:absolute;right:-4px;bottom:-4px;font:700 9px/1 var(--text);font-style:normal;
   background:var(--yellow);border:2px solid var(--ink);padding:1px 2px}
+/* 보스전 (§22.6): 가운데 위, 단계 이름 밑. 체력 바는 빨강, 목숨은 하트 */
+/* 가운데 맞춤은 transform 이 아니라 margin 으로 — drop 애니메이션이 transform 을 덮어쓴다 */
+#boss{position:absolute;left:0;right:0;width:max-content;margin:0 auto;top:calc(112px + env(safe-area-inset-top,0px));
+  pointer-events:none;display:flex;align-items:center;gap:8px;padding:5px 10px;
+  background:var(--white);border:3px solid var(--ink);box-shadow:3px 3px 0 var(--ink);
+  animation:drop .4s ease-out both}
+#boss[hidden]{display:none}
+#boss .lb{font:700 12px/1 var(--text)}
+#boss .hp{display:block;width:120px;height:10px;border:2px solid var(--ink);background:var(--gray-light)}
+#boss .hp b{display:block;height:100%;background:var(--red);width:100%}
+#boss .lives{display:flex;gap:3px}
+#boss .lives img{width:14px;height:12px}
+/* 경보: 남은 10초는 깜빡인다. 모션 줄이기면 그대로 */
+#angle.alarm{animation:blink .5s steps(2) infinite;background:var(--yellow)}
+@keyframes blink{50%{background:var(--red)}}
 /* 레벨업 카드 (§22.5): 세로로 셋. 받은 단계는 ●, 지금 받을 단계는 노랑 */
 #levelup .panel{text-align:center}
 #levelup .cards{display:flex;flex-direction:column;gap:10px}
