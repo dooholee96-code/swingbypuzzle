@@ -59,9 +59,11 @@ export class Hud {
   constructor() {
     this.retry.addEventListener('click', () => this.onRetry());
     this.back.addEventListener('click', () => this.onOpenPicker());
-    // 실패 결과는 화면 아무 곳이나 탭해도 재시도 (§13.4)
+    // 실패 결과는 화면 아무 곳이나 탭해도 재시도 (§13.4). **성공에는 걸지 않는다** —
+    // 궤적을 보려고 탭했다가 단계가 다시 시작되면 "다음 단계" 를 잃는다
     this.result.addEventListener('pointerdown', (e) => {
       if ((e.target as HTMLElement).closest('button')) return;
+      if (!this.result.classList.contains('lose')) return;
       this.onRetry();
     });
   }
@@ -90,12 +92,13 @@ export class Hud {
     set(this.angle, s.state === 'aiming' && s.aimFar
       ? t('hud.angle', { deg: toUi(s.angle).toFixed(1) })
       : s.docked ? t('hud.dockTap') : '');
-    // 남은 분사: 바뀔 때만 다시 쓴다
-    const key = `${s.turnsLeft}/${s.turnSlots}`;
+    // 남은 분사: 바뀔 때만 다시 쓴다. 글자도 키에 넣는다 — 언어를 바꾸면 따라 바뀌게
+    const label = t('hud.turns');
+    const key = `${s.turnsLeft}/${s.turnSlots}/${label}`;
     if (key !== this.turnsKey) {
       this.turnsKey = key;
       this.turns.hidden = s.turnSlots === 0;
-      this.turns.innerHTML = `<span class="lb">${t('hud.turns')}</span>`
+      this.turns.innerHTML = `<span class="lb">${label}</span>`
         + Array.from({ length: s.turnSlots }, (_, i) =>
           `<i class="pip${i < s.turnsLeft ? ' on' : ''}"></i>`).join('');
       // 하나 쓸 때마다 판이 튄다 (§12.7)

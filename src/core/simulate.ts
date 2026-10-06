@@ -171,6 +171,9 @@ export class Sim {
   /** 궤도 행성에서 다음 스텝 경계에 나간다 (§22.4). 붙잡혀 있지 않으면 아무 일도 없다 */
   queueRelease(): void { if (this.docked) this.relQueued = true; }
 
+  /** 아직 적용 안 된 나가기가 있는가 — 한 스텝 안의 두 번째 탭은 없는 것으로 */
+  get releasePending(): boolean { return this.relQueued; }
+
   /** 한 스텝. '' = 계속. */
   step(): Outcome | '' {
     if (this.n - this.dockedSteps >= this.maxN) return 'drift';

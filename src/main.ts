@@ -9,7 +9,7 @@ import {
 } from './levels/progress.js';
 import { Camera } from './game/camera.js';
 import { AimInput } from './game/input.js';
-import { Session } from './game/session.js';
+import { END_SECONDS, Session } from './game/session.js';
 import { DOME_DRAW_R, FieldRenderer } from './render/field.js';
 import { drawMinimap, miniRect } from './render/minimap.js';
 import type { MiniRect } from './render/minimap.js';
@@ -107,6 +107,9 @@ const screens = new Screens({
     screens.showSelect();
   },
   onInfinity: () => startInfinity(),
+  // 타이틀이 보이면 뒤에서 데모가 돌아야 한다 (§13.1). 단계 선택·설정에서 타이틀로
+  // 돌아올 때 전에는 멈춘 단계가 그대로 비쳤다
+  onTitle: () => { if (!demo) replayDemo(); },
   infinityOpen: () => TEST_OPEN || save.cleared('6-1'),
   onPick: (id) => startPlay(id),
   onSettingChange: () => { applySettings(); save.touch(); },
@@ -385,6 +388,14 @@ canvas.addEventListener('pointerdown', (e) => {
     tapTurn(...pos(e));
     return;
   }
+  if (session.state === 'ending') {
+    // 실패 연출 중에 탭하면 기다리지 않고 바로 다시 (§13.4 의 "아무 곳이나" 를 연출까지).
+    // 부딪힌 직후 0.3초는 뺀다 — 늦게 떨어진 분사 탭이 재시도로 새지 않게
+    if (!session.world && session.outcome !== 'win' && session.endProgress() * END_SECONDS >= 0.3) {
+      hud.onRetry();
+    }
+    return;
+  }
   if (session.state !== 'ready' && session.state !== 'aiming') return;
   if (glide) snapToStart();          // 누르면 훑어보기는 바로 끝난다
   const [x, y] = pos(e);
@@ -452,7 +463,9 @@ function moveCamTo(x: number, y: number): void {
 // 브라우저 뒤로 가기 → 화면 한 단계 뒤로 (§15.2 의 흐름을 웹으로)
 history.replaceState({ depth: 0 }, '');
 addEventListener('popstate', () => {
-  if (!screens.goBack() && !demo) {
+  // 힌트 시트가 열려 있으면 그것만 닫는다 — 전에는 시트와 멈춘 시계를 남긴 채 단계 선택이 떴다
+  if (hints.open) hints.close();
+  else if (!screens.goBack() && !demo) {
     if (session.world) startDemo(); else screens.showSelect();
   }
   history.pushState({ depth: 1 }, '');
@@ -509,6 +522,28 @@ async function goNext(): Promise<void> {
   startPlay(next);
 }
 
+/**
+ * 결과는 비행이 끝난 **순간** 기록한다. 전에는 0.8초 연출이 끝나고 시트를 띄울 때
+ * 기록했는데, 그 사이에 "다시"·"단계"·뒤로 가기를 누르면 기록이 사라졌다 —
+ * 깬 단계가 클리어로 남지 않고, 실패 횟수가 안 올라 힌트(§14.3)가 열리지 않았다.
+ */
+let infResult: { sec: number; best: number; isBest: boolean } | null = null;
+function recordOutcome(): void {
+  if (session.world) {
+    // 인피니티의 끝: 기록만 남긴다. 단계 기록·광고 횟수에는 넣지 않는다
+    const sec = session.freeSeconds();          // 링에서 쉰 시간은 빼고 (§22.3)
+    const inf = save.data.infinity;
+    const isBest = sec > inf.best;
+    inf.runs++;
+    if (isBest) inf.best = sec;
+    save.touch();
+    infResult = { sec, best: inf.best, isBest };
+    return;
+  }
+  save.record(session.level.id, session.outcome, session.flightSeconds());
+  if (session.outcome === 'win') saveAdState(afterClear(adState()));
+}
+
 // ── 루프 ────────────────────────────────────────────────────────────────
 function frame(now: number): void {
   requestAnimationFrame(frame);
@@ -540,39 +575,33 @@ function frame(now: number): void {
     cam.follow(session.level, x, y, vx, vy, dt);
   }
   stepGlide(dt);
-  // 비행이 끝난 순간 한 번만 소리와 진동
+  // 비행이 끝난 순간 한 번만: 소리·진동, 그리고 **기록**
   if (session.state === 'ending' && !ended) {
     ended = true;
     if (session.outcome === 'win') { sfx.play('arrive'); buzz([25, 60, 25]); }
     else { sfx.play('explode'); buzz(60); }
+    recordOutcome();
   }
   if (session.state !== 'ending') ended = false;
   // 궤도 행성에 붙잡힌 순간 한 번 (§22.4)
   if (session.docked && !wasDocked) { sfx.play('dock'); buzz(20); }
   wasDocked = session.docked;
 
-  if (session.state === 'ending' && session.endProgress() >= 1 && hud.result.hidden && session.world) {
-    // 인피니티의 끝: 기록만 남긴다. 단계 기록·광고 횟수에는 넣지 않는다
-    const sec = session.freeSeconds();          // 링에서 쉰 시간은 빼고 (§22.3)
-    const inf = save.data.infinity;
-    const isBest = sec > inf.best;
-    inf.runs++;
-    if (isBest) inf.best = sec;
-    save.touch();
-    hud.showInfinityResult(sec, inf.best, isBest);
-  }
-  if (session.state === 'ending' && session.endProgress() >= 1 && hud.result.hidden && !session.world) {
-    save.record(session.level.id, session.outcome, session.flightSeconds());
-    if (session.outcome === 'win') saveAdState(afterClear(adState()));
-    const p = {
-      cleared: (id: string) => save.cleared(id),
-      skipped: (id: string) => save.level(id).skipped,
-    };
-    hud.showResult(session, {
-      chapterLast: isChapterLast(session.level.id),
-      last: nextLevel(session.level.id, p) === null,
-      canHint: save.level(session.level.id).fails >= 2,
-    });
+  // 연출이 끝나면 결과 시트. 기록은 위에서 이미 했다
+  if (session.state === 'ending' && session.endProgress() >= 1 && hud.result.hidden) {
+    if (session.world) {
+      if (infResult) hud.showInfinityResult(infResult.sec, infResult.best, infResult.isBest);
+    } else {
+      const p = {
+        cleared: (id: string) => save.cleared(id),
+        skipped: (id: string) => save.level(id).skipped,
+      };
+      hud.showResult(session, {
+        chapterLast: isChapterLast(session.level.id),
+        last: nextLevel(session.level.id, p) === null,
+        canHint: save.level(session.level.id).fails >= 2,
+      });
+    }
   }
 
   hud.refresh(session);

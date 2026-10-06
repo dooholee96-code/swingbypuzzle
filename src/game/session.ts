@@ -88,7 +88,7 @@ export class Session {
 
   /** 궤도 행성에서 다음 스텝 경계에 나간다 (§22.4). 분사를 쓰지 않는다. 나갔으면 true */
   release(): boolean {
-    if (!this.docked) return false;
+    if (!this.docked || this.sim.releasePending) return false;
     this.sim.queueRelease();
     return true;
   }

@@ -227,13 +227,17 @@ export class InfinityWorld {
     return true;
   }
 
-  /** 우주선 자리에서 먹을 수 있는 아이템을 먹는다. 먹은 개수 */
+  /**
+   * 우주선 자리에서 먹을 수 있는 아이템을 먹는다. 먹은 개수.
+   * 매 스텝(초당 240번) 불리므로 먹은 것이 있을 때만 배열을 새로 만든다
+   */
   eat(x: number, y: number): number {
     let n = 0;
+    for (const it of this.items) if (dist(it.x, it.y, x, y) < ITEM_R) n++;
+    if (n === 0) return 0;
     this.items = this.items.filter((it) => {
       if (dist(it.x, it.y, x, y) >= ITEM_R) return true;
       this.eaten.add(it.id);
-      n++;
       return false;
     });
     return n;

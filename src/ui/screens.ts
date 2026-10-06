@@ -40,6 +40,8 @@ export interface ScreenDeps {
   openPrivacyOptions?(): Promise<void>;
   onStart(): void;                 // 타이틀 → 스테이지(단계 선택)
   onInfinity(): void;              // 타이틀 → 인피니티 (§13.8)
+  /** 타이틀이 보일 때마다. 뒤의 데모가 돌고 있지 않으면 다시 돌린다 (§13.1) */
+  onTitle?(): void;
   /** 인피니티가 열렸는가. 6-1 을 깨면 열린다 (§22.3) */
   infinityOpen(): boolean;
   onPick(id: string): void;
@@ -99,6 +101,7 @@ export class Screens {
       language: () => this.showLanguage(),
     });
     this.titleEl.hidden = false;
+    this.d.onTitle?.();
   }
 
   // ── §13.2 단계 선택 ───────────────────────────────────────────────────
