@@ -12,14 +12,18 @@ import type { Level, Outcome, ShipState, SimState } from './types.js';
  * delay 초에 첫 사격, 이후 interval 초마다 시도한다(비행 시계 기준).
  * 시도 시점에 우주선이 range 안이면 그 순간 위치를 향해 쏜다(예측 사격 없음).
  */
-export function fireUfos(L: Level, st: SimState, ship: ShipState, ft: number): void {
+export function fireUfos(
+  L: Level, st: SimState, ship: ShipState, ft: number, bulletScale = 1,
+): void {
   const ufos = L.ufos ?? [];
   for (let i = 0; i < ufos.length; i++) {
     const u = ufos[i]!;
     while (ft >= st.nextFire[i]!) {
       const dx = ship.x - u.x, dy = ship.y - u.y, d = Math.sqrt(dx * dx + dy * dy);
       if (d < u.range) {
-        st.bullets.push({ x: u.x, y: u.y, vx: dx / d * u.bs, vy: dy / d * u.bs, age: 0 });
+        // bulletScale 은 인피니티의 패시브(§22.5). 1 이면 곱해도 값이 그대로다
+        const bs = bulletScale === 1 ? u.bs : u.bs * bulletScale;
+        st.bullets.push({ x: u.x, y: u.y, vx: dx / d * bs, vy: dy / d * bs, age: 0 });
       }
       st.nextFire[i]! += u.interval;
     }

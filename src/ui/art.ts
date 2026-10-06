@@ -4,6 +4,8 @@
 import { holeArtRadius } from '../render/field.js';
 import { toDataUrl } from '../render/sprites/bake.js';
 import { type Face, rocket, small, ufo } from '../render/sprites/rocket.js';
+import { fromRows } from '../render/sprites/pixel.js';
+import type { OfferKind } from '../tools-shared/perks.js';
 import { blackhole, dockArt, moon, planet, rock } from '../render/sprites/world.js';
 import type { IntroKey } from './intro.js';
 
@@ -36,4 +38,48 @@ export function introArt(key: IntroKey): string {
 
 export function img(src: string, alt = '', cls = 'px'): string {
   return `<img class="${cls}" src="${src}" alt="${alt}" draggable="false">`;
+}
+
+/** 레벨업 카드의 패시브 그림 (§22.5). 12×12, 팔레트 키만 (§12.6) */
+const PERK_ROWS: Readonly<Record<OfferKind, readonly string[]>> = {
+  boost: [
+    '.....OO.....', '....OOOO....', '....OCCO....', '....OCCO....', '...LOOOOL...', '..LLOOOOLL..',
+    '..L.OOOO.L..', '....OOOO....', '.....YY.....', '....YyyY....', '...Y.YY.Y...', '....Y..Y....',
+  ],
+  turn: [
+    '............', '.......W....', '......WW....', '.....WWWWW..', '....WW..WW..', '...WW....W..',
+    '..WW.....W..', '..W......W..', '..W.....WW..', '..WW...WW...', '...WWWWW....', '............',
+  ],
+  recharge: [
+    '....KKKK....', '..KKWWWWKK..', '.KWWWWWWWWK.', '.KWWWWKWWWK.', 'KWWWWWKWWWWK', 'KWWWWWKWWWWK',
+    'KWWWWWKKKWWK', 'KWWWWWWWWWWK', '.KWWWWWWWWK.', '.KWWWWWWWWK.', '..KKWWWWKK..', '....KKKK....',
+  ],
+  magnet: [
+    '..RR....BB..', '..RR....BB..', '..RR....BB..', '..WW....WW..', '..WW....WW..', '..RR....BB..',
+    '..RR....BB..', '..RRR..BBB..', '..RRRRBBBB..', '...RRRBBB...', '....RRBB....', '............',
+  ],
+  shield: [
+    '..BBBBBBBB..', '.BWWBBBBBBB.', 'BWWBBBBBBBBB', 'BWBBBBBBBBBB', 'BBBBBBBBBBBB', 'BBBBBBBBBBBB',
+    'BBBBBBBBBBBB', '.BBBBBBBBBB.', '.BBBBBBBBBB.', '..BBBBBBBB..', '...BBBBBB...', '.....BB.....',
+  ],
+  slowshot: [
+    '............', 'S...........', 'SS..........', '.S..rrrr....', '....rYYYr...', 'S...rYYYYr..',
+    'SS..rYYYr...', '.S..rrrr....', 'S...........', 'SS..........', '............', '............',
+  ],
+  foresight: [
+    '..........YY', '..........YY', '.......YY...', '.......YY...', '....YY......', '....YY......',
+    '.YY.........', '.YY.........', '..OOO.......', '.OCCCO......', '.OCCCO......', '..OOO.......',
+  ],
+  dockwide: [
+    '....LL.LL...', '..L.......L.', '.L.........L', '.L...pp....L', 'L...pPPp....', 'L...pPPp...L',
+    '.L...pp....L', '.L.........L', '..L.......L.', '....LL.LL...', '............', '............',
+  ],
+  refill: [
+    '......LL....', '.....LlL....', '....KOOK....', '....KOOoK...', '...KOOoK....', '...KOoK.....',
+    '..KOOK......', '..KOoK......', '.KOoK.......', '.Ko.........', 'K...........', '............',
+  ],
+};
+
+export function perkIcon(kind: OfferKind): string {
+  return once(`perk:${kind}`, () => toDataUrl(fromRows(PERK_ROWS[kind])));
 }

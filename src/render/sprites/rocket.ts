@@ -97,6 +97,10 @@ export const SMALL = {
   dust0: ['.WW.', 'WwwW', 'WwwW', '.WW.'],
   dust1: ['.W..W.', 'W.ww.W', '.w..w.', 'W.ww.W', '.W..W.'],
   dot: ['YY', 'YY'],
+  // 비행 중 예측선 (§22.5 앞길 보기): 한 단계 물러난 색
+  dot2: ['SS', 'SS'],
+  // 방패 (§22.5): 우주선 둘레의 점 — 링은 field 가 돌려 찍는다
+  shieldDot: ['.B.', 'BWB', '.B.'],
   trail: ['W'],
   xmark: ['R...R', '.R.R.', '..R..', '.R.R.', 'R...R'],
   zz: ['KKK.', '..K.', '.K..', 'KKK.'],

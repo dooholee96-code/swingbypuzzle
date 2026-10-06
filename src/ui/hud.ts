@@ -7,7 +7,8 @@ import type { Outcome } from '../core/types.js';
 import type { Session } from '../game/session.js';
 import { type Key, t } from '../i18n/index.js';
 import { levelHint, levelName } from '../i18n/levels.js';
-import { img, rabbitIcon } from './art.js';
+import { img, perkIcon, rabbitIcon } from './art.js';
+import { PERK_KINDS } from '../tools-shared/perks.js';
 
 /** §13.4 결과 화면 문구의 키. 성공에는 조언이 없다 */
 export const RESULT: Readonly<Record<Outcome, readonly [Key, Key | null]>> = {
@@ -41,6 +42,11 @@ export class Hud {
   /** 남은 분사 (§22.1). 분사가 있는 단계에서만 보인다 */
   readonly turns = $('turns');
   private turnsKey = '';
+  /** 경험치 바와 레벨, 받은 패시브 줄 (§22.5). 인피니티에서만 */
+  readonly xp = $('xp');
+  readonly perks = $('perks');
+  private xpKey = '';
+  private perksKey = '';
   private readonly hintBtn = $('hintbtn');
   /** 인피니티(§22.3)의 최고 기록(초). main 이 판을 시작할 때 넣는다 */
   infBest = 0;
@@ -109,6 +115,30 @@ export class Hud {
     }
     // 첫 시도의 ready 상태에서만 레벨 hint (§13.3)
     set(this.hint, s.firstTry && s.state === 'ready' ? (levelHint(s.level) ?? '') : '');
+    this.refreshPerks(s);
+  }
+
+  /** 경험치 바·레벨·패시브 줄. 바뀔 때만 DOM 에 쓴다 */
+  private refreshPerks(s: Session): void {
+    const on = !!s.world;
+    if (this.xp.hidden === on) { this.xp.hidden = !on; this.perks.hidden = !on; }
+    if (!on) return;
+    const span = Math.max(1e-9, s.xpNext - s.xpPrev);
+    const frac = Math.max(0, Math.min(1, (s.xp - s.xpPrev) / span));
+    const pct = Math.round(frac * 50) * 2;                 // 2% 단위 — 매 프레임 쓰지 않게
+    const key = `${s.xpLevel}/${pct}`;
+    if (key !== this.xpKey) {
+      this.xpKey = key;
+      (this.xp.querySelector('b') as HTMLElement).style.width = `${pct}%`;
+      set(this.xp.querySelector('.lv') as HTMLElement, t('hud.level', { n: s.xpLevel }));
+    }
+    const pk = PERK_KINDS.map((k) => s.perks[k]).join('');
+    if (pk !== this.perksKey) {
+      this.perksKey = pk;
+      this.perks.innerHTML = PERK_KINDS.filter((k) => s.perks[k] > 0)
+        .map((k) => `<span class="pk">${img(perkIcon(k))}<i>${s.perks[k]}</i></span>`).join('');
+      this.perks.hidden = this.perks.innerHTML === '';
+    }
   }
 
   showResult(

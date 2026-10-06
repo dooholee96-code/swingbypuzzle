@@ -14,6 +14,7 @@ import type { Grav, Level, Outcome } from '../core/types.js';
 import type { Camera } from '../game/camera.js';
 import { END_SECONDS, type Session } from '../game/session.js';
 import { C } from './palette.js';
+import { sameDock } from '../core/simulate.js';
 import { type Baked, SpriteCache, put, putScaled } from './sprites/bake.js';
 import { Spring } from './spring.js';
 import { type Grid, grid, set } from './sprites/pixel.js';
@@ -95,6 +96,10 @@ export class FieldRenderer {
   /** 궤도 행성에서 나간 순간 */
   onRelease(): void { if (!this.reduceMotion) this.shipS.kick(4.5); }
 
+  // 방패로 튕긴 순간 (§22.5): 우주선이 출렁이고 둘레에 반짝임
+  private absorbAt = -1;
+  onAbsorb(): void { this.absorbAt = this.lastT; if (!this.reduceMotion) this.shipS.kick(5); }
+
   /** 단계마다 크기가 다른 그림은 단계를 바꿀 때 버린다. 로켓·효과는 남긴다. */
   rebuild(L: Level): void {
     if (this.levelId) this.cache.dropPrefix(`L:`);
@@ -107,6 +112,7 @@ export class FieldRenderer {
     this.prevState = '';
     this.turnReq = null;
     this.puff = null;
+    this.absorbAt = -1;
   }
 
   /** 상태가 바뀐 순간과 중력 범위에 들어선 순간에 용수철을 튕긴다 */
@@ -215,8 +221,40 @@ export class FieldRenderer {
     this.bullets(ctx, s);
     this.pad(ctx, s);
     if (preview) this.preview(ctx, preview, t);
+    this.foresight(ctx, s, t);
     this.turnPuff(ctx, t);
     this.ship(ctx, s, t);
+    this.shield(ctx, s, t);
+  }
+
+  /** 앞길 보기 (§22.5): 날면서 지금 상태에서 몇 초 앞까지. 조준 예측선과 같은 함수, 물러난 색 */
+  private foresight(ctx: CanvasRenderingContext2D, s: Session, t: number): void {
+    const sec = s.values.foresight;
+    if (!sec || s.state !== 'flying' || s.sim.docked) return;
+    const pr = s.sim.predictRelease(s.level, s.sim.ship, s.sim.time, sec);
+    const pts = pr.points, n = pts.length / 2;
+    const spacing = 8;
+    const phase = this.reduceMotion ? 0 : Math.floor((t * 34) % spacing);
+    const dot = this.fx('dot2');
+    for (let i = phase; i < n; i += spacing) put(ctx, dot, pts[i * 2]!, pts[i * 2 + 1]!);
+    if (pr.outcome) put(ctx, this.fx('xmark'), pts[(n - 1) * 2]!, pts[(n - 1) * 2 + 1]!);
+  }
+
+  /** 방패 (§22.5): 남은 횟수만큼 점을 돌린다. 무적 중엔 빠르게, 튕긴 직후엔 반짝임 */
+  private shield(ctx: CanvasRenderingContext2D, s: Session, t: number): void {
+    if (!s.world || (s.state !== 'flying' && s.state !== 'ending')) return;
+    const n = s.sim.mods.shield, inv = s.sim.invuln > 0;
+    const age = this.absorbAt < 0 ? 99 : t - this.absorbAt;
+    if (n <= 0 && !inv && age > 0.4) return;
+    const [x, y] = s.shipPos();
+    const dots = Math.max(n, 1) * 4;
+    const spin = this.reduceMotion ? 0 : t * (inv ? 9 : 2.2);
+    const d = this.fx(inv || n <= 0 ? 'sparkle1' : 'shieldDot');
+    const R = 15 + (age < 0.4 ? Math.round((0.4 - age) * 20) : 0);
+    for (let i = 0; i < dots; i++) {
+      const q = spin + i * Math.PI * 2 / dots;
+      put(ctx, d, x + Math.cos(q) * R, y + Math.sin(q) * R);
+    }
   }
 
   /** 분사 연기(0.35초, 뒤로 퍼지며 커지는 네 덩이)와 탭 지점 반짝임(0.25초) */
@@ -324,7 +362,7 @@ export class FieldRenderer {
     const cur = s.sim.docked?.dock ?? null;
     for (const d of L.docks ?? []) {
       if (!this.seen(d.x, d.y, d.cr + 4)) continue;
-      const lit = d === cur && !this.reduceMotion && Math.floor(t * 4) % 2 === 0;
+      const lit = sameDock(d, cur) && !this.reduceMotion && Math.floor(t * 4) % 2 === 0;
       put(ctx, this.lv(`dockring:${d.cr}:${lit ? 1 : 0}`, () => dockRing(d.cr, lit ? 'W' : 'L')), d.x, d.y);
       const k = this.dockS.get(d)?.x ?? 0;
       putScaled(ctx, this.lv(`dock:${d.r}:${d.sides % 6}`, () => planet(d.r, (d.sides % 6 + 4) % 6, { face: true })),
@@ -472,6 +510,8 @@ export class FieldRenderer {
         return;
       }
       const flame = this.reduceMotion ? 0 : Math.floor(t * 15) % 2;
+      // 무적 중(§22.5 방패)에는 깜빡인다 — 모션 줄이기면 그대로 보인다
+      if (s.sim.invuln > 0 && !this.reduceMotion && Math.floor(t * 12) % 3 === 0) return;
       // 발사 순간 진행 방향으로 늘어났다가 출렁이며 돌아온다
       const k = this.shipS.x;
       putScaled(ctx, this.rocket('fly', a, { flame, ears: 'back' }),

@@ -19,6 +19,7 @@ import type { MiniRect } from './render/minimap.js';
 import { Hud } from './ui/hud.js';
 import { InfinityWorld } from './tools-shared/infinity.js';
 import { HintSheet } from './ui/hints.js';
+import { LevelUpSheet } from './ui/levelup.js';
 import { seenKey } from './ui/intro.js';
 import { type InfinityMode, Screens } from './ui/screens.js';
 import { dailySeed, dayKey, shortDate } from './tools-shared/daily.js';
@@ -67,6 +68,7 @@ let ended = false;               // 이번 비행의 끝 소리를 이미 냈는
 let glide: { t: number; fx: number; fy: number; tx: number; ty: number } | null = null;
 const GLIDE_HOLD = 0.6, GLIDE_MOVE = 0.9;
 let paused = false;                // 힌트 시트가 열려 있으면 단계 시계를 멈춘다 (§13.5)
+let absorbs = 0;                   // 지난 프레임까지 방패로 튕긴 횟수 (§22.5)
 let ads: AdProvider = new NoAdProvider();
 const started = performance.now();
 
@@ -158,6 +160,10 @@ const hints = new HintSheet({
   },
   setPaused: (on) => { paused = on; session.pauseReset(); },
 });
+
+// 레벨업 카드 (§22.5). 세션이 멈춰 있는 동안 떠 있고, 고르면 바로 이어 난다
+const levelup = new LevelUpSheet();
+levelup.onPick = (kind) => { session.pick(kind); sfx.play('pick'); };
 
 function adState(): { clearsSinceInterstitial: number;
   lastInterstitialAt: number | null; lastRewardedAt: number | null } {
@@ -300,6 +306,7 @@ function loadInto(id: string): void {
   field.rebuild(session.level);
   hud.hideResult();
   hints.close();
+  levelup.close();
   panning = false;
   applyHints();
   resize();
@@ -367,6 +374,8 @@ function startInfinity(mode: InfinityMode = 'random'): void {
   hud.infBest = mode === 'daily' ? dailyRecord().best : save.data.infinity.best;
   hud.hideResult();
   hints.close();
+  levelup.close();
+  absorbs = 0;
   panning = false;
   resize();
   snapToStart();
@@ -402,7 +411,7 @@ canvas.addEventListener('pointerdown', (e) => {
   // 두 번째 손가락이 조준을 처음부터 다시 시작하거나, 그 손가락을 떼는 순간
   // 발사되지 않게 한다. 조준은 한 손가락이다.
   if (!e.isPrimary || dragMode) return;
-  if (demo || screens.overlayOpen || hints.open || !session.level) return;
+  if (demo || screens.overlayOpen || hints.open || levelup.open || !session.level) return;
   if (session.state === 'flying') {
     // 궤도 행성에서 도는 중이면 탭은 "나가기"다 (§22.4). 분사를 쓰지 않는다
     if (session.release()) { sfx.play('launch'); buzz(15); field.onRelease(); return; }
@@ -495,6 +504,12 @@ addEventListener('keydown', (e) => {
   const tag = (document.activeElement as HTMLElement | null)?.tagName;
   if (tag === 'SELECT' || tag === 'INPUT' || tag === 'TEXTAREA') return;
   if (demo || screens.overlayOpen || hints.open || !session.level) return;
+  if (levelup.open) {
+    // 레벨업 카드: 1·2·3 또는 Enter(첫 카드)
+    if (e.key >= '1' && e.key <= '3') { levelup.choose(Number(e.key) - 1); e.preventDefault(); }
+    else if (e.key === 'Enter') { levelup.choose(0); e.preventDefault(); }
+    return;
+  }
   const st = session.state;
   let used = true;
   if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
@@ -671,10 +686,21 @@ function frame(now: number): void {
 
   if (screens.overlayOpen || paused) { draw(null); return; }
 
+  if (levelup.open) { draw(null); return; }
   session.advance(dt);
+  if (session.levelUpPending && !levelup.open) {
+    // 문턱을 넘은 프레임: 판이 멈춘 채 카드를 띄운다 (§22.5)
+    levelup.show(session.offers(), session.perks, session.xpLevel);
+    sfx.play('levelup'); buzz([20, 40, 20]);
+  }
   if (session.state === 'flying') {
     const { x, y, vx, vy } = session.sim.ship;
     cam.follow(session.level, x, y, vx, vy, dt);
+  }
+  // 방패로 튕긴 순간 (§22.5)
+  if (session.sim.absorbs !== absorbs) {
+    absorbs = session.sim.absorbs;
+    if (absorbs > 0) { sfx.play('shield'); buzz(40); field.onAbsorb(); }
   }
   stepGlide(dt);
   // 비행이 끝난 순간 한 번만: 소리·진동, 그리고 **기록**
@@ -757,10 +783,10 @@ function draw(preview: { points: number[]; outcome: string } | null): void {
 
 // HUD 는 플레이 중에만 보인다.
 // 전에는 따로 도는 두 번째 rAF 루프가 매 프레임 스타일을 썼다. 바뀔 때만 쓴다.
-const hudEls = [document.querySelector('.hud.top'), hud.hint, hud.angle, hud.turns] as HTMLElement[];
+const hudEls = [document.querySelector('.hud.top'), hud.hint, hud.angle, hud.turns, hud.xp, hud.perks] as HTMLElement[];
 let hudShown: boolean | null = null;
 function syncHudVisibility(): void {
-  const show = !demo && !screens.overlayOpen && !hints.open;
+  const show = !demo && !screens.overlayOpen && !hints.open && !levelup.open;
   if (show === hudShown) return;
   hudShown = show;
   for (const el of hudEls) if (el) el.style.visibility = show ? '' : 'hidden';
@@ -791,7 +817,7 @@ if (!import.meta.env.DEV && buildTarget() !== 'itch' && 'serviceWorker' in navig
 // 개발 서버에서만: 브라우저 확인 스크립트가 정확한 각도로 쏘려고 쓴다 (§16.6). 배포 번들에는 없다
 if (import.meta.env.DEV) {
   (window as unknown as { __swingby: unknown }).__swingby = {
-    session, cam, field, startPlay, tapTurn, startInfinity,
+    session, cam, field, startPlay, tapTurn, startInfinity, levelup,
     fire: (deg: number) => { session.setAngle(deg); session.launch(); },
   };
 }

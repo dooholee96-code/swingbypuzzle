@@ -35,6 +35,15 @@ export const MAX_TURNS = 5;
 const debrisP = (ring: number): number => (ring <= 1 ? 0.3 : ring === 2 ? 0.7 : 0.9);
 const rockP = (ring: number): number => (ring <= 1 ? 0.55 : 0.85);
 
+/**
+ * 칸을 만들 때의 보정 (§22.5).
+ *   threat    — 시간 위협 단계(1분마다 +1). 블랙홀·외계인·파편이 늘고 외계인이 빨리 쏜다.
+ *               이미 만든 칸은 그대로다 — 창을 갈아 끼우며 새로 만드는 칸만 읽는다.
+ *   dockScale — 포획 링 배율(패시브). 바뀌면 칸을 다시 만든다(InfinityWorld.setDockScale).
+ * 둘 다 기본값이면 난수를 부르는 순서·횟수가 그대로라 칸이 전과 똑같다.
+ */
+export interface ChunkOpts { threat?: number; dockScale?: number }
+
 /** 분사 아이템 (§22.3). 먹으면 분사 +1 */
 export interface Item { id: string; x: number; y: number }
 
@@ -71,10 +80,12 @@ export function chunkOf(x: number, y: number): [number, number] {
  *
  * 멀어질수록(ring) 블랙홀·공전 행성·외계인이 차례로 섞인다.
  */
-export function makeChunk(seed: number, cx: number, cy: number): Chunk {
+export function makeChunk(seed: number, cx: number, cy: number, opts: ChunkOpts = {}): Chunk {
   const rnd = mulberry32(chunkSeed(seed, cx, cy));
   const pick = (lo: number, hi: number): number => lo + rnd() * (hi - lo);
   const ring = Math.max(Math.abs(cx), Math.abs(cy));
+  const th = Math.max(0, opts.threat ?? 0);
+  const dockK = opts.dockScale ?? 1;
   const x0 = ORIGIN + cx * CHUNK - CHUNK / 2, y0 = ORIGIN + cy * CHUNK - CHUNK / 2;
   const out: Chunk = { cx, cy, planets: [], holes: [], rocks: [], ufos: [], items: [], docks: [] };
 
@@ -85,9 +96,13 @@ export function makeChunk(seed: number, cx: number, cy: number): Chunk {
     [subs[i], subs[j]] = [subs[j]!, subs[i]!];
   }
   const gravN = rnd() < 0.55 ? 2 : 1;
-  const holeP = ring >= 2 ? Math.min(0.12 + 0.03 * ring, 0.3) : 0;
+  // 시간 위협: 분마다 블랙홀 +3%, 외계인 +5%(3번째 링부터 2번째 링으로도), 파편 +5%
+  const holeP = ring >= 2 ? Math.min(0.12 + 0.03 * ring + 0.03 * th, 0.4) : 0;
   const orbitP = ring >= 2 ? Math.min(0.08 + 0.02 * ring, 0.2) : 0;
-  const ufoP = ring >= 3 ? Math.min(0.12 + 0.03 * ring, 0.35) : 0;
+  const ufoP = ring >= 3 || (ring >= 2 && th >= 1)
+    ? Math.min(0.12 + 0.03 * ring + 0.05 * th, 0.5) : 0;
+  const debrisTh = Math.min(0.95, debrisP(ring) + 0.05 * th);
+  const fireK = Math.max(0.5, 1 - 0.1 * th);
   const itemP = Math.max(0.42 - 0.02 * ring, 0.22);
   // 궤도 행성(§22.4): 쉬면서 방향을 고르는 자리. 출발 칸 밖부터, 칸마다 하나까지
   const dockP = ring >= 1 ? 0.22 : 0;
@@ -122,13 +137,16 @@ export function makeChunk(seed: number, cx: number, cy: number): Chunk {
     if (dockN === 0 && rnd() < dockP && clear(80)) {
       // 흔들지 않는다: 작은 칸 가운데에서 모서리 파편(±15)까지 141 − 21 = 120 ≥ 링 50 + 파편 14 + 6
       const r = Math.round(pick(16, 20));
-      out.docks.push({ x: Math.round(scx), y: Math.round(scy), r, cr: r + 30, sides: Math.floor(pick(0, 6)) });
+      out.docks.push({
+        x: Math.round(scx), y: Math.round(scy), r, cr: Math.round((r + 30) * dockK), sides: Math.floor(pick(0, 6)),
+      });
       dockN++;
       return;
     }
     if (roll < ufoP && clear(60)) {
       out.ufos.push({
-        x, y, range: Math.round(pick(140, 180)), interval: Math.round(pick(9, 13)) / 10,
+        x, y, range: Math.round(pick(140, 180)),
+        interval: Math.round(pick(9, 13) * fireK) / 10,
         delay: Math.round(pick(2, 8)) / 10, bs: Math.round(pick(220, 250)),
       });
       return;
@@ -147,7 +165,7 @@ export function makeChunk(seed: number, cx: number, cy: number): Chunk {
   // 쓰면 그 사이 경계선이 곧은 통로로 남는다 — 재 보니 3000 유닛 넘게 아무것도 안 걸리는
   // 직선이 나왔다(tests/infinity.test.ts)
   for (const [px, py] of [[x0, y0], [x0 + 200, y0], [x0, y0 + 200], [x0 + 200, y0 + 200]] as const) {
-    if (rnd() > debrisP(ring)) continue;
+    if (rnd() > debrisTh) continue;
     // 흔들기는 ±15 까지. 이웃 칸(내용을 모른다)의 물체와도 겹치지 않는 한도다 —
     // 작은 칸 가운데(±50)에서 모서리까지 141 − 71 − 21 = 49 ≥ 행성 28 + 파편 14 + 6
     const x = Math.round(px + pick(-15, 15)), y = Math.round(py + pick(-15, 15));
@@ -168,6 +186,9 @@ export class InfinityWorld {
   private eaten = new Set<string>();
   private cache = new Map<string, Chunk>();
   private at: [number, number] | null = null;
+  private last: [number, number] = [ORIGIN, ORIGIN];
+  /** 칸을 만들 때의 보정 (§22.5). threat 는 세션이 분마다 올린다 */
+  readonly opts: ChunkOpts = {};
 
   constructor(readonly seed: number) {
     this.level = {
@@ -189,7 +210,7 @@ export class InfinityWorld {
     const k = `${cx},${cy}`;
     let c = this.cache.get(k);
     if (!c) {
-      c = makeChunk(this.seed, cx, cy);
+      c = makeChunk(this.seed, cx, cy, this.opts);
       this.cache.set(k, c);
       // 아주 먼 칸은 잊는다. 다시 오면 같은 모양으로 다시 만든다(먹은 아이템은 기억한다)
       if (this.cache.size > 200) {
@@ -207,6 +228,7 @@ export class InfinityWorld {
    * 부른 쪽이 Sim.refreshBodies 와 외계인 사격 시각을 맞춘다.
    */
   sync(x: number, y: number): boolean {
+    this.last = [x, y];
     const [cx, cy] = chunkOf(x, y);
     if (this.at && this.at[0] === cx && this.at[1] === cy) return false;
     this.at = [cx, cy];
@@ -228,15 +250,30 @@ export class InfinityWorld {
   }
 
   /**
-   * 우주선 자리에서 먹을 수 있는 아이템을 먹는다. 먹은 개수.
+   * 포획 링 배율을 바꾼다 (§22.5 패시브). 만든 칸을 전부 버리고 창을 다시 연다 —
+   * 부른 쪽이 Sim.refreshBodies 를 한다. 스텝 경계(레벨업으로 멈춘 동안)에서만 부른다.
+   */
+  setDockScale(k: number): void {
+    if (this.opts.dockScale === k) return;
+    this.opts.dockScale = k;
+    this.cache.clear();
+    this.at = null;
+    this.sync(this.last[0], this.last[1]);
+  }
+
+  /** 시간 위협 단계 (§22.5). 새로 만드는 칸만 읽는다 */
+  setThreat(th: number): void { this.opts.threat = th; }
+
+  /**
+   * 우주선 자리에서 먹을 수 있는 아이템을 먹는다. 먹은 개수. r 은 먹는 반경(당근 자석 §22.5).
    * 매 스텝(초당 240번) 불리므로 먹은 것이 있을 때만 배열을 새로 만든다
    */
-  eat(x: number, y: number): number {
+  eat(x: number, y: number, r = ITEM_R): number {
     let n = 0;
-    for (const it of this.items) if (dist(it.x, it.y, x, y) < ITEM_R) n++;
+    for (const it of this.items) if (dist(it.x, it.y, x, y) < r) n++;
     if (n === 0) return 0;
     this.items = this.items.filter((it) => {
-      if (dist(it.x, it.y, x, y) >= ITEM_R) return true;
+      if (dist(it.x, it.y, x, y) >= r) return true;
       this.eaten.add(it.id);
       return false;
     });

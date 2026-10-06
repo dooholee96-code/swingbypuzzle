@@ -8,7 +8,8 @@
 
 import { DOCK_HOLD_LAPS, DOCK_LAP, DT, MAX_FLIGHT, PAD_R, SHIP_R, TURN_MAX } from './constants.js';
 import { fireUfos, stepBullets } from './hazards.js';
-import { dist, gravs, stepShip } from './physics.js';
+import { INVULN_STEPS, type Mods, defaultMods } from './mods.js';
+import { bodyPos, dist, gravs, stepShip } from './physics.js';
 import type { Dock, Grav, Level, Outcome, ShipState, SimState, Turn, Ufo } from './types.js';
 
 /** 궤도 행성을 도는 각속도(rad/s) */
@@ -21,10 +22,18 @@ const DOCK_LEAVE = 6;
 /** 궤도 행성에 붙잡혀 도는 상태 (§22.4) */
 export interface Docked { dock: Dock; ang: number; dir: 1 | -1; speed: number; since: number }
 
+/**
+ * 같은 궤도 행성인가 — **자리로** 본다. 인피니티는 패시브(포획 링 넓게, §22.5)로 칸을 다시
+ * 만들면 같은 행성이 새 객체가 된다. 객체로 비교하면 방금 나온 링에 바로 다시 잡힌다.
+ */
+export function sameDock(a: Dock | null, b: Dock | null): boolean {
+  return a !== null && b !== null && a.x === b.x && a.y === b.y;
+}
+
 /** 이 위치에서 붙잡을 궤도 행성. 방금 나온 것은 빼고 본다 */
 function dockAt(L: Level, x: number, y: number, leaving: Dock | null): Dock | null {
   for (const d of L.docks ?? []) {
-    if (d !== leaving && dist(d.x, d.y, x, y) < d.cr) return d;
+    if (!sameDock(d, leaving) && dist(d.x, d.y, x, y) < d.cr) return d;
   }
   return null;
 }
@@ -51,14 +60,14 @@ function placeOnOrbit(o: Docked, s: ShipState): void {
  * 분사 (§22.1). 속력은 두고 진행 방향만 dir 쪽으로 돌린다. 차이가 TURN_MAX 를 넘으면
  * TURN_MAX 만큼만. 게임·검증기·리플레이가 모두 이 함수 하나를 쓴다.
  */
-export function applyTurn(s: ShipState, dirDeg: number): void {
+export function applyTurn(s: ShipState, dirDeg: number, max = TURN_MAX): void {
   const speed = Math.sqrt(s.vx * s.vx + s.vy * s.vy);
   if (speed === 0) return;
   const cur = Math.atan2(s.vy, s.vx) * 180 / Math.PI;
   let d = dirDeg - cur;
   d -= 360 * Math.round(d / 360);                    // (−180, 180]
-  if (d > TURN_MAX) d = TURN_MAX;
-  else if (d < -TURN_MAX) d = -TURN_MAX;
+  if (d > max) d = max;
+  else if (d < -max) d = -max;
   const a = (cur + d) * Math.PI / 180;
   s.vx = Math.cos(a) * speed;
   s.vy = Math.sin(a) * speed;
@@ -90,6 +99,15 @@ export class Sim {
   releases: number[] = [];
   /** 붙잡혀 돈 스텝 수. 30초 표류 시계와 인피니티 점수에서 뺀다 */
   dockedSteps = 0;
+  /**
+   * 보정값 (§22.5). 인피니티의 패시브가 여기에 쓴다. 스테이지는 기본값 그대로 —
+   * begin() 이 되돌리지 않으므로 부른 쪽이 비행마다 원하는 값으로 둔다.
+   */
+  mods: Mods = defaultMods();
+  /** 방패로 튕긴 뒤 남은 무적 스텝. 그리는 쪽이 깜빡임에 쓴다 */
+  invuln = 0;
+  /** 이번 비행에서 방패로 튕긴 횟수. 화면이 소리·연출의 순간을 알아채는 데 쓴다 */
+  absorbs = 0;
 
   private L!: Level;
   private G: Grav[] = [];
@@ -131,6 +149,8 @@ export class Sim {
     this.relPlan = releases?.length ? [...releases].sort((a, b) => a - b) : [];
     this.relAt = 0;
     this.leaving = null;
+    this.invuln = 0;
+    this.absorbs = 0;
 
     const a = angleDeg * Math.PI / 180;
     // 돔 표면에서 이륙한다 (§5.9)
@@ -202,19 +222,20 @@ export class Sim {
       return this.orbitStep();
     }
     if (this.queued !== null) {
-      applyTurn(this.ship, this.queued);
+      applyTurn(this.ship, this.queued, this.mods.turnMax);
       this.turns.push({ step: this.n, dir: this.queued });
       this.queued = null;
     }
+    if (this.invuln > 0) this.invuln -= 1;
     const r = stepShip(this.L, this.G, this.ship, this.t);
     this.t += DT;
     this.n += 1;
     if (this.recordPath) this.path.push(this.ship.x, this.ship.y);
-    if (r) return r;
+    if (r && !this.absorb(r)) return r;
     if (this.L.docks?.length) {
       const s = this.ship;
       for (const d of this.L.docks) {
-        if (dist(d.x, d.y, s.x, s.y) < d.r + SHIP_R) return 'planet';
+        if (dist(d.x, d.y, s.x, s.y) < d.r + SHIP_R && !this.absorb('planet')) return 'planet';
       }
       if (this.leaving && dist(this.leaving.x, this.leaving.y, s.x, s.y) > this.leaving.cr + DOCK_LEAVE) {
         this.leaving = null;
@@ -225,11 +246,59 @@ export class Sim {
         placeOnOrbit(this.docked, s);
       }
     }
-    fireUfos(this.L, this.state, this.ship, this.n * DT);
+    fireUfos(this.L, this.state, this.ship, this.n * DT, this.mods.bulletScale);
     const rb = stepBullets(this.L, this.state, this.ship);
-    if (rb) return rb;
+    if (rb && !this.absorb(rb)) return rb;
     if (this.n - this.dockedSteps >= this.maxN) return 'drift';
     return '';
+  }
+
+  /**
+   * 방패 (§22.5). 충돌을 튕겨 낸다 — 부딪힌 것의 중심에서 바깥쪽으로 밀어내고 속도를
+   * 그 법선에 반사한다(속력은 그대로). 횟수가 남아 있거나 무적 중이면 참.
+   * 무적 중의 충돌은 횟수를 쓰지 않는다 — 행성 곁에서 한 번 튕기면 중력이 다시 끌어
+   * 당기므로, 그 1.5초는 분사로 벗어날 시간이다. 벽·표류는 튕길 것이 없다.
+   */
+  private absorb(r: Outcome): boolean {
+    if (r === 'wall' || r === 'drift' || r === 'win') return false;
+    if (this.mods.shield <= 0 && this.invuln <= 0) return false;
+    const s = this.ship;
+    if (r === 'shot') {
+      // 맞은 총알(들)을 지운다
+      const hit = 3 + SHIP_R;
+      this.state.bullets = this.state.bullets.filter((b) => dist(b.x, b.y, s.x, s.y) >= hit);
+    } else {
+      // 부딪힌 것: 그 종류 중 판정 경계에 가장 가까운 것
+      const tt = this.t;
+      let cx = 0, cy = 0, hr = 0, best = Infinity;
+      const see = (x: number, y: number, radius: number): void => {
+        const d = dist(x, y, s.x, s.y) - radius;
+        if (d < best) { best = d; cx = x; cy = y; hr = radius; }
+      };
+      if (r === 'planet') {
+        for (const p of this.L.planets ?? []) { const [px, py] = bodyPos(p, tt); see(px, py, p.r + SHIP_R); }
+        for (const d of this.L.docks ?? []) see(d.x, d.y, d.r + SHIP_R);
+      } else if (r === 'hole') {
+        for (const h of this.L.holes ?? []) see(h.x, h.y, h.rH + 2);
+      } else if (r === 'rock') {
+        for (const a of this.L.rocks ?? []) see(a.x, a.y, a.r * 0.85 + SHIP_R);
+      } else {
+        for (const u of this.L.ufos ?? []) see(u.x, u.y, 13 + SHIP_R);
+      }
+      if (!Number.isFinite(best)) return false;
+      let nx = s.x - cx, ny = s.y - cy;
+      const len = Math.sqrt(nx * nx + ny * ny);
+      if (len < 1e-9) { nx = -s.vx; ny = -s.vy; } else { nx /= len; ny /= len; }
+      const nl = Math.sqrt(nx * nx + ny * ny);
+      nx /= nl; ny /= nl;
+      s.x = cx + nx * (hr + 1);
+      s.y = cy + ny * (hr + 1);
+      const vn = s.vx * nx + s.vy * ny;
+      if (vn < 0) { s.vx -= 2 * vn * nx; s.vy -= 2 * vn * ny; }
+    }
+    if (this.invuln <= 0) { this.mods.shield -= 1; this.absorbs += 1; }
+    this.invuln = INVULN_STEPS;
+    return true;
   }
 
   /** 붙잡혀 도는 한 스텝. 중력은 받지 않고, 총알은 맞는다 */
@@ -240,9 +309,11 @@ export class Sim {
     this.t += DT;
     this.n += 1;
     this.dockedSteps += 1;
+    if (this.invuln > 0) this.invuln -= 1;
     if (this.recordPath) this.path.push(this.ship.x, this.ship.y);
-    fireUfos(this.L, this.state, this.ship, this.n * DT);
-    return stepBullets(this.L, this.state, this.ship);
+    fireUfos(this.L, this.state, this.ship, this.n * DT, this.mods.bulletScale);
+    const rb = stepBullets(this.L, this.state, this.ship);
+    return rb && this.absorb(rb) ? '' : rb;
   }
 
   /** 전체 비행. 결과 문자열을 반환한다. turns 는 정답·리플레이의 분사 기록 (§22.1). */

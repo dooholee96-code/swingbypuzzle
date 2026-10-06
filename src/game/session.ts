@@ -4,10 +4,15 @@
 
 import { DT } from '../core/constants.js';
 import { padAngle } from '../core/angle.js';
+import { defaultMods } from '../core/mods.js';
 import { Sim, launchPos } from '../core/simulate.js';
 import type { Preview } from '../core/simulate.js';
 import type { Level, Outcome } from '../core/types.js';
-import { type InfinityWorld, MAX_TURNS } from '../tools-shared/infinity.js';
+import type { InfinityWorld } from '../tools-shared/infinity.js';
+import {
+  CARROT_XP, type OfferKind, type PerkLevels, type PerkValues, noPerks, offerPerks, perkValues,
+  raise, threatOf, xpForLevel,
+} from '../tools-shared/perks.js';
 import { Clock } from './clock.js';
 
 export type State = 'ready' | 'aiming' | 'flying' | 'ending';
@@ -32,8 +37,16 @@ export class Session {
   bonusTurns = 0;
   /** 인피니티(§22.3)면 그 우주. 스테이지에서는 null */
   world: InfinityWorld | null = null;
-  /** 이번 판에 먹은 분사 아이템 수. 화면이 바뀐 순간을 알아채려고 센다 */
+  /** 이번 판에 먹은 당근 수. 경험치이자(§22.5) 화면이 바뀐 순간을 알아채는 수 */
   itemsEaten = 0;
+  /** 인피니티의 패시브 (§22.5). 스테이지에서는 비어 있다 */
+  perks: PerkLevels = noPerks();
+  values: PerkValues = perkValues(this.perks);
+  /** 인피니티의 레벨(경험치). 단계 객체 `level` 과 다르다 */
+  xpLevel = 1;
+  /** 아직 고르지 않은 레벨업 수. 0 이 아니면 advance() 가 멈춘다 — 카드를 고를 때까지 */
+  pendingLevels = 0;
+  private rechargeAcc = 0;
 
   trail: number[] = [];
   prevTrail: number[] = [];
@@ -48,11 +61,21 @@ export class Session {
     this.world = world;
     this.sim.endless = true;
     this.itemsEaten = 0;
+    this.perks = noPerks();
+    this.xpLevel = 1;
+    this.pendingLevels = 0;
+    this.rechargeAcc = 0;
+    this.applyPerks();
+    this.turnsLeft = this.maxTurns;
   }
 
   setup(L: Level): void {
     this.world = null;
     this.sim.endless = false;
+    this.sim.mods = defaultMods();         // 스테이지는 보정값 없이 (§22.5)
+    this.perks = noPerks();
+    this.values = perkValues(this.perks);
+    this.pendingLevels = 0;
     this.level = L;
     this.angle = padAngle(L);       // 돔 중심에서 시작
     this.prevTrail = [];
@@ -74,10 +97,46 @@ export class Session {
     this.turnsLeft = this.maxTurns;
   }
 
-  get maxTurns(): number { return (this.level.turns ?? 0) + this.bonusTurns; }
+  /** 분사 최대. 인피니티는 패시브(§22.5)가 올린다 */
+  get maxTurns(): number {
+    return (this.world ? this.values.maxTurns : (this.level.turns ?? 0)) + this.bonusTurns;
+  }
 
-  /** HUD 의 칸 수. 인피니티는 아이템으로 MAX_TURNS 까지 찬다 */
-  get turnSlots(): number { return this.world ? MAX_TURNS + this.bonusTurns : this.maxTurns; }
+  /** HUD 의 칸 수 */
+  get turnSlots(): number { return this.maxTurns; }
+
+  // ── 경험치·레벨업 (§22.5) ─────────────────────────────────────────
+  /** 경험치 = 버틴 초 + 당근 × CARROT_XP. 스테이지는 0 */
+  get xp(): number { return this.world ? this.freeSeconds() + this.itemsEaten * CARROT_XP : 0; }
+  get xpPrev(): number { return xpForLevel(this.xpLevel); }
+  get xpNext(): number { return xpForLevel(this.xpLevel + 1); }
+  get levelUpPending(): boolean { return this.pendingLevels > 0; }
+
+  /** 지금 레벨업의 카드 셋. 판 시드와 레벨로 정해진다 */
+  offers(): OfferKind[] {
+    return this.world ? offerPerks(this.world.seed, this.xpLevel, this.perks) : [];
+  }
+
+  /** 카드를 고른다. 패시브를 올리고 물리 보정값에 반영한다 */
+  pick(kind: OfferKind): void {
+    if (!this.world || this.pendingLevels <= 0) return;
+    this.pendingLevels--;
+    if (kind === 'refill') { this.turnsLeft = this.maxTurns; }
+    else {
+      this.perks = raise(kind, this.perks);
+      this.applyPerks();
+      if (kind === 'boost') this.turnsLeft = Math.min(this.maxTurns, this.turnsLeft + 1);
+      if (kind === 'dockwide') { this.world.setDockScale(this.values.dockScale); this.sim.refreshBodies(); }
+    }
+    this.clock.reset();                    // 멈춘 동안 쌓인 시간을 버린다
+  }
+
+  private applyPerks(): void {
+    this.values = perkValues(this.perks);
+    this.sim.mods.turnMax = this.values.turnMax;
+    this.sim.mods.bulletScale = this.values.bulletScale;
+    this.sim.mods.shield = this.perks.shield;
+  }
 
   /**
    * 분사 (§22.1). 비행 중이고 남아 있으면 다음 스텝 경계에서 dirDeg 쪽으로 꺾는다.
@@ -155,6 +214,7 @@ export class Session {
   /** 한 프레임. 고정 스텝 누산기가 스텝 수를 정한다 (§5.8). */
   advance(delta: number): void {
     if (this.state === 'ending') { this.endElapsed += delta; return; }
+    if (this.pendingLevels > 0) return;    // 카드를 고를 때까지 멈춘다 (§22.5)
     const n = this.clock.steps(delta);
     for (let i = 0; i < n; i++) {
       if (this.step()) break;              // 결과가 나오면 남은 스텝을 버린다
@@ -173,14 +233,22 @@ export class Session {
       return true;
     }
     if (this.world) {
-      // 칸을 넘었으면 창을 갈아 끼우고, 지나가며 아이템을 먹는다 (§22.3)
+      // 칸을 넘었으면 창을 갈아 끼우고, 지나가며 당근을 먹는다 (§22.3). 당근은 경험치다 (§22.5)
       const { x, y } = this.sim.ship;
+      this.world.setThreat(threatOf(this.freeSeconds()));
       if (this.world.sync(x, y)) this.sim.refreshBodies();
-      const n = this.world.eat(x, y);
-      if (n) {
-        this.itemsEaten += n;
-        this.turnsLeft = Math.min(this.turnSlots, this.turnsLeft + n);   // ?turns 몫까지 담는다
+      this.itemsEaten += this.world.eat(x, y, this.values.magnetR);
+      // 방패를 썼으면 패시브 쪽 횟수도 맞춘다 — 그래야 카드에서 다시 받을 수 있다
+      if (this.perks.shield !== this.sim.mods.shield) this.perks.shield = this.sim.mods.shield;
+      // 재충전: 분사가 모자랄 때만 센다
+      if (this.values.rechargeSteps > 0) {
+        if (this.turnsLeft >= this.maxTurns) this.rechargeAcc = 0;
+        else if (++this.rechargeAcc >= this.values.rechargeSteps) { this.rechargeAcc = 0; this.turnsLeft++; }
       }
+      // 레벨업: 문턱을 넘으면 이번 프레임은 여기서 멈춘다
+      const xp = this.xp;
+      while (xp >= xpForLevel(this.xpLevel + 1)) { this.xpLevel++; this.pendingLevels++; }
+      if (this.pendingLevels > 0) return true;
     }
     if (this.sim.flightStep % TRAIL_EVERY === 0) {
       this.trail.push(this.sim.ship.x, this.sim.ship.y);

@@ -7,7 +7,8 @@
 // 정책 때문이고, 만들어도 suspended 로 시작해 경고만 남는다.
 // 화면이 숨겨지면 음소거한다(§15.3).
 
-export type Sfx = 'launch' | 'enterField' | 'shoot' | 'explode' | 'arrive' | 'tick' | 'boost' | 'dock';
+export type Sfx = 'launch' | 'enterField' | 'shoot' | 'explode' | 'arrive' | 'tick' | 'boost' | 'dock'
+  | 'shield' | 'levelup' | 'pick';
 
 export class Audio {
   enabled = true;
@@ -58,6 +59,12 @@ export class Audio {
       case 'boost': return this.tone(320, 760, 0.12, 'sawtooth', 0.4);
       // 궤도 행성에 붙잡힘: 부드럽게 내려앉는 소리 (§22.4)
       case 'dock': return this.tone(660, 330, 0.22, 'triangle', 0.6);
+      // 방패로 튕김 (§22.5): 둔탁하게 울리는 소리
+      case 'shield': return this.tone(220, 110, 0.25, 'square', 0.5);
+      // 레벨업: 올라가는 세 음
+      case 'levelup': return this.chord([523.25, 659.25, 1046.5], 0.35);
+      // 카드 고름: 짧은 확인음
+      case 'pick': return this.tone(880, 1320, 0.09, 'square', 0.3);
     }
   }
 
