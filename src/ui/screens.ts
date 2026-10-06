@@ -19,6 +19,7 @@ import type { Level } from '../core/types.js';
 declare const __APP_VERSION__: string;
 
 export type Screen = 'title' | 'select' | 'play';
+export type InfinityMode = 'daily' | 'random';
 
 const $ = (id: string): HTMLElement => {
   const el = document.getElementById(id);
@@ -42,7 +43,10 @@ export interface ScreenDeps {
   canOpenPrivacyOptions?(): boolean;
   openPrivacyOptions?(): Promise<void>;
   onStart(): void;                 // 타이틀 → 스테이지(단계 선택)
-  onInfinity(): void;              // 타이틀 → 인피니티 (§13.8)
+  /** 인피니티 시작 (§22.3). daily 는 오늘의 우주, random 은 매번 새 판 */
+  onInfinity(mode: InfinityMode): void;
+  /** 오늘의 우주 고르기 판에 보일 것: 오늘 날짜(짧게)와 오늘 최고(없으면 0) */
+  dailyInfo(): { date: string; best: number };
   /** 타이틀이 보일 때마다. 뒤의 데모가 돌고 있지 않으면 다시 돌린다 (§13.1) */
   onTitle?(): void;
   /** 인피니티가 열렸는가. 6-1 을 깨면 열린다 (§22.3) */
@@ -99,13 +103,37 @@ export class Screens {
       <div class="spacer"></div>`;
     this.bind(this.titleEl, {
       start: () => this.d.onStart(),
-      infinity: () => this.d.onInfinity(),
+      infinity: () => this.showInfinityPick(),
       settings: () => this.showSettings(),
       language: () => this.showLanguage(),
     });
     this.titleEl.hidden = false;
     this.d.onTitle?.();
   }
+
+  // ── §22.3 인피니티 고르기: 오늘의 우주 / 무작위 우주 ──────────────────
+  /** 타이틀 자리에 두 버튼. 뒤로 가면 타이틀로 */
+  showInfinityPick(): void {
+    this.hideAll();
+    const { date, best } = this.d.dailyInfo();
+    const sub = best > 0
+      ? t('inf.dailyBest', { date, sec: best.toFixed(1) }) : t('inf.dailyNew', { date });
+    this.introEl.className = 'sheet';
+    this.introEl.innerHTML = `<div class="panel modes">
+      <h2>${t('title.infinity')}</h2>
+      <button class="btn next" data-a="daily" type="button">${t('inf.daily')}<small>${sub}</small></button>
+      <button class="btn" data-a="random" type="button">${t('inf.random')}<small>${t('inf.randomSub')}</small></button>
+      <button class="btn" data-a="back" type="button">${t('set.back')}</button></div>`;
+    this.introBack = 'title';
+    this.bind(this.introEl, {
+      daily: () => { this.introEl.hidden = true; this.d.onInfinity('daily'); },
+      random: () => { this.introEl.hidden = true; this.d.onInfinity('random'); },
+      back: () => { this.introEl.hidden = true; this.showTitle(); },
+    });
+    this.introEl.hidden = false;
+  }
+  /** 소개 판을 닫으면 어디로 — 고르기 판은 타이틀로, 새 요소 카드는 그 자리에 */
+  private introBack: 'title' | null = null;
 
   // ── §13.2 단계 선택 ───────────────────────────────────────────────────
   showSelect(chapter?: number): void {
@@ -200,6 +228,7 @@ export class Screens {
 
   private showIntroCard(levelId: string, key: IntroKey): void {
     const { title, body } = introFor(levelId, key);
+    this.introBack = null;
     this.introEl.className = 'sheet';
     this.introEl.innerHTML = `<div class="panel">
       <div class="art">${img(introArt(key), title)}</div>
@@ -319,7 +348,11 @@ export class Screens {
 
   /** 뒤로 가기 한 단계. 처리했으면 true (§15.2 의 뒤로 버튼 흐름). */
   goBack(): boolean {
-    if (!this.introEl.hidden) { this.introEl.hidden = true; return true; }
+    if (!this.introEl.hidden) {
+      this.introEl.hidden = true;
+      if (this.introBack === 'title') this.showTitle();
+      return true;
+    }
     if (!this.settingsEl.hidden) { this.closeSettings(); return true; }
     if (!this.pickerEl.hidden) { this.showTitle(); return true; }
     return false;

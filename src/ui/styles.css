@@ -142,6 +142,11 @@ img.px{image-rendering:pixelated;image-rendering:crisp-edges}
             display:grid;place-items:center}
 #intro .art img{width:auto;height:96px}
 #intro .btn{align-self:stretch}
+/* 인피니티 고르기 (§22.3): 큰 버튼 둘, 아래 작은 글씨로 날짜·오늘 최고 */
+#intro .panel.modes{text-align:center;gap:12px}
+#intro .modes .btn{min-height:56px;flex-direction:column;gap:3px;font-size:17px}
+#intro .modes .btn small{display:block;font:400 11px/1.2 var(--text)}
+#intro .modes .btn:last-child{min-height:44px;font-size:14px}
 
 /* ── 타이틀 · 단계 선택 · 설정 (§13.1, §13.2, §13.6) ────────────────── */
 .screen{position:absolute;inset:0;display:flex;flex-direction:column;

@@ -18,11 +18,12 @@ import { Hud } from './ui/hud.js';
 import { InfinityWorld } from './tools-shared/infinity.js';
 import { HintSheet } from './ui/hints.js';
 import { seenKey } from './ui/intro.js';
-import { Screens } from './ui/screens.js';
+import { type InfinityMode, Screens } from './ui/screens.js';
+import { dailySeed, dayKey, shortDate } from './tools-shared/daily.js';
 import { Save } from './save/save.js';
 import { Audio } from './audio/sfx.js';
 import { type AdProvider, NoAdProvider } from './platform/ads.js';
-import { buildTarget, detect, pickAdProvider } from './platform/capabilities.js';
+import { buildTarget, detect, pickAdProvider, shareUrl } from './platform/capabilities.js';
 import {
   afterClear, afterInterstitial, afterRewarded, forNewSession, shouldShowInterstitial,
 } from './monetization/ad-policy.js';
@@ -111,7 +112,8 @@ const screens = new Screens({
     }));
     screens.showSelect();
   },
-  onInfinity: () => startInfinity(),
+  onInfinity: (mode) => startInfinity(mode),
+  dailyInfo: () => { const d = dailyRecord(); return { date: shortDate(d.day), best: d.best }; },
   // 타이틀이 보이면 뒤에서 데모가 돌아야 한다 (§13.1). 단계 선택·설정에서 타이틀로
   // 돌아올 때 전에는 멈춘 단계가 그대로 비쳤다
   onTitle: () => { if (!demo) replayDemo(); },
@@ -342,13 +344,25 @@ function startPlay(id: string): void {
  * 스테이지와 달리 힌트(applyHints)를 거치지 않는다: 그 함수는 session.level 을
  * 복사해 바꾸는데, 인피니티는 그 객체(창)를 계속 갈아 끼우므로 복사본은 멈춰 버린다.
  */
-function startInfinity(): void {
+let infMode: InfinityMode = 'random';
+/** 오늘의 우주 기록. 날짜가 바뀌었으면 비우고 오늘로 */
+function dailyRecord(): { day: string; best: number; runs: number } {
+  const d = save.data.infinity.daily;
+  const today = dayKey(new Date());
+  if (d.day !== today) { d.day = today; d.best = 0; d.runs = 0; }
+  return d;
+}
+function startInfinity(mode: InfinityMode = 'random'): void {
   demo = false;
+  infMode = mode;
   session.bonusTurns = TEST_TURNS;
-  session.setupInfinity(new InfinityWorld((Math.random() * 2 ** 31) | 0));
+  // 오늘의 우주는 날짜가 시드다 — 그날은 모두가 같은 우주 (§22.3). 무작위는 매번 새 판
+  const seed = mode === 'daily' ? dailySeed(dailyRecord().day) : (Math.random() * 2 ** 31) | 0;
+  session.setupInfinity(new InfinityWorld(seed));
   field.rebuild(session.level);
   field.directionArc = null;
-  hud.infBest = save.data.infinity.best;
+  hud.infDaily = mode === 'daily';
+  hud.infBest = mode === 'daily' ? dailyRecord().best : save.data.infinity.best;
   hud.hideResult();
   hints.close();
   panning = false;
@@ -488,7 +502,7 @@ addEventListener('pagehide', () => save.flush());
 // ── 화면 흐름 ───────────────────────────────────────────────────────────
 hud.onRetry = () => {
   aim.finish();
-  if (session.world) { startInfinity(); return; }     // 인피니티는 언제나 새 판
+  if (session.world) { startInfinity(infMode); return; }   // 인피니티는 언제나 새 판(같은 모드)
   session.reset(); hud.hideResult(); panning = false; snapToStart();
 };
 // 인피니티에서 "뒤로"·단계 이름·결과의 두 번째 버튼은 타이틀로
@@ -498,6 +512,27 @@ hud.onOpenPicker = () => {
 };
 hud.onNext = () => { void goNext(); };
 hud.onHints = () => hints.show();
+/**
+ * 인피니티 결과 공유 (§22.3). 폰은 공유 시트(navigator.share), 없으면 클립보드.
+ * 둘 다 안 되면 안내만. 문구는 사전에서, 주소는 shareUrl() — itch 에서는 붙이지 않는다.
+ */
+hud.onShare = async () => {
+  if (!infResult) return null;
+  const sec = infResult.sec.toFixed(1);
+  const text = infMode === 'daily'
+    ? t('inf.shareText', { date: shortDate(dailyRecord().day), sec })
+    : t('inf.shareTextRandom', { sec });
+  const url = shareUrl();
+  const nav = navigator as Navigator & { share?: (d: { text: string; url?: string }) => Promise<void> };
+  if (typeof nav.share === 'function') {
+    try { await nav.share(url ? { text, url } : { text }); return null; }
+    catch (e) { if ((e as { name?: string }).name === 'AbortError') return null; }
+  }
+  try {
+    await navigator.clipboard.writeText(url ? `${text}\n${url}` : text);
+    return 'inf.copied';
+  } catch { return 'inf.shareFailed'; }
+};
 hud.stage.addEventListener('click', () => hud.onOpenPicker());
 document.getElementById('hintbtn')!.addEventListener('click', () => hints.show());
 
@@ -538,11 +573,15 @@ function recordOutcome(): void {
     // 인피니티의 끝: 기록만 남긴다. 단계 기록·광고 횟수에는 넣지 않는다
     const sec = session.freeSeconds();          // 링에서 쉰 시간은 빼고 (§22.3)
     const inf = save.data.infinity;
-    const isBest = sec > inf.best;
     inf.runs++;
-    if (isBest) inf.best = sec;
+    if (sec > inf.best) inf.best = sec;         // 전체 최고는 어느 우주든 센다
+    // 오늘의 우주는 오늘 기록으로 보여 준다 — "오늘 최고" 가 공유의 단위다
+    const rec = infMode === 'daily' ? dailyRecord() : inf;
+    if (infMode === 'daily') rec.runs++;
+    const isBest = sec > rec.best || (infMode === 'daily' && rec.best === 0 && sec > 0 && rec.runs === 1);
+    if (sec > rec.best) rec.best = sec;
     save.touch();
-    infResult = { sec, best: inf.best, isBest };
+    infResult = { sec, best: rec.best, isBest };
     return;
   }
   const l = save.level(session.level.id);
@@ -602,7 +641,7 @@ function frame(now: number): void {
   // 연출이 끝나면 결과 시트. 기록은 위에서 이미 했다
   if (session.state === 'ending' && session.endProgress() >= 1 && hud.result.hidden) {
     if (session.world) {
-      if (infResult) hud.showInfinityResult(infResult.sec, infResult.best, infResult.isBest);
+      if (infResult) hud.showInfinityResult(infResult.sec, infResult.best, infResult.isBest, infMode === 'daily');
     } else {
       const p = {
         cleared: (id: string) => save.cleared(id),

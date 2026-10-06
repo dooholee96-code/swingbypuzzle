@@ -69,6 +69,14 @@ export function buildTarget(): 'web' | 'itch' {
   return (import.meta.env as Record<string, string | undefined>)['VITE_TARGET'] === 'itch' ? 'itch' : 'web';
 }
 
+/**
+ * 공유 문구에 붙일 게임 주소 (§22.3). 우리 웹은 지금 주소(질의 없이). itch.io 는 iframe
+ * 안이라 location 이 itch 의 CDN 주소다 — 사람이 열 수 없으니 붙이지 않는다.
+ */
+export function shareUrl(): string {
+  return buildTarget() === 'itch' ? '' : location.origin + location.pathname;
+}
+
 function h5Client(): string {
   return (import.meta.env as Record<string, string | undefined>)['VITE_H5_CLIENT'] ?? '';
 }

@@ -32,8 +32,8 @@ export interface SaveData {
     free_hint_used: boolean; clears_since_interstitial: number;
     last_interstitial_at: number | null; last_rewarded_at: number | null;
   };
-  /** 인피니티(§22.3): 최고 기록(초)과 판 수 */
-  infinity: { best: number; runs: number };
+  /** 인피니티(§22.3): 최고 기록(초)과 판 수. daily 는 오늘의 우주 — 날짜가 바뀌면 비운다 */
+  infinity: { best: number; runs: number; daily: { day: string; best: number; runs: number } };
 }
 
 const defaults = (): SaveData => ({
@@ -48,7 +48,7 @@ const defaults = (): SaveData => ({
     free_hint_used: false, clears_since_interstitial: 0,
     last_interstitial_at: null, last_rewarded_at: null,
   },
-  infinity: { best: 0, runs: 0 },
+  infinity: { best: 0, runs: 0, daily: { day: '', best: 0, runs: 0 } },
 });
 
 const levelDefaults = (): LevelSave => ({
