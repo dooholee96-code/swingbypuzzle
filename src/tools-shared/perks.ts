@@ -107,8 +107,10 @@ export function canRaise(kind: PerkKind, p: PerkLevels): boolean {
  * 레벨업 때 보여 줄 카드 셋. **시드로 뽑는다** — 오늘의 우주(§22.3)는 같은 날 같은 제안을
  * 받는다(고르는 건 사람 몫). 다 찬 패시브는 빼고, 셋이 안 되면 "당근 한 입"으로 채운다.
  */
-export function offerPerks(seed: number, level: number, p: PerkLevels): OfferKind[] {
-  const rnd = mulberry32((seed ^ Math.imul(level, 0x9e3779b1)) | 0);
+export function offerPerks(seed: number, level: number, p: PerkLevels, reroll = 0): OfferKind[] {
+  // reroll 은 다시 뽑기(§14.7) 횟수. 0 이면 전과 똑같은 시드 — 기록·되풀이가 흔들리지 않는다
+  const base = (seed ^ Math.imul(level, 0x9e3779b1)) | 0;
+  const rnd = mulberry32(reroll ? (base ^ Math.imul(reroll, 0x85ebca6b)) | 0 : base);
   const pool = PERK_KINDS.filter((k) => canRaise(k, p));
   for (let i = pool.length - 1; i > 0; i--) {
     const j = Math.floor(rnd() * (i + 1));

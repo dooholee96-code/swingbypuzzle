@@ -37,6 +37,10 @@ export interface SaveData {
   ads: {
     free_hint_used: boolean; clears_since_interstitial: number;
     last_interstitial_at: number | null; last_rewarded_at: number | null;
+    /** 마지막 전면 광고 이후 끝난 인피니티 판 수 (§14.7) */
+    runs_since_interstitial: number;
+    /** 광고 제거를 샀는가 (§14.7). 결제는 M12 — 지금은 자리만 */
+    removed: boolean;
   };
   /** 인피니티(§22.3): 최고 기록(초)과 판 수. daily 는 오늘의 우주 — 날짜가 바뀌면 비운다 */
   infinity: { best: number; runs: number; daily: { day: string; best: number; runs: number } };
@@ -55,6 +59,7 @@ const defaults = (): SaveData => ({
   ads: {
     free_hint_used: false, clears_since_interstitial: 0,
     last_interstitial_at: null, last_rewarded_at: null,
+    runs_since_interstitial: 0, removed: false,
   },
   infinity: { best: 0, runs: 0, daily: { day: '', best: 0, runs: 0 } },
   messier: {},

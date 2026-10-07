@@ -49,6 +49,10 @@ export class Session {
   xpLevel = 1;
   /** 아직 고르지 않은 레벨업 수. 0 이 아니면 advance() 가 멈춘다 — 카드를 고를 때까지 */
   pendingLevels = 0;
+  /** 지금 레벨업에서 카드를 다시 뽑은 횟수 (§14.7). 고르면 0 으로 */
+  rerolls = 0;
+  /** 이번 판에 이어하기를 썼는가 (§14.7). 판마다 한 번 */
+  revived = false;
   private rechargeAcc = 0;
   // ── 보스전 (§22.6) ──
   /** fly 는 중력 비행, boss 는 슈팅 구간. 인피니티에서만 boss 가 된다 */
@@ -84,9 +88,41 @@ export class Session {
     this.perks = noPerks();
     this.xpLevel = 1;
     this.pendingLevels = 0;
+    this.rerolls = 0;
+    this.revived = false;
     this.rechargeAcc = 0;
     this.applyPerks();
     this.turnsLeft = this.maxTurns;
+  }
+
+  /** 이어하기를 권할 수 있는가 — 인피니티의 끝이고 아직 안 썼다 (§14.7) */
+  get canRevive(): boolean {
+    return !!this.world && this.state === 'ending' && !this.revived;
+  }
+
+  /**
+   * 이어하기 (§14.7). 끝난 자리에서 다시 난다 — 분사 가득, 방패 하나(없으면), 무적.
+   * 보스전에서 졌으면 목숨을 채워 싸움을 잇는다. 점수(버틴 시간)는 이어서 센다.
+   */
+  revive(): boolean {
+    if (!this.canRevive) return false;
+    if (this.mode === 'boss') {
+      if (!this.boss?.revive(BOSS_LIVES + (this.perks.shield > 0 ? 1 : 0))) return false;
+    } else if (!this.sim.revive()) return false;
+    this.revived = true;
+    this.outcome = '';
+    this.state = 'flying';
+    this.endElapsed = 0;
+    this.turnsLeft = this.maxTurns;
+    if (this.perks.shield < 1) this.perks.shield = 1;
+    this.sim.mods.shield = this.perks.shield;
+    this.clock.reset();
+    return true;
+  }
+
+  /** 카드를 다시 뽑는다 (§14.7). 다음 offers() 가 다른 셋을 돌려준다 */
+  reroll(): void {
+    if (this.pendingLevels > 0) this.rerolls++;
   }
 
   // ── 보스전 (§22.6) ───────────────────────────────────────────────
@@ -219,13 +255,14 @@ export class Session {
 
   /** 지금 레벨업의 카드 셋. 판 시드와 레벨로 정해진다 */
   offers(): OfferKind[] {
-    return this.world ? offerPerks(this.world.seed, this.xpLevel, this.perks) : [];
+    return this.world ? offerPerks(this.world.seed, this.xpLevel, this.perks, this.rerolls) : [];
   }
 
   /** 카드를 고른다. 패시브를 올리고 물리 보정값에 반영한다 */
   pick(kind: OfferKind): void {
     if (!this.world || this.pendingLevels <= 0) return;
     this.pendingLevels--;
+    this.rerolls = 0;
     // 레벨업은 분사 하나를 채운다 (사용자 결정 2026-10). 카드 효과는 그 위에
     this.turnsLeft = Math.min(this.maxTurns, this.turnsLeft + 1);
     if (kind === 'refill') { this.turnsLeft = this.maxTurns; }

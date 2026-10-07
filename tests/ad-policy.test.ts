@@ -7,8 +7,9 @@ import { describe, expect, it } from 'vitest';
 
 import { AD_POLICY } from '../src/monetization/ad-policy-config.js';
 import {
-  type AdState, type InterstitialInput,
-  afterClear, afterInterstitial, afterRewarded, forNewSession, shouldShowInterstitial,
+  type AdState, type InfinityInterstitialInput, type InterstitialInput,
+  afterClear, afterInfinityRun, afterInterstitial, afterRewarded, forNewSession,
+  shouldShowInfinityInterstitial, shouldShowInterstitial,
 } from '../src/monetization/ad-policy.js';
 
 /** 여섯 조건을 모두 만족하는 기준 입력. 테스트마다 한 가지만 어긋뜨린다. */
@@ -112,7 +113,7 @@ describe('상태 갱신', () => {
 
   it('전면 광고를 보여주면 클리어 수가 0 이 되고 시각이 기록된다', () => {
     expect(afterInterstitial(base, 500))
-      .toEqual({ clearsSinceInterstitial: 0, lastInterstitialAt: 500, lastRewardedAt: null });
+      .toEqual({ clearsSinceInterstitial: 0, runsSinceInterstitial: 0, lastInterstitialAt: 500, lastRewardedAt: null });
   });
 
   it('보상형 광고는 클리어 수를 건드리지 않는다', () => {
@@ -146,5 +147,46 @@ describe('실행이 바뀔 때 (§14.4 의 시계는 실행마다 0 에서 시�
       .toEqual({ show: false, veto: 'since-interstitial' });            // 버리지 않으면 막힌다
     expect(shouldShowInterstitial({ chapter: 3, showsIntro: false, now, ads: forNewSession(stale) }))
       .toEqual({ show: true });
+  });
+});
+
+// ── 인피니티 결과 화면 (§14.7) ───────────────────────────────────────
+describe('인피니티 전면 광고 (§14.7)', () => {
+  const okInf = (): InfinityInterstitialInput => ({
+    now: 1000, revived: false,
+    ads: { clearsSinceInterstitial: 0, runsSinceInterstitial: 3, lastInterstitialAt: 800, lastRewardedAt: null },
+  });
+
+  it('판 3회·180초·120초·90초·이어하기 없음이면 보여준다', () => {
+    expect(shouldShowInfinityInterstitial(okInf())).toEqual({ show: true });
+  });
+  it('끝난 판이 2회면 거부, 옛 저장(판 수 없음)은 0 으로 본다', () => {
+    const i = okInf();
+    expect(shouldShowInfinityInterstitial({ ...i, ads: { ...i.ads, runsSinceInterstitial: 2 } }).veto).toBe('runs');
+    const { runsSinceInterstitial: _r, ...old } = i.ads;
+    expect(shouldShowInfinityInterstitial({ ...i, ads: old }).veto).toBe('runs');
+  });
+  it('마지막 전면 광고 179초 뒤 거부, 180초 허용', () => {
+    const i = okInf();
+    expect(shouldShowInfinityInterstitial({ ...i, now: 800 + AD_POLICY.secondsBetween - 1 }).veto).toBe('since-interstitial');
+    expect(shouldShowInfinityInterstitial({ ...i, now: 800 + AD_POLICY.secondsBetween }).show).toBe(true);
+  });
+  it('실행 119초는 거부', () => {
+    const i = okInf();
+    expect(shouldShowInfinityInterstitial({ ...i, now: 119, ads: { ...i.ads, lastInterstitialAt: null } }).veto).toBe('since-start');
+  });
+  it('보상형 광고 89초 뒤는 거부', () => {
+    const i = okInf();
+    expect(shouldShowInfinityInterstitial({ ...i, ads: { ...i.ads, lastRewardedAt: 1000 - 89 } }).veto).toBe('after-rewarded');
+  });
+  it('이어하기를 쓴 판은 거부 — 광고 없는 빌드에서 공짜로 이어도', () => {
+    expect(shouldShowInfinityInterstitial({ ...okInf(), revived: true }).veto).toBe('revived');
+  });
+  it('판이 끝나면 판 수가 하나 늘고, 전면 광고 뒤에 0 이 된다', () => {
+    const a: AdState = { clearsSinceInterstitial: 1, lastInterstitialAt: null, lastRewardedAt: null };
+    expect(afterInfinityRun(a).runsSinceInterstitial).toBe(1);
+    expect(afterInfinityRun(afterInfinityRun(a)).runsSinceInterstitial).toBe(2);
+    expect(afterInterstitial(afterInfinityRun(a), 5).runsSinceInterstitial).toBe(0);
+    expect(afterInfinityRun(a).clearsSinceInterstitial).toBe(1);     // 클리어 수는 그대로
   });
 });

@@ -73,6 +73,14 @@ describe('레벨업 카드', () => {
     expect([b, c].some((x) => x.join() !== a.join())).toBe(true);
   });
 
+  it('다시 뽑기(§14.7): 0 이면 전과 같은 셋, 1 이면 대체로 다른 셋', () => {
+    const p = noPerks();
+    expect(offerPerks(42, 2, p, 0)).toEqual(offerPerks(42, 2, p));
+    expect(offerPerks(42, 2, p, 1)).toEqual(offerPerks(42, 2, p, 1));
+    const diff = [1, 2, 3, 4, 5].filter((lv) => offerPerks(42, lv, p, 1).join() !== offerPerks(42, lv, p).join());
+    expect(diff.length).toBeGreaterThan(2);
+  });
+
   it('다 찬 패시브는 안 나오고, 셋이 안 되면 당근 한 입으로 채운다', () => {
     let p = noPerks();
     for (const k of PERK_KINDS) if (k !== 'shield' && k !== 'turn') for (let i = 0; i < PERK_MAX; i++) p = raise(k, p);

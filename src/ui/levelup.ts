@@ -17,12 +17,24 @@ export class LevelUpSheet {
   readonly el = $('levelup');
   private offers: OfferKind[] = [];
   onPick: (kind: OfferKind) => void = () => {};
+  /** 다시 뽑기 (§14.7): 뽑았으면 null, 못 뽑았으면 보일 안내 문구의 키 */
+  onReroll: () => Promise<Key | null> = async () => null;
+  /** 지금 다시 뽑기를 권할 수 있는가 — 광고 없이 / 광고로 / 없음. 레벨업마다 한 번 */
+  rerollMode: () => 'free' | 'ad' | null = () => null;
 
   constructor() {
     this.el.addEventListener('click', (e) => {
       const b = (e.target as HTMLElement).closest<HTMLButtonElement>('button[data-i]');
-      if (!b) return;
-      this.choose(Number(b.dataset['i']));
+      if (b) { this.choose(Number(b.dataset['i'])); return; }
+      const r = (e.target as HTMLElement).closest<HTMLButtonElement>('button[data-a=reroll]');
+      if (!r || r.disabled) return;
+      r.disabled = true;
+      void this.onReroll().then((k) => {
+        if (!k || !this.el.contains(r)) return;   // 뽑았으면 show() 가 다시 그렸다
+        r.disabled = false;
+        const note = this.el.querySelector<HTMLElement>('.note');
+        if (note) { note.textContent = t(k); note.hidden = false; }
+      });
     });
   }
 
@@ -51,10 +63,15 @@ export class LevelUpSheet {
         <span class="txt"><b>${t(`perk.${k}` as Key)}</b><small>${desc}</small></span>
         ${dots}<kbd>${i + 1}</kbd></button>`;
     }).join('');
+    const mode = this.rerollMode();
+    const reroll = mode
+      ? `<div class="row"><button class="btn" data-a="reroll" type="button">${
+        t(mode === 'ad' ? 'lvl.rerollAd' : 'lvl.reroll')}</button></div><p class="tapnote note" hidden></p>`
+      : '';
     this.el.innerHTML = `<div class="panel">
       <h2>${t('lvl.title', { n: level })}</h2>
       <p>${t('lvl.pick')}</p>
-      <div class="cards">${cards}</div></div>`;
+      <div class="cards">${cards}</div>${reroll}</div>`;
     this.el.hidden = false;
   }
 

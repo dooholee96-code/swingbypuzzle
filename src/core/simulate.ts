@@ -108,6 +108,8 @@ export class Sim {
   invuln = 0;
   /** 이번 비행에서 방패로 튕긴 횟수. 화면이 소리·연출의 순간을 알아채는 데 쓴다 */
   absorbs = 0;
+  /** step() 이 마지막으로 돌려준 결과. 이어하기(revive)가 무엇에 부딪혔는지 안다 */
+  lastOutcome: Outcome | '' = '';
 
   private L!: Level;
   private G: Grav[] = [];
@@ -151,6 +153,7 @@ export class Sim {
     this.leaving = null;
     this.invuln = 0;
     this.absorbs = 0;
+    this.lastOutcome = '';
 
     const a = angleDeg * Math.PI / 180;
     // 돔 표면에서 이륙한다 (§5.9)
@@ -196,6 +199,26 @@ export class Sim {
 
   /** 한 스텝. '' = 계속. */
   step(): Outcome | '' {
+    const r = this.stepInner();
+    if (r) this.lastOutcome = r;
+    return r;
+  }
+
+  /**
+   * 이어하기 (§14.7). 끝난 자리에서 다시 난다 — 부딪힌 것의 바깥으로 밀어내고 속도를
+   * 반사한다(방패와 같은 식). 블랙홀은 중력 범위 밖까지 내보낸다 — 흡수 반경 곁에 두면
+   * 바로 다시 빨려 들어간다. 무적 3초. 벽·표류·도착은 이어갈 것이 없어 거짓.
+   */
+  revive(): boolean {
+    const r = this.lastOutcome;
+    if (!r || r === 'wall' || r === 'drift' || r === 'win') return false;
+    if (!this.pushOut(r, true)) return false;
+    this.lastOutcome = '';
+    this.invuln = INVULN_STEPS * 2;
+    return true;
+  }
+
+  private stepInner(): Outcome | '' {
     if (this.n - this.dockedSteps >= this.maxN) return 'drift';
     // 기록된 나가기·분사는 지나간 것까지 소비한다. 스텝이 맞아도 그때 붙잡혀 있지 않은
     // 나가기는 버린다 — 깃발을 남겨 두면 다음에 붙잡히자마자 나가 버린다
@@ -262,6 +285,14 @@ export class Sim {
   private absorb(r: Outcome): boolean {
     if (r === 'wall' || r === 'drift' || r === 'win') return false;
     if (this.mods.shield <= 0 && this.invuln <= 0) return false;
+    if (!this.pushOut(r, false)) return false;
+    if (this.invuln <= 0) { this.mods.shield -= 1; this.absorbs += 1; }
+    this.invuln = INVULN_STEPS;
+    return true;
+  }
+
+  /** 부딪힌 것의 바깥으로 밀어내고 속도를 반사한다. far 면 블랙홀은 중력 범위 밖으로 */
+  private pushOut(r: Outcome, far: boolean): boolean {
     const s = this.ship;
     if (r === 'shot') {
       // 맞은 총알(들)을 지운다
@@ -279,7 +310,7 @@ export class Sim {
         for (const p of this.L.planets ?? []) { const [px, py] = bodyPos(p, tt); see(px, py, p.r + SHIP_R); }
         for (const d of this.L.docks ?? []) see(d.x, d.y, d.r + SHIP_R);
       } else if (r === 'hole') {
-        for (const h of this.L.holes ?? []) see(h.x, h.y, h.rH + 2);
+        for (const h of this.L.holes ?? []) see(h.x, h.y, far ? h.R + 4 : h.rH + 2);
       } else if (r === 'rock') {
         for (const a of this.L.rocks ?? []) see(a.x, a.y, a.r * 0.85 + SHIP_R);
       } else {
@@ -296,8 +327,6 @@ export class Sim {
       const vn = s.vx * nx + s.vy * ny;
       if (vn < 0) { s.vx -= 2 * vn * nx; s.vy -= 2 * vn * ny; }
     }
-    if (this.invuln <= 0) { this.mods.shield -= 1; this.absorbs += 1; }
-    this.invuln = INVULN_STEPS;
     return true;
   }
 

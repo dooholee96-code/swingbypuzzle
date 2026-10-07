@@ -13,6 +13,8 @@ export const AD_POLICY = {
   secondsAfterStart: 120,
   /** 보상형 광고를 본 직후 이만큼은 전면 광고를 띄우지 않는다(초) */
   quietAfterRewarded: 90,
+  /** 인피니티(§14.7): 마지막 전면 광고 이후 끝난 판 수가 이만큼 돼야 결과 화면 뒤에 검토한다 */
+  infRunsBetween: 3,
 } as const;
 
 /** 힌트가 열리는 조건 (§14.3) */

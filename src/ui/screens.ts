@@ -47,6 +47,8 @@ export interface ScreenDeps {
   /** 광고 SDK 가 동의 양식을 다시 열 수 있는가 (§13.6, §14.5). 해당 지역에서만 참 */
   canOpenPrivacyOptions?(): boolean;
   openPrivacyOptions?(): Promise<void>;
+  /** 광고 제거 (§14.7). 샀거나 살 수 있을 때만 줄이 뜬다. 결제는 M12 */
+  noAds?: { owned(): boolean; canBuy(): boolean; buy(): void };
   onStart(): void;                 // 타이틀 → 스테이지(단계 선택)
   /** 인피니티 시작 (§22.3). daily 는 오늘의 우주, random 은 매번 새 판 */
   onInfinity(mode: InfinityMode): void;
@@ -331,6 +333,12 @@ export class Screens {
           ? `<div class="row2"><span class="label">${t('set.privacyOptions')}</span>`
             + `<button class="btn" data-a="privacy" type="button">${t('set.open')}</button></div>`
           : ''}
+        ${this.d.noAds?.owned()
+          ? `<div class="row2"><span class="label">${t('set.noAds')}</span><span class="val">${t('set.noAdsOwned')}</span></div>`
+          : this.d.noAds?.canBuy()
+            ? `<div class="row2"><span class="label">${t('set.noAds')}</span>`
+              + `<button class="btn" data-a="noads" type="button">${t('set.buy')}</button></div>`
+            : ''}
         <div class="row2"><span class="label">${t('set.privacy')}</span>
           <a class="btn" href="./privacy/" target="_blank" rel="noopener">${t('set.view')}</a></div>
         <div class="row2"><span class="label">${t('set.credits')}</span>
@@ -343,6 +351,7 @@ export class Screens {
     this.bind(this.settingsEl, {
       back: () => this.closeSettings(),
       privacy: () => { void this.d.openPrivacyOptions?.(); },
+      noads: () => this.d.noAds?.buy(),
     });
     this.settingsEl.querySelector<HTMLSelectElement>('#set-lang')!
       .addEventListener('change', (e) => {

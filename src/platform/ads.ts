@@ -6,7 +6,8 @@
 // 광고를 못 불러와도 게임은 완전히 동작해야 한다(§14.1). 그래서 "광고 없음"
 // 상태가 오류가 아니라 정상 상태다 — NoAdProvider 가 그 자리다.
 
-export type RewardPlacement = 'hint_preview' | 'hint_direction' | 'skip';
+/** 힌트 셋(§14.3)과 인피니티의 이어하기·카드 다시 뽑기(§14.7) */
+export type RewardPlacement = 'hint_preview' | 'hint_direction' | 'skip' | 'revive' | 'reroll';
 export type RewardResult = 'rewarded' | 'dismissed' | 'failed';
 
 export interface AdProvider {
@@ -19,8 +20,9 @@ export interface AdProvider {
   canOpenPrivacyOptions(): boolean;
   openPrivacyOptions(): Promise<void>;
   /**
-   * 광고가 없는 곳(itch.io 빌드)에서 힌트를 **광고 없이 그냥** 주는가. 참이면 힌트 시트가
-   * 광고를 부르지 않고 바로 준다. 실패 횟수 조건(§14.3)은 그대로다.
+   * 광고가 없는 곳(itch.io 빌드)이나 광고 제거를 산 뒤(§14.7)에 보상을 **광고 없이 그냥**
+   * 주는가. 참이면 힌트·이어하기·다시 뽑기가 광고를 부르지 않고 바로 준다.
+   * 실패 횟수 조건(§14.3)과 판마다 한 번(§14.7)은 그대로다.
    */
   readonly adFree?: boolean;
 }
@@ -51,9 +53,10 @@ export async function withTimeout<T>(p: Promise<T>, fallback: T, ms = AD_TIMEOUT
 }
 
 /**
- * 광고 없이 힌트를 주는 제공자 — itch.io 빌드(§15.6). itch 는 게임을 자기 도메인의
- * iframe 에서 돌려서 H5 광고(우리 도메인만 승인)가 뜨지 않는다. 그대로 두면 힌트가
- * "광고를 불러올 수 없어요" 로 영영 잠긴다.
+ * 광고 없이 보상을 주는 제공자 — itch.io 빌드(§15.6)와 광고 제거 구매 뒤(§14.7).
+ * itch 는 게임을 자기 도메인의 iframe 에서 돌려서 H5 광고(우리 도메인만 승인)가 뜨지
+ * 않는다. 그대로 두면 힌트가 "광고를 불러올 수 없어요" 로 영영 잠긴다.
+ * 전면 광고는 isInterstitialReady 가 거짓이라 뜨지 않는다.
  */
 export class FreeHintProvider extends NoAdProvider {
   readonly adFree = true;

@@ -15,6 +15,8 @@ export interface AdState {
   lastInterstitialAt: number | null;
   /** 마지막 보상형 광고 시각(초). 아직 없으면 null */
   lastRewardedAt: number | null;
+  /** 마지막 전면 광고 이후 끝난 인피니티 판 수 (§14.7). 옛 저장에는 없어 0 으로 본다 */
+  runsSinceInterstitial?: number;
 }
 
 export interface InterstitialInput {
@@ -69,9 +71,46 @@ export function shouldShowInterstitial(i: InterstitialInput): AdDecision {
   return { show: true };
 }
 
-/** 전면 광고를 보여준 뒤의 상태. */
+/** 전면 광고를 보여준 뒤의 상태. 클리어 수와 판 수를 함께 비운다 */
 export function afterInterstitial(ads: AdState, now: number): AdState {
-  return { ...ads, clearsSinceInterstitial: 0, lastInterstitialAt: now };
+  return { ...ads, clearsSinceInterstitial: 0, runsSinceInterstitial: 0, lastInterstitialAt: now };
+}
+
+/** 인피니티 한 판이 끝난 뒤의 상태 (§14.7). 이어하기로 이어진 판은 끝날 때 한 번만 센다 */
+export function afterInfinityRun(ads: AdState): AdState {
+  return { ...ads, runsSinceInterstitial: (ads.runsSinceInterstitial ?? 0) + 1 };
+}
+
+export interface InfinityInterstitialInput {
+  /** 지금 시각(초). 앱 실행 시점이 0 */
+  now: number;
+  ads: AdState;
+  /** 이번 판에 이어하기를 썼는가. 썼으면(광고를 봤든 광고 없는 빌드든) 띄우지 않는다 */
+  revived: boolean;
+}
+
+export type InfAdVeto = 'runs' | 'since-interstitial' | 'since-start' | 'after-rewarded' | 'revived';
+
+/**
+ * 인피니티 결과 화면에서 [다시] 로 새 판을 열 때만 검토한다 (§14.7).
+ * 시간 조건 셋은 스테이지(§14.4)와 같고, 클리어 수 대신 끝난 판 수를 본다.
+ */
+export function shouldShowInfinityInterstitial(
+  i: InfinityInterstitialInput,
+): { show: boolean; veto?: InfAdVeto } {
+  const { now, ads, revived } = i;
+  if ((ads.runsSinceInterstitial ?? 0) < AD_POLICY.infRunsBetween) return { show: false, veto: 'runs' };
+  if (ads.lastInterstitialAt !== null
+    && now - ads.lastInterstitialAt < AD_POLICY.secondsBetween) {
+    return { show: false, veto: 'since-interstitial' };
+  }
+  if (now < AD_POLICY.secondsAfterStart) return { show: false, veto: 'since-start' };
+  if (ads.lastRewardedAt !== null
+    && now - ads.lastRewardedAt < AD_POLICY.quietAfterRewarded) {
+    return { show: false, veto: 'after-rewarded' };
+  }
+  if (revived) return { show: false, veto: 'revived' };
+  return { show: true };
 }
 
 /** 보상형 광고를 본 뒤의 상태. */

@@ -130,3 +130,49 @@ describe('궤도 행성은 자리로 알아본다', () => {
     expect(sameDock(a, null)).toBe(false);
   });
 });
+
+describe('이어하기 (§14.7)', () => {
+  const rockAhead = (): Level => level({ rocks: [{ x: O, y: O - 200, r: 20, seed: 1 }] });
+
+  it('소행성에 부딪혀 끝난 뒤 revive 하면 바깥에서 반사돼 이어 난다 — 무적 3초, 방패는 안 쓴다', () => {
+    const sim = new Sim();
+    sim.begin(rockAhead(), -90, 0);
+    let r = '';
+    for (let i = 0; i < 240 * 3 && !r; i++) r = sim.step();
+    expect(r).toBe('rock');
+    expect(sim.lastOutcome).toBe('rock');
+    expect(sim.revive()).toBe(true);
+    expect(sim.invuln).toBe(720);
+    expect(sim.mods.shield).toBe(0);
+    expect(sim.ship.vy).toBeGreaterThan(0);
+    expect(speed(sim.ship)).toBeCloseTo(150, 6);
+    let r2 = '';
+    for (let i = 0; i < 240 * 2 && !r2; i++) r2 = sim.step();
+    expect(r2).toBe('');
+  });
+
+  it('블랙홀은 중력 범위 밖으로 내보낸다', () => {
+    const L = level({ holes: [{ x: O, y: O - 200, rH: 14, g: 900, R: 160 }] });
+    const sim = new Sim();
+    sim.begin(L, -90, 0);
+    let r = '';
+    for (let i = 0; i < 240 * 5 && !r; i++) r = sim.step();
+    expect(r).toBe('hole');
+    expect(sim.revive()).toBe(true);
+    expect(Math.sqrt((sim.ship.x - O) ** 2 + (sim.ship.y - (O - 200)) ** 2)).toBeGreaterThan(160);
+  });
+
+  it('끝나지 않았거나 벽·표류·도착이면 거짓', () => {
+    const sim = new Sim();
+    sim.begin(rockAhead(), -90, 0);
+    expect(sim.revive()).toBe(false);
+    const wall = new Sim();
+    const L = level({});
+    L.w = 2 * O; L.h = 2 * O;
+    wall.begin({ ...L, w: 400, h: 400, start: { x: 200, y: 200 } }, -90, 0);
+    let r = '';
+    for (let i = 0; i < 240 * 5 && !r; i++) r = wall.step();
+    expect(r).toBe('wall');
+    expect(wall.revive()).toBe(false);
+  });
+});

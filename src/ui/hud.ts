@@ -79,6 +79,8 @@ export class Hud {
     this.result.addEventListener('pointerdown', (e) => {
       if ((e.target as HTMLElement).closest('button')) return;
       if (!this.result.classList.contains('lose')) return;
+      // 이어하기(§14.7)가 걸려 있으면 판 밖 탭으로 새 판을 열지 않는다 — 실수로 잃지 않게
+      if (this.result.dataset['hold'] === '1') return;
       this.onRetry();
     });
   }
@@ -178,6 +180,7 @@ export class Hud {
       newBest?: boolean;
     } = {},
   ): void {
+    this.result.dataset['hold'] = '';
     if (!this.result.hidden) return;
     const keys = RESULT[s.outcome as Outcome];
     const title = keys ? t(keys[0]) : t('result.ended');
@@ -232,25 +235,34 @@ export class Hud {
 
   /** [공유] (§22.3). 끝나면 보여 줄 안내 문구의 키, 없으면 null */
   onShare: () => Promise<Key | null> = async () => null;
+  /** 이어하기 (§14.7). 이었으면 null, 못 이었으면 보일 안내 문구의 키 */
+  onRevive: () => Promise<Key | null> = async () => null;
 
   /**
    * 인피니티의 끝 (§22.3). 실패 시트와 같은 모양 — 화면 아무 곳이나 누르면 새 판.
    * daily 가 참이면 "오늘 최고" 로 적는다
    */
-  showInfinityResult(sec: number, best: number, isBest: boolean, daily = false): void {
+  showInfinityResult(
+    sec: number, best: number, isBest: boolean, daily = false, revive: 'free' | 'ad' | null = null,
+  ): void {
     if (!this.result.hidden) return;
     this.result.className = 'sheet lose';
+    this.result.dataset['hold'] = revive ? '1' : '';
+    // 이어하기(§14.7)는 판마다 한 번. 광고가 없는 빌드는 그냥 잇고, 광고를 못 불러오면 버튼이 없다
+    const reviveBtn = revive
+      ? `<button class="btn next" data-a="revive" type="button">${t(revive === 'ad' ? 'inf.reviveAd' : 'inf.revive')}</button>`
+      : '';
     this.result.innerHTML = `<div class="panel">
       <div class="head">${img(rabbitIcon(isBest ? 'win' : 'sad'))}<h2></h2></div>
       <p class="msg"></p>
-      <div class="row">
+      <div class="row">${reviveBtn}
         <button class="btn primary" data-a="retry" type="button">${t('result.retry')}</button>
         <button class="btn hint" data-a="share" type="button">${t('inf.share')}</button>
         <button class="btn" data-a="pick" type="button">${t('picker.toTitle')}</button>
       </div>
       ${isBest ? `<p class="tapnote">${t(daily ? 'inf.newBestDaily' : 'inf.newBest')}</p>` : ''}
       <p class="tapnote sharenote" hidden></p>
-      <p class="tapnote">${t('result.tapRetry')}</p></div>`;
+      ${revive ? '' : `<p class="tapnote">${t('result.tapRetry')}</p>`}</div>`;
     this.result.querySelector('h2')!.textContent = t('inf.over');
     this.result.querySelector('.msg')!.textContent =
       t(daily ? 'inf.statsDaily' : 'inf.stats', { sec: sec.toFixed(1), best: best.toFixed(1) });
@@ -259,7 +271,15 @@ export class Hud {
       b.addEventListener('click', () => {
         const a = b.dataset['a'];
         if (a === 'pick') this.onOpenPicker();
-        else if (a === 'share') {
+        else if (a === 'revive') {
+          b.disabled = true;
+          void this.onRevive().then((k) => {
+            if (!k) return;                      // 이었다 — 시트는 main 이 닫는다
+            b.disabled = false;
+            note.textContent = t(k);
+            note.hidden = false;
+          });
+        } else if (a === 'share') {
           void this.onShare().then((k) => {
             if (!k) return;
             note.textContent = t(k);

@@ -100,3 +100,21 @@ describe('흐름', () => {
     expect(DT).toBe(1 / 240);
   });
 });
+
+describe('이어하기 (§14.7)', () => {
+  it('진 뒤 revive 하면 목숨이 차고 탄이 비고 무적이 두 배, 체력은 깎인 대로', () => {
+    const b = new BossSim(5, 1, 1);
+    // 보스 몸통에 우주선을 박아 한 번에 진다
+    for (let i = 0; i < 240 * 10 && b.phase !== 'lost'; i++) b.step(b.x, b.y);
+    expect(b.phase).toBe('lost');
+    expect(b.revive(0)).toBe(false);        // 목숨 0 은 뜻이 없다 — 호출 쪽이 3 을 준다
+    const hp = b.hp;
+    expect(b.revive(BOSS_LIVES)).toBe(true);
+    expect(b.phase).toBe('fight');
+    expect(b.lives).toBe(BOSS_LIVES);
+    expect(b.shots).toEqual([]);
+    expect(b.invuln).toBe(BOSS_INVULN * 2);
+    expect(b.hp).toBe(hp);
+    expect(b.revive(BOSS_LIVES)).toBe(false); // 지지 않았으면 거짓
+  });
+});

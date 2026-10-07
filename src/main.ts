@@ -26,10 +26,11 @@ import { type InfinityMode, Screens } from './ui/screens.js';
 import { dailySeed, dayKey, shortDate } from './tools-shared/daily.js';
 import { Save } from './save/save.js';
 import { Audio } from './audio/sfx.js';
-import { type AdProvider, NoAdProvider } from './platform/ads.js';
+import { type AdProvider, FreeHintProvider, NoAdProvider, type RewardPlacement } from './platform/ads.js';
 import { buildTarget, detect, pickAdProvider, shareUrl } from './platform/capabilities.js';
 import {
-  afterClear, afterInterstitial, afterRewarded, forNewSession, shouldShowInterstitial,
+  type AdState, afterClear, afterInfinityRun, afterInterstitial, afterRewarded, forNewSession,
+  shouldShowInfinityInterstitial, shouldShowInterstitial,
 } from './monetization/ad-policy.js';
 import { type HintKind, directionArc, previewSeconds } from './monetization/hints.js';
 import {
@@ -83,7 +84,7 @@ const GLIDE_HOLD = 0.6, GLIDE_MOVE = 0.9;
 let paused = false;                // 힌트 시트가 열려 있으면 단계 시계를 멈춘다 (§13.5)
 let absorbs = 0;                   // 지난 프레임까지 방패로 튕긴 횟수 (§22.5)
 let ads: AdProvider = new NoAdProvider();
-const started = performance.now();
+let started = performance.now();
 
 /** 앱 실행 후 흐른 시각(초). 광고 규칙이 쓰는 유일한 시계다 (§14.4) */
 const nowSeconds = (): number => (performance.now() - started) / 1000;
@@ -140,6 +141,8 @@ const screens = new Screens({
   onSettingChange: () => { applySettings(); save.touch(); },
   canOpenPrivacyOptions: () => ads.canOpenPrivacyOptions(),
   openPrivacyOptions: () => ads.openPrivacyOptions(),
+  // 광고 제거 (§14.7): 결제는 M12 의 앱 셸에서 잇는다. 그전까지 줄은 뜨지 않는다
+  noAds: { owned: () => save.data.ads.removed, canBuy: () => false, buy: () => {} },
 });
 
 const cap = detect();
@@ -178,21 +181,50 @@ const hints = new HintSheet({
 // 레벨업 카드 (§22.5). 세션이 멈춰 있는 동안 떠 있고, 고르면 바로 이어 난다
 const levelup = new LevelUpSheet();
 levelup.onPick = (kind) => { session.pick(kind); sfx.play('pick'); };
+// 다시 뽑기 (§14.7): 레벨업마다 한 번, 보상형 광고. 새 셋은 시드로 정해진다
+levelup.rerollMode = () => (session.rerolls > 0 ? null : rewardMode());
+levelup.onReroll = async () => {
+  const r = await reward('reroll');
+  if (r !== 'ok') return r;
+  session.reroll();
+  levelup.show(session.offers(), session.perks, session.xpLevel);
+  sfx.play('pick');
+  return null;
+};
 
-function adState(): { clearsSinceInterstitial: number;
+function adState(): { clearsSinceInterstitial: number; runsSinceInterstitial: number;
   lastInterstitialAt: number | null; lastRewardedAt: number | null } {
   const a = save.data.ads;
   return {
     clearsSinceInterstitial: a.clears_since_interstitial,
+    runsSinceInterstitial: a.runs_since_interstitial,
     lastInterstitialAt: a.last_interstitial_at,
     lastRewardedAt: a.last_rewarded_at,
   };
 }
-function saveAdState(next: ReturnType<typeof adState>): void {
+function saveAdState(next: AdState): void {
   save.data.ads.clears_since_interstitial = next.clearsSinceInterstitial;
+  save.data.ads.runs_since_interstitial = next.runsSinceInterstitial ?? 0;
   save.data.ads.last_interstitial_at = next.lastInterstitialAt;
   save.data.ads.last_rewarded_at = next.lastRewardedAt;
   save.touch();
+}
+
+/** 보상을 광고 없이 주는가 / 광고로 주는가 / 지금은 못 주는가 — 버튼 문구와 표시를 정한다 (§14.7) */
+function rewardMode(): 'free' | 'ad' | null {
+  return ads.adFree ? 'free' : ads.isRewardedReady() ? 'ad' : null;
+}
+/**
+ * 보상형 광고 한 번 (§14.7의 이어하기·다시 뽑기). 광고 없는 제공자(itch·광고 제거)는 바로 준다.
+ * 'ok' 가 아니면 사용자에게 보일 안내 문구의 키 — 힌트 시트의 문구를 같이 쓴다
+ */
+async function reward(placement: RewardPlacement): Promise<'ok' | Key> {
+  if (ads.adFree) return 'ok';
+  if (!ads.isRewardedReady()) return 'hint.unavailable';
+  const r = await ads.showRewarded(placement);
+  if (r !== 'rewarded') return r === 'dismissed' ? 'hint.dismissed' : 'hint.unavailable';
+  saveAdState(afterRewarded(adState(), nowSeconds()));
+  return 'ok';
 }
 
 /** 받은 힌트를 화면에 반영한다 (§14.3). */
@@ -387,6 +419,7 @@ function startInfinity(mode: InfinityMode = 'random'): void {
   // 오늘의 우주는 날짜가 시드다 — 그날은 모두가 같은 우주 (§22.3). 무작위는 매번 새 판
   const seed = mode === 'daily' ? dailySeed(dailyRecord().day) : (Math.random() * 2 ** 31) | 0;
   session.setupInfinity(new InfinityWorld(seed));
+  infCounted = false;
   field.rebuild(session.level);
   field.directionArc = null;
   hud.infDaily = mode === 'daily';
@@ -649,8 +682,26 @@ addEventListener('pagehide', () => save.flush());
 // ── 화면 흐름 ───────────────────────────────────────────────────────────
 hud.onRetry = () => {
   aim.finish();
-  if (session.world) { startInfinity(infMode); return; }   // 인피니티는 언제나 새 판(같은 모드)
+  if (session.world) { void nextInfinityRun(); return; }   // 인피니티는 언제나 새 판(같은 모드)
   session.reset(); hud.hideResult(); panning = false; snapToStart();
+};
+/** 인피니티 [다시]. **전면 광고는 여기서만 검토한다** (§14.7) — 타이틀로 나갈 때는 아니다 */
+async function nextInfinityRun(): Promise<void> {
+  const d = shouldShowInfinityInterstitial({ now: nowSeconds(), ads: adState(), revived: session.revived });
+  if (d.show && ads.isInterstitialReady()) {
+    const r = await ads.showInterstitial();
+    if (r === 'shown') saveAdState(afterInterstitial(adState(), nowSeconds()));
+  }
+  startInfinity(infMode);
+}
+/** 이어하기 (§14.7): 보상형 광고 뒤 끝난 자리에서 다시 난다. 안내 문구 키를 돌려주면 시트가 보인다 */
+hud.onRevive = async () => {
+  const r = await reward('revive');
+  if (r !== 'ok') return r;
+  if (!session.revive()) return 'hint.unavailable';
+  hud.hideResult();
+  sfx.play('shield'); buzz(40); field.onAbsorb();
+  return null;
 };
 // 인피니티에서 "뒤로"·단계 이름·결과의 두 번째 버튼은 타이틀로
 hud.onOpenPicker = () => {
@@ -666,9 +717,10 @@ hud.onHints = () => hints.show();
 hud.onShare = async () => {
   if (!infResult) return null;
   const sec = infResult.sec.toFixed(1);
-  const text = infMode === 'daily'
+  let text = infMode === 'daily'
     ? t('inf.shareText', { date: shortDate(dailyRecord().day), sec })
     : t('inf.shareTextRandom', { sec });
+  if (session.revived) text += ` · ${t('inf.revived')}`;   // 이어하기를 쓴 기록임을 밝힌다 (§14.7)
   const url = shareUrl();
   const nav = navigator as Navigator & { share?: (d: { text: string; url?: string }) => Promise<void> };
   if (typeof nav.share === 'function') {
@@ -715,16 +767,22 @@ async function goNext(): Promise<void> {
  * 깬 단계가 클리어로 남지 않고, 실패 횟수가 안 올라 힌트(§14.3)가 열리지 않았다.
  */
 let infResult: { sec: number; best: number; isBest: boolean } | null = null;
+/** 이번 인피니티 판을 판 수에 넣었는가. 이어하기(§14.7)로 두 번 끝나도 한 판이다 */
+let infCounted = false;
 function recordOutcome(): void {
   if (session.world) {
-    // 인피니티의 끝: 기록만 남긴다. 단계 기록·광고 횟수에는 넣지 않는다
+    // 인피니티의 끝: 기록만 남긴다. 단계 기록에는 넣지 않는다. 판 수는 전면 광고 간격(§14.7)
     const sec = session.freeSeconds();          // 링에서 쉰 시간은 빼고 (§22.3)
     const inf = save.data.infinity;
-    inf.runs++;
+    const rec = infMode === 'daily' ? dailyRecord() : inf;
+    if (!infCounted) {
+      infCounted = true;
+      inf.runs++;
+      if (infMode === 'daily') rec.runs++;
+      saveAdState(afterInfinityRun(adState()));
+    }
     if (sec > inf.best) inf.best = sec;         // 전체 최고는 어느 우주든 센다
     // 오늘의 우주는 오늘 기록으로 보여 준다 — "오늘 최고" 가 공유의 단위다
-    const rec = infMode === 'daily' ? dailyRecord() : inf;
-    if (infMode === 'daily') rec.runs++;
     const isBest = sec > rec.best || (infMode === 'daily' && rec.best === 0 && sec > 0 && rec.runs === 1);
     if (sec > rec.best) rec.best = sec;
     save.touch();
@@ -836,7 +894,10 @@ function frame(now: number): void {
   // 연출이 끝나면 결과 시트. 기록은 위에서 이미 했다
   if (session.state === 'ending' && session.endProgress() >= 1 && hud.result.hidden) {
     if (session.world) {
-      if (infResult) hud.showInfinityResult(infResult.sec, infResult.best, infResult.isBest, infMode === 'daily');
+      if (infResult) {
+        hud.showInfinityResult(infResult.sec, infResult.best, infResult.isBest, infMode === 'daily',
+          session.canRevive ? rewardMode() : null);
+      }
     } else {
       const p = {
         cleared: (id: string) => save.cleared(id),
@@ -913,7 +974,7 @@ function syncHudVisibility(): void {
 void pickAdProvider(cap, {
   pause: () => { paused = true; session.pauseReset(); },
   resume: () => { paused = false; },
-}).then((p) => { ads = p; });
+}).then((p) => { ads = save.data.ads.removed ? new FreeHintProvider() : p; });   // 광고 제거 (§14.7)
 
 // OS 가 모션 줄이기를 켰으면 기본값으로 따른다 (§12.4).
 // 사용자가 설정에서 직접 바꾼 적이 있으면 그 값이 이긴다.
@@ -935,7 +996,9 @@ if (!import.meta.env.DEV && buildTarget() !== 'itch' && 'serviceWorker' in navig
 // 개발 서버에서만: 브라우저 확인 스크립트가 정확한 각도로 쏘려고 쓴다 (§16.6). 배포 번들에는 없다
 if (import.meta.env.DEV) {
   (window as unknown as { __swingby: unknown }).__swingby = {
-    session, cam, field, save, startPlay, tapTurn, startInfinity, levelup,
+    session, cam, field, save, hud, startPlay, tapTurn, startInfinity, levelup, ads: () => ads,
+    // 광고 시간 조건(§14.4·§14.7)을 시험하려고 앱 시작 시각을 과거로 당긴다
+    backdate: (sec: number) => { started -= sec * 1000; },
     fire: (deg: number) => { session.setAngle(deg); session.launch(); },
   };
 }

@@ -177,6 +177,19 @@ export class BossSim {
     return this.phase;
   }
 
+  /**
+   * 이어하기 (§14.7). 진 자리에서 목숨을 채우고 싸움을 잇는다. 체력은 깎인 대로.
+   * 화면의 탄은 모두 지우고 무적은 평소의 두 배 — 돌아오자마자 맞지 않게
+   */
+  revive(lives: number): boolean {
+    if (this.phase !== 'lost' || lives <= 0) return false;
+    this.lives = lives;
+    this.phase = 'fight';
+    this.shots = [];
+    this.invuln = BOSS_INVULN * 2;
+    return true;
+  }
+
   /** (x, y) 가 보스 몸통(타원) 안인가. pad 만큼 넉넉히 */
   private hitsBoss(x: number, y: number, pad: number): boolean {
     const ex = (x - this.x) / (BOSS_RX + pad), ey = (y - this.y) / (BOSS_RY + pad);
