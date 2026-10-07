@@ -216,7 +216,7 @@ export class FieldRenderer {
     }
 
     this.sky(ctx, cam, L);
-    this.bounds(ctx, L);
+    this.bounds(ctx, cam, L);
     this.gravity(ctx, L, st, t);
     this.ufoRanges(ctx, L, s, t);
     this.trail(ctx, s.prevTrail, C.dim);
@@ -368,33 +368,39 @@ export class FieldRenderer {
     if (age < 0.25) put(ctx, this.fx(Math.floor(age * 16) % 2 ? 'sparkle1' : 'sparkle0'), p.tx, p.ty);
   }
 
-  // 밤하늘. 맵 바깥은 한 칸 어두운 색($03)으로 칠해 벽이 읽히게 한다.
+  // 밤하늘. 보이는 곳 전부 — 맵 바깥도 같은 하늘과 별이다(사용자 결정, §12.5: 넓은 화면에서
+  // 맵 밖이 다른 색으로 잘려 보였다). 벽은 bounds() 의 점선이 읽히게 한다.
   // 별은 반복 타일이고, 카메라 이동의 30%만 따라간다 (§12 시차)
   private sky(ctx: CanvasRenderingContext2D, cam: Camera, L: Level, scroll = 0): void {
-    ctx.fillStyle = C.void;
-    ctx.fillRect(cam.x - 2, cam.y - 2, cam.viewW + 4, cam.viewH + 4);
+    const x0 = cam.x - 2, y0 = cam.y - 2, x1 = cam.x + cam.viewW + 2, y1 = cam.y + cam.viewH + 2;
     ctx.fillStyle = C.bg;
-    ctx.fillRect(0, 0, L.w, L.h);
+    ctx.fillRect(x0, y0, x1 - x0, y1 - y0);
 
     const tile = this.sprite('stars', () => starTile(3, STAR_TILE, STAR_TILE));
     // scroll 은 보스전(§22.6)에서 별이 아래로 흐르게 — 위로 나는 느낌
     const ox = Math.round(cam.x * (1 - STAR_PARALLAX)), oy = Math.round(cam.y * (1 - STAR_PARALLAX) + scroll);
-    const x0 = Math.max(0, cam.x), y0 = Math.max(0, cam.y);
-    const x1 = Math.min(L.w, cam.x + cam.viewW), y1 = Math.min(L.h, cam.y + cam.viewH);
-    ctx.save();
-    ctx.beginPath(); ctx.rect(0, 0, L.w, L.h); ctx.clip();
     const sx = Math.floor((x0 - ox) / STAR_TILE) * STAR_TILE + ox;
     const sy = Math.floor((y0 - oy) / STAR_TILE) * STAR_TILE + oy;
     for (let y = sy; y < y1; y += STAR_TILE) {
       for (let x = sx; x < x1; x += STAR_TILE) ctx.drawImage(tile.img as CanvasImageSource, x, y);
     }
-    ctx.restore();
   }
 
-  // 맵 모서리 꺾쇠. 2px 간격 점선($32)
-  private bounds(ctx: CanvasRenderingContext2D, L: Level): void {
+  // 맵 경계: 네 변을 따라 2px 간격 점선과 모서리 꺾쇠($32). 맵 밖이 같은 하늘이라
+  // 벽은 이 선으로만 읽힌다. 인피니티처럼 맵이 화면보다 훨씬 크면 보이는 변만 찍는다
+  private bounds(ctx: CanvasRenderingContext2D, cam: Camera, L: Level): void {
     const { w, h } = L;
     ctx.fillStyle = C.dim;
+    const vx0 = Math.max(0, Math.floor(cam.x)), vx1 = Math.min(w, Math.ceil(cam.x + cam.viewW));
+    const vy0 = Math.max(0, Math.floor(cam.y)), vy1 = Math.min(h, Math.ceil(cam.y + cam.viewH));
+    for (const y of [0, h - 1]) {
+      if (y < cam.y - 1 || y > cam.y + cam.viewH + 1) continue;
+      for (let x = vx0 - (vx0 % 2); x < vx1; x += 2) ctx.fillRect(x, y, 1, 1);
+    }
+    for (const x of [0, w - 1]) {
+      if (x < cam.x - 1 || x > cam.x + cam.viewW + 1) continue;
+      for (let y = vy0 - (vy0 % 2); y < vy1; y += 2) ctx.fillRect(x, y, 1, 1);
+    }
     for (const [x, y, sx, sy] of [[0, 0, 1, 1], [w - 1, 0, -1, 1], [w - 1, h - 1, -1, -1], [0, h - 1, 1, -1]] as const) {
       for (let i = 0; i < BRACKET; i += 2) {
         ctx.fillRect(x + i * sx, y, 1, 1);

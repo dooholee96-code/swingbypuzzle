@@ -30,8 +30,6 @@ export const PIX: Readonly<Record<string, string>> = Object.fromEntries(
 export const C = {
   /** 밤하늘 $22 */
   bg: NES['22'],
-  /** 맵 바깥 $03 — 벽 너머를 어둡게 해 경계를 읽히게 한다 */
-  void: NES['03'],
   line: NES['30'],
   /** 이전 시도 궤적처럼 한 단계 물러난 흰색 $32 */
   dim: NES['32'],

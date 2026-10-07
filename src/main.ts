@@ -37,6 +37,8 @@ import {
 } from './i18n/index.js';
 import { levelName } from './i18n/levels.js';
 import { messierLabel } from './i18n/messier.js';
+import { toDataUrl } from './render/sprites/bake.js';
+import { starTile } from './render/sprites/world.js';
 
 const MAX_DPR = 2.5;               // §15.3
 const DEMO_LEVEL = '1-1';          // §13.1 타이틀 뒤에서 도는 데모
@@ -937,6 +939,9 @@ if (import.meta.env.DEV) {
     fire: (deg: number) => { session.setAngle(deg); session.launch(); },
   };
 }
+
+// DOM 화면 뒤 밤하늘 (§12.5): 필드와 같은 별 타일을 구워 CSS 변수로 넘긴다
+document.documentElement.style.setProperty('--stars', `url(${toDataUrl(starTile(3, 192, 192))})`);
 
 resize();
 startDemo();

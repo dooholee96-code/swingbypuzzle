@@ -50,13 +50,13 @@
   --display:var(--text)}
 
 *{box-sizing:border-box}
-html,body{height:100%;margin:0;background:var(--deep);color:var(--ink);
+html,body{height:100%;margin:0;background:var(--sky);color:var(--ink);
           font-family:var(--text);overflow:hidden;overscroll-behavior:none;
           /* 픽셀 글꼴을 가짜 굵게·기울임으로 뭉개지 않는다 */
           font-synthesis:none;-webkit-font-smoothing:none;
           -webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
 #app{position:fixed;inset:0}
-canvas{display:block;width:100%;height:100%;touch-action:none;background:var(--deep);
+canvas{display:block;width:100%;height:100%;touch-action:none;background:var(--sky);
        image-rendering:pixelated;image-rendering:crisp-edges}
 img.px{image-rendering:pixelated;image-rendering:crisp-edges}
 
@@ -165,7 +165,7 @@ img.px{image-rendering:pixelated;image-rendering:crisp-edges}
 .cell img{width:20px;height:20px;image-rendering:pixelated}
 .cell .q{font:400 16px/1 var(--display);color:var(--gray)}
 .cell .n{position:absolute;right:1px;bottom:0;font:400 8px/1 var(--display);color:var(--deep)}
-.catnote{margin:-8px 0 0;font:400 12px/1.5 var(--text);color:var(--paper)}
+.catnote{margin:-8px 0 0;font:400 12px/1.5 var(--text);color:var(--ink)}
 #intro .panel.messier .art{height:110px}
 #intro .panel.messier .art img{height:96px;width:96px}
 #intro .panel.messier .art .q{font:400 48px/1 var(--display);color:var(--deep)}
@@ -221,7 +221,9 @@ img.px{image-rendering:pixelated;image-rendering:crisp-edges}
 .screen{position:absolute;inset:0;display:flex;flex-direction:column;
         padding:calc(16px + env(safe-area-inset-top,0px)) 16px
                 calc(20px + env(safe-area-inset-bottom,0px));
-        gap:16px;overflow-y:auto;background:var(--deep)}
+        gap:16px;overflow-y:auto;
+        /* 캔버스와 같은 밤하늘. --stars 는 main.ts 가 필드의 별 타일을 구워 넣는다 (§12.5) */
+        background:var(--sky) var(--stars,none) repeat;background-size:192px 192px}
 .screen[hidden]{display:none}
 .screen h2{margin:0;font:400 26px/1 var(--display);color:var(--paper);
            text-shadow:3px 3px 0 var(--ink);display:flex;align-items:center;gap:10px}
@@ -279,7 +281,7 @@ img.px{image-rendering:pixelated;image-rendering:crisp-edges}
 .card .stars{color:var(--orange-dark);letter-spacing:1px}
 .card .best{font-size:12px}
 .screen h2 .sum{margin-left:auto;font:400 16px/1 var(--display);color:var(--yellow)}
-.unlocknote{margin:-6px 0 0;font:700 12px/1.4 var(--text);color:var(--paper)}
+.unlocknote{margin:-6px 0 0;font:700 12px/1.4 var(--text);color:var(--ink)}
 
 /* 결과의 별 세 칸 (§13.4). 받은 것은 노랑, 못 받은 것은 회색 — 차례로 튀어나온다 */
 .sheet .stars{display:flex;gap:6px;flex-wrap:wrap}
