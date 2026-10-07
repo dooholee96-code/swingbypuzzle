@@ -1254,7 +1254,7 @@ v4의 Godot 익스포트 자리다. Capacitor는 웹 자산을 WebView로 감싸
 - `npx cap add android` → `android/`가 생긴다. **이 폴더는 생성물이므로 git에서 제외**하고, 손으로 고친 설정(권한, 방향 고정, 스플래시)은 `capacitor.config.ts`와 재현 가능한 패치로 둔다.
 - 절차: `npm run build` → `npx cap sync` → Android Studio에서 실행·서명.
 - 설정: 세로 고정(`android:screenOrientation="portrait"`), 전체 화면, `webContentsDebuggingEnabled`는 디버그 빌드에서만.
-- 앱 이름 "스윙바이", 앱 ID `com.<개발자명>.swingby`(출시 전 사용자와 확정).
+- 앱 이름 "스윙바이", 앱 ID `com.shiroleestudio.swingby`(사업용 계정 shiroleestudio@gmail.com 에서 따옴, 2026-10. 스토어 등록 전 최종 확인).
 - **구형 안드로이드 WebView가 유일한 호환성 위험이다.** WebView는 크롬과 함께 갱신되지만 구형 기기에서 뒤처질 수 있다. 빌드 타깃을 **ES2020**으로 낮추고, M12 점검표에 구형 WebView 확인을 넣는다.
 
 ### 15.3 플랫폼 계층 (`src/platform/`)

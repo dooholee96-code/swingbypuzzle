@@ -13,13 +13,13 @@ Claude Code 가 초안을 만들고 사용자가 확인한다.
 | `screenshots.md` | 스크린샷 구성안 5장 | ✅ |
 | `data-safety.md` | 데이터 보안·개인정보 라벨 메모 | ✅ |
 | `tester-guide.md` | 비공개 테스터 안내문 | ✅ |
-| `../public/privacy/index.html` | 개인정보처리방침 (Pages 에 함께 올라간다) | ✅ 문의처만 비어 있음 |
+| `../public/privacy/index.html` | 개인정보처리방침 (Pages 에 함께 올라간다) | ✅ 문의처 shiroleestudio@gmail.com |
 
 ## 사용자가 해야 하는 것
 
 이 저장소에서 할 수 없는 일들이다.
 
-1. **개인정보처리방침의 문의처 이메일**을 채운다.
+1. ~~개인정보처리방침의 문의처 이메일~~ — 채움(shiroleestudio@gmail.com, 사업용 구글 계정. 스토어·광고 계정도 이 계정으로).
 2. **H5 Games Ads 도메인 승인 신청** — AdSense/Ad Manager 계정으로
    `dooholee96-code.github.io` 를 등록한다. 심사에 시간이 걸리므로 먼저 낸다.
 3. 승인 뒤 퍼블리셔 ID 를 **GitHub Actions 시크릿 `VITE_H5_CLIENT`** 로 넣는다.

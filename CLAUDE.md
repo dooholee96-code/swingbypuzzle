@@ -200,7 +200,8 @@ Settings → Pages → Source 는 **"GitHub Actions"** 로 되어 있다 (확인
 1. **H5 Games Ads 도메인 승인 신청** (§14.2) — 심사에 시간이 걸리니 가장 먼저.
    승인 뒤 퍼블리셔 ID 를 **GitHub Actions 시크릿 `VITE_H5_CLIENT`** 로 넣는다.
    저장소 파일에 적지 않는다 (§0.8)
-2. **개인정보처리방침의 문의처 이메일** — `public/privacy/index.html` 에 자리만 비어 있다
+2. ~~개인정보처리방침의 문의처 이메일~~ — 채움. **사업용 계정은 shiroleestudio@gmail.com** — Play·AdMob·판매자 프로필·
+   itch·CrazyGames·토스를 여기로. AdSense 는 개인 계정 보유 여부를 먼저 확인(한 사람에 하나)
 3. **옛 브랜치 정리** — `claude/kind-wozniak-x4heoi`·`claude/upbeat-noether-355hjk`.
    둘 다 main 에 없는 커밋이 없다. 이 세션 권한으로는 원격 브랜치를 지울 수 없어 사용자가 지운다.
    (`main` 배포는 `github-pages` 환경의 브랜치 목록을 `main` 으로 바꿔 풀렸다)
