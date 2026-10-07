@@ -117,6 +117,9 @@ img.px{image-rendering:pixelated;image-rendering:crisp-edges}
 #turns .pip{width:10px;height:14px;border:2px solid var(--ink);background:var(--gray-light)}
 #turns .pip.on{background:var(--orange)}
 #turns.pop{animation:pop .3s ease-out both}
+/* 분사가 없는데 탭했다 (§22.1) */
+#turns.shake{animation:shake .3s linear both}
+@keyframes shake{0%,100%{transform:none}20%{transform:translateX(-4px)}40%{transform:translateX(4px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
 /* 경험치 바 (§22.5): 오른쪽 위, 다시 버튼 밑. 패시브 줄은 분사 판 밑 */
 #xp{position:absolute;right:12px;top:calc(64px + env(safe-area-inset-top,0px));pointer-events:none;
   display:flex;align-items:center;gap:6px;padding:5px 8px;

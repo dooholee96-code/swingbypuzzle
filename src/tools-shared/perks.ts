@@ -5,9 +5,8 @@
 //
 // DOM·브라우저 API 를 import 하지 않는다 (§0.3).
 
-import { TURN_MAX } from '../core/constants.js';
 import { mulberry32 } from '../core/rng.js';
-import { ITEM_R, MAX_TURNS, START_TURNS } from './infinity.js';
+import { INF_TURN, ITEM_R, MAX_TURNS, START_TURNS } from './infinity.js';
 
 /** 패시브 종류. 각각 3단계(방패는 남은 횟수 0~3) */
 export type PerkKind =
@@ -22,13 +21,16 @@ export type OfferKind = PerkKind | 'refill';
 export type PerkLevels = Record<PerkKind, number>;
 
 export function noPerks(): PerkLevels {
-  return { boost: 0, turn: 0, recharge: 0, magnet: 0, shield: 0, slowshot: 0, foresight: 0, dockwide: 0 };
+  return { boost: 0, turn: 0, recharge: 0, magnet: 0, shield: START_SHIELD, slowshot: 0, foresight: 0, dockwide: 0 };
 }
 
 /** 단계별 값. 0단계는 패시브가 없을 때의 값이다 */
-const TURN_DEG = [TURN_MAX, 48, 56, 64] as const;
-const RECHARGE_S = [0, 24, 16, 10] as const;
-const MAGNET_R = [ITEM_R, 40, 70, 100] as const;
+// 0단계가 인피니티의 기본이다. 재충전·자석은 기본으로도 조금 있다(밸런스, 2026-10)
+const TURN_DEG = [INF_TURN, 70, 80, 90] as const;
+const RECHARGE_S = [15, 10, 7, 5] as const;
+const MAGNET_R = [26, 44, 70, 100] as const;
+/** 시작 방패. 한 번은 봐준다 */
+export const START_SHIELD = 1;
 const BULLET = [1, 0.8, 0.65, 0.5] as const;
 const FORESIGHT_S = [0, 0.8, 1.4, 2.0] as const;
 const DOCK_K = [1, 1.3, 1.6, 2.0] as const;

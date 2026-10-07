@@ -91,7 +91,7 @@ export const zh: Dict = {
   'intro.wide': '大地图',
   'intro.wide.body': '一屏看不全。点击角落的小地图查看航线。',
   'intro.turn': '喷射',
-  'intro.turn.body': '飞行中点击屏幕，就会朝那一侧转向。剩余次数显示在左上角。',
+  'intro.turn.body': '飞行中点击屏幕，就会朝那一侧转向。每次转向的角度有限，范围会以虚线显示在飞船前方。剩余次数在左上角。',
   'intro.infinity': '无尽模式',
   'intro.infinity.body': '在无尽的宇宙中别撞上任何东西，坚持得越久越好。胡萝卜是经验值，升级后选择一项能力。',
   'intro.dock': '轨道行星',

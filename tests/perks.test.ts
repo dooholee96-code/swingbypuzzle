@@ -1,7 +1,6 @@
 // 패시브·경험치 (§22.5)
 import { describe, expect, it } from 'vitest';
-import { TURN_MAX } from '../src/core/constants.js';
-import { ITEM_R, MAX_TURNS, START_TURNS, makeChunk } from '../src/tools-shared/infinity.js';
+import { INF_TURN, MAX_TURNS, START_TURNS, makeChunk } from '../src/tools-shared/infinity.js';
 import {
   CARROT_XP, PERK_KINDS, PERK_MAX, levelOf, noPerks, offerPerks, perkValueText, perkValues,
   raise, threatOf, xpForLevel,
@@ -29,24 +28,25 @@ describe('경험치', () => {
 });
 
 describe('패시브 값', () => {
-  it('없으면 기본값 그대로', () => {
+  it('없으면 인피니티 기본값 — 60°, 재충전 15초, 자석 26, 방패 하나', () => {
     const v = perkValues(noPerks());
     expect(v.maxTurns).toBe(START_TURNS);
-    expect(v.turnMax).toBe(TURN_MAX);
-    expect(v.rechargeSteps).toBe(0);
-    expect(v.magnetR).toBe(ITEM_R);
+    expect(v.turnMax).toBe(INF_TURN);
+    expect(v.rechargeSteps).toBe(15 * 240);
+    expect(v.magnetR).toBe(26);
+    expect(noPerks().shield).toBe(1);
     expect(v.bulletScale).toBe(1);
     expect(v.foresight).toBe(0);
     expect(v.dockScale).toBe(1);
   });
 
-  it('다 올리면 분사 5, 64°, 10초, 100, 50%, 2.0초, 2.0배', () => {
+  it('다 올리면 분사 6, 90°, 5초, 100, 50%, 2.0초, 2.0배', () => {
     let p = noPerks();
     for (const k of PERK_KINDS) for (let i = 0; i < PERK_MAX; i++) p = raise(k, p);
     const v = perkValues(p);
     expect(v.maxTurns).toBe(MAX_TURNS);
-    expect(v.turnMax).toBe(64);
-    expect(v.rechargeSteps).toBe(10 * 240);
+    expect(v.turnMax).toBe(90);
+    expect(v.rechargeSteps).toBe(5 * 240);
     expect(v.magnetR).toBe(100);
     expect(v.bulletScale).toBe(0.5);
     expect(v.foresight).toBe(2);
@@ -56,9 +56,9 @@ describe('패시브 값', () => {
   });
 
   it('카드 문구의 값은 다음 단계 것', () => {
-    expect(perkValueText('turn', 1)).toBe('48');
+    expect(perkValueText('turn', 1)).toBe('70');
     expect(perkValueText('slowshot', 2)).toBe('65');
-    expect(perkValueText('boost', 1)).toBe('3');
+    expect(perkValueText('boost', 1)).toBe('4');
     expect(perkValueText('foresight', 3)).toBe('2.0');
   });
 });
@@ -77,7 +77,7 @@ describe('레벨업 카드', () => {
     let p = noPerks();
     for (const k of PERK_KINDS) if (k !== 'shield' && k !== 'turn') for (let i = 0; i < PERK_MAX; i++) p = raise(k, p);
     const o = offerPerks(7, 5, p);
-    expect(o.sort()).toEqual(['refill', 'shield', 'turn']);
+    expect(o.sort()).toEqual(['refill', 'shield', 'turn']);      // 방패는 시작 1 이라 아직 올릴 수 있다
     for (const k of PERK_KINDS) for (let i = 0; i < PERK_MAX; i++) p = raise(k, p);
     expect(offerPerks(7, 6, p)).toEqual(['refill']);
   });

@@ -406,7 +406,14 @@ function tapTurn(x: number, y: number): void {
   const [sx, sy] = session.shipPos();
   const wx = cam.x + x / cam.scale, wy = cam.y + y / cam.scale;
   const dir = Math.atan2(wy - sy, wx - sx) * 180 / Math.PI;
-  if (!session.turn(dir)) return;
+  if (!session.turn(dir)) {
+    // 분사가 없다: 소리 없이 넘어가면 "안 꺾인다"로 느껴진다 — 둔탁한 소리와 분사 판 흔들림
+    if (session.state === 'flying' && session.turnSlots > 0 && session.turnsLeft <= 0) {
+      sfx.play('dud'); buzz(30);
+      hud.turns.classList.remove('shake'); void hud.turns.offsetWidth; hud.turns.classList.add('shake');
+    }
+    return;
+  }
   field.onTurn(wx, wy);
   sfx.play('boost');
   buzz(15);

@@ -8,7 +8,7 @@
 // 화면이 숨겨지면 음소거한다(§15.3).
 
 export type Sfx = 'launch' | 'enterField' | 'shoot' | 'explode' | 'arrive' | 'tick' | 'boost' | 'dock'
-  | 'shield' | 'levelup' | 'pick' | 'alarm' | 'hurt' | 'bossdown' | 'found';
+  | 'shield' | 'levelup' | 'pick' | 'alarm' | 'hurt' | 'bossdown' | 'found' | 'dud';
 
 export class Audio {
   enabled = true;
@@ -65,6 +65,8 @@ export class Audio {
       case 'levelup': return this.chord([523.25, 659.25, 1046.5], 0.35);
       // 카드 고름: 짧은 확인음
       case 'pick': return this.tone(880, 1320, 0.09, 'square', 0.3);
+      // 분사가 없을 때 탭 (§22.1): 둔탁한 "안 돼" 소리
+      case 'dud': return this.tone(160, 110, 0.12, 'square', 0.35);
       // 메시에 천체 발견 (§22.7): 반짝이는 상행 아르페지오
       case 'found': return this.chord([659.25, 880, 1174.66, 1567.98], 0.4);
       // 보스 경보 (§22.6): 두 음이 오르내리는 사이렌

@@ -604,6 +604,16 @@ export class FieldRenderer {
         return;
       }
       const flame = this.reduceMotion ? 0 : Math.floor(t * 15) % 2;
+      // 꺾을 수 있는 범위 (§22.1): 분사가 남아 있으면 진행 방향 ±turnMax 의 두 점선.
+      // 한 번에 다 못 꺾는다는 것을 보여 준다 — 폰에서 "탭해도 그쪽으로 안 간다"고 느꼈다
+      if (s.turnsLeft > 0) {
+        const m = s.sim.mods.turnMax * Math.PI / 180;
+        ctx.fillStyle = C.dim;
+        for (const q of [a - m, a + m]) {
+          const cq = Math.cos(q), sq = Math.sin(q);
+          for (let d = 18; d <= 44; d += 4) ctx.fillRect(Math.floor(x + cq * d), Math.floor(y + sq * d), 1, 1);
+        }
+      }
       // 무적 중(§22.5 방패)에는 깜빡인다 — 모션 줄이기면 그대로 보인다
       if (s.sim.invuln > 0 && !this.reduceMotion && Math.floor(t * 12) % 3 === 0) return;
       // 발사 순간 진행 방향으로 늘어났다가 출렁이며 돌아온다

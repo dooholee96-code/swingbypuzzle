@@ -27,12 +27,18 @@ export const ORIGIN = 1_000_000;
 export const START_CLEAR = 260;
 /** 아이템을 먹는 거리 (우주선 중심에서) */
 export const ITEM_R = 16;
-export const START_TURNS = 2;
-export const MAX_TURNS = 5;
+/** 시작 분사와 최대. 처음 2·5 였는데 폰에서 20초를 못 버텼다 — 3·6 으로 (§22.3 밸런스) */
+export const START_TURNS = 3;
+export const MAX_TURNS = 6;
+/** 인피니티의 기본 꺾는 각(°). 스테이지의 TURN_MAX(40)는 6장 검증에 묶여 있어 그대로 두고, 여기만 넉넉히 */
+export const INF_TURN = 60;
 /**
  * 경계 격자점에 파편을 둘 확률. 출발 둘레(ring 0~1)는 "숨 고르는 구간"이라 성기게 둔다 —
  * 처음 시험에서 위로 곧게 쏘자 2초 만에 파편에 부딪혔다. 곧은 길 금지(§22.3)는 ring 2 부터다.
  */
+// 밸런스(2026-10 폰 피드백)로 밀도를 낮춰 봤지만 곧은 길 금지(99% 가 900 유닛 안,
+// tests/infinity.test.ts)가 바로 깨졌다 — 0.85/0.8 만 해도 914. 밀도는 그대로 두고
+// 버티는 수단(시작 분사 3·기본 재충전·시작 방패·60°)을 늘리는 쪽으로 갔다
 const debrisP = (ring: number): number => (ring <= 1 ? 0.3 : ring === 2 ? 0.7 : 0.9);
 const rockP = (ring: number): number => (ring <= 1 ? 0.55 : 0.85);
 
@@ -152,7 +158,7 @@ export function makeChunk(seed: number, cx: number, cy: number, opts: ChunkOpts 
       out.ufos.push({
         x, y, range: Math.round(pick(140, 180)),
         interval: Math.round(pick(9, 13) * fireK) / 10,
-        delay: Math.round(pick(2, 8)) / 10, bs: Math.round(pick(220, 250)),
+        delay: Math.round(pick(2, 8)) / 10, bs: Math.round(pick(200, 230)),
       });
       return;
     }

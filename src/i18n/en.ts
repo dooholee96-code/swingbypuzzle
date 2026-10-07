@@ -91,7 +91,7 @@ export const en: Dict = {
   'intro.wide': 'Wide Map',
   'intro.wide.body': "It doesn't fit on one screen. Tap the minimap in the corner to look over the route.",
   'intro.turn': 'Boost',
-  'intro.turn.body': 'Tap the screen mid-flight to veer toward that side. Boosts left are shown at the top left.',
+  'intro.turn.body': 'Tap the screen mid-flight to veer toward that side. Each boost turns only so far — the dotted lines ahead of the ship show the range. Boosts left are at the top left.',
   'intro.infinity': 'Infinity',
   'intro.infinity.body': 'Survive as long as you can in endless space without crashing. Carrots are experience: level up and pick a power.',
   'intro.dock': 'Orbit Station',
