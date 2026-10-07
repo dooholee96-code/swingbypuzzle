@@ -933,7 +933,7 @@ if (!import.meta.env.DEV && buildTarget() !== 'itch' && 'serviceWorker' in navig
 // 개발 서버에서만: 브라우저 확인 스크립트가 정확한 각도로 쏘려고 쓴다 (§16.6). 배포 번들에는 없다
 if (import.meta.env.DEV) {
   (window as unknown as { __swingby: unknown }).__swingby = {
-    session, cam, field, startPlay, tapTurn, startInfinity, levelup,
+    session, cam, field, save, startPlay, tapTurn, startInfinity, levelup,
     fire: (deg: number) => { session.setAngle(deg); session.launch(); },
   };
 }

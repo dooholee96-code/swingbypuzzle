@@ -28,11 +28,11 @@ describe('경험치', () => {
 });
 
 describe('패시브 값', () => {
-  it('없으면 인피니티 기본값 — 60°, 재충전 15초, 자석 26, 방패 하나', () => {
+  it('없으면 인피니티 기본값 — 60°, 재충전 10초, 자석 26, 방패 하나', () => {
     const v = perkValues(noPerks());
     expect(v.maxTurns).toBe(START_TURNS);
     expect(v.turnMax).toBe(INF_TURN);
-    expect(v.rechargeSteps).toBe(15 * 240);
+    expect(v.rechargeSteps).toBe(10 * 240);
     expect(v.magnetR).toBe(26);
     expect(noPerks().shield).toBe(1);
     expect(v.bulletScale).toBe(1);
@@ -46,7 +46,7 @@ describe('패시브 값', () => {
     const v = perkValues(p);
     expect(v.maxTurns).toBe(MAX_TURNS);
     expect(v.turnMax).toBe(90);
-    expect(v.rechargeSteps).toBe(5 * 240);
+    expect(v.rechargeSteps).toBe(4 * 240);
     expect(v.magnetR).toBe(100);
     expect(v.bulletScale).toBe(0.5);
     expect(v.foresight).toBe(2);
@@ -58,7 +58,7 @@ describe('패시브 값', () => {
   it('카드 문구의 값은 다음 단계 것', () => {
     expect(perkValueText('turn', 1)).toBe('70');
     expect(perkValueText('slowshot', 2)).toBe('65');
-    expect(perkValueText('boost', 1)).toBe('4');
+    expect(perkValueText('boost', 1)).toBe('5');
     expect(perkValueText('foresight', 3)).toBe('2.0');
   });
 });

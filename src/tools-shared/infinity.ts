@@ -27,9 +27,17 @@ export const ORIGIN = 1_000_000;
 export const START_CLEAR = 260;
 /** 아이템을 먹는 거리 (우주선 중심에서) */
 export const ITEM_R = 16;
-/** 시작 분사와 최대. 처음 2·5 였는데 폰에서 20초를 못 버텼다 — 3·6 으로 (§22.3 밸런스) */
-export const START_TURNS = 3;
-export const MAX_TURNS = 6;
+/**
+ * 시작 분사와 최대. 처음 2·5 였는데 폰에서 20초를 못 버텼다 — 3·6(§22.4.1), 다시 4·6(§22.4.4).
+ * 자동 조종 측정(scratch policy, 앞길 1초·반응 0.25초)에서 시작 4·재충전 10초가 중앙값 20→29초
+ */
+export const START_TURNS = 4;
+export const MAX_TURNS = 7;   // 패시브 '분사 하나 더' 세 단계가 5·6·7
+/**
+ * 인피니티의 속력. 스테이지(150~160)보다 느리다 — 같은 우주에서 150 → 130 만으로
+ * 20초 못 버티는 비율이 47% → 13% (§22.4.4). 곧은 길 금지는 유닛 기준이라 그대로 유효하다
+ */
+export const INF_SPEED = 130;
 /** 인피니티의 기본 꺾는 각(°). 스테이지의 TURN_MAX(40)는 6장 검증에 묶여 있어 그대로 두고, 여기만 넉넉히 */
 export const INF_TURN = 60;
 /**
@@ -226,7 +234,7 @@ export class InfinityWorld {
 
   constructor(readonly seed: number) {
     this.level = {
-      id: 'infinity', name: '', w: ORIGIN * 2, h: ORIGIN * 2, speed: 150, preview: 1.8,
+      id: 'infinity', name: '', w: ORIGIN * 2, h: ORIGIN * 2, speed: INF_SPEED, preview: 1.8,
       start: { x: ORIGIN, y: ORIGIN },
       // 목적지는 없다. 돔 방향(위쪽)만 정하려고 아주 먼 곳에 둔다
       goal: { x: ORIGIN, y: ORIGIN - 1e5, r: 1 },

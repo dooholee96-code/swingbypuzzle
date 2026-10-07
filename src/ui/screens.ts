@@ -40,6 +40,7 @@ export interface ScreenDeps {
     lang: LangSetting;
     zoom: 'fit' | 'x15' | 'x2';
     fps: 60 | 30;
+    display_set?: boolean;
   };
   /** 자동일 때 실제로 고른 언어의 이름. 설정 화면에 "자동 (日本語)" 처럼 보인다 */
   autoLangName(): string;
@@ -356,6 +357,8 @@ export class Screens {
         st[k] = k === 'glow' || k === 'zoom' ? v : k === 'fps' ? Number(v) : v === '1';
         // 직접 건드린 뒤로는 OS 의 prefers-reduced-motion 을 따르지 않는다 (§12.4)
         if (k === 'reduce_motion') st['reduce_motion_set'] = true;
+        // 배율·프레임도 마찬가지 — 직접 고른 뒤로는 기본값이 바뀌어도 따라가지 않는다 (§22.4.4)
+        if (k === 'zoom' || k === 'fps') st['display_set'] = true;
         this.d.onSettingChange();
         this.showSettings();
       });

@@ -27,7 +27,8 @@ export function noPerks(): PerkLevels {
 /** 단계별 값. 0단계는 패시브가 없을 때의 값이다 */
 // 0단계가 인피니티의 기본이다. 재충전·자석은 기본으로도 조금 있다(밸런스, 2026-10)
 const TURN_DEG = [INF_TURN, 70, 80, 90] as const;
-const RECHARGE_S = [15, 10, 7, 5] as const;
+/** 기본 15초였다가 10초로 (§22.4.4). 패시브는 7·5·4 */
+const RECHARGE_S = [10, 7, 5, 4] as const;
 const MAGNET_R = [26, 44, 70, 100] as const;
 /** 시작 방패. 한 번은 봐준다 */
 export const START_SHIELD = 1;

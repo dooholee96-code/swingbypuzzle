@@ -27,10 +27,12 @@ export interface SaveData {
     /** 사용자가 모션 줄이기를 직접 건드린 적이 있는가.
      *  없으면 OS 의 prefers-reduced-motion 을 따른다 (§12.4) */
     reduce_motion_set: boolean;
-    /** 화면 배율 (§11). 폰에서 요소가 작아 1.5배가 기본 */
+    /** 화면 배율 (§11). 폰에서 요소가 작아 2배가 기본 (§22.4.4) */
     zoom: 'fit' | 'x15' | 'x2';
-    /** 그리는 프레임. 물리는 240Hz 고정이라 30 이어도 결과가 같다 (§5.8) */
+    /** 그리는 프레임. 물리는 240Hz 고정이라 30 이어도 결과가 같다 (§5.8). 기본 30 (§22.4.4) */
     fps: 60 | 30;
+    /** 배율·프레임을 사용자가 직접 고른 적이 있는가. 없으면 기본값이 바뀔 때 새 기본값을 따른다 */
+    display_set: boolean;
   };
   ads: {
     free_hint_used: boolean; clears_since_interstitial: number;
@@ -48,7 +50,7 @@ const defaults = (): SaveData => ({
   seen_intros: [],
   settings: {
     sfx: true, haptics: true, glow: 'normal',
-    reduce_motion: false, reduce_motion_set: false, lang: 'auto', zoom: 'x15', fps: 60,
+    reduce_motion: false, reduce_motion_set: false, lang: 'auto', zoom: 'x2', fps: 30, display_set: false,
   },
   ads: {
     free_hint_used: false, clears_since_interstitial: 0,
@@ -76,6 +78,10 @@ export class Save {
       const parsed = JSON.parse(raw) as Partial<SaveData>;
       if (parsed?.version !== VERSION) return;   // 판이 다르면 기본값으로 시작
       this.data = merge(defaults(), parsed) as SaveData;
+      // 배율 1.5·60fps 가 기본이던 때의 저장(§22.4.2)은 그 값을 그대로 담고 있다.
+      // 직접 고른 적이 없고 옛 기본값 그대로면 새 기본값(2×·30)으로 옮긴다 (§22.4.4)
+      const st = this.data.settings;
+      if (!st.display_set && st.zoom === 'x15' && st.fps === 60) { st.zoom = 'x2'; st.fps = 30; }
     } catch { /* 손상된 값은 버리고 기본값으로 간다 */ }
   }
 
