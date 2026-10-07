@@ -226,6 +226,8 @@ export class Session {
   pick(kind: OfferKind): void {
     if (!this.world || this.pendingLevels <= 0) return;
     this.pendingLevels--;
+    // 레벨업은 분사 하나를 채운다 (사용자 결정 2026-10). 카드 효과는 그 위에
+    this.turnsLeft = Math.min(this.maxTurns, this.turnsLeft + 1);
     if (kind === 'refill') { this.turnsLeft = this.maxTurns; }
     else {
       this.perks = raise(kind, this.perks);

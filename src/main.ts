@@ -55,7 +55,11 @@ const sfx = new Audio();
 let cssW = 0, cssH = 0, dpr = 1;
 let mini: MiniRect | null = null;
 let panning = false;
-let dragMode: 'aim' | 'mini' | 'boss' | null = null;
+let dragMode: 'aim' | 'mini' | 'boss' | 'flick' | null = null;
+// 비행 중 스와이프 분사 (§22.1): 누른 자리에서 이만큼(CSS px) 끌면 끈 방향으로 바로 꺾는다.
+// 끌지 않고 떼면 탭 — 탭한 쪽으로
+let flickFrom: [number, number] = [0, 0];
+const FLICK_PX = 20;
 // 보스전 드래그 (§22.6): 손가락이 움직인 만큼 우주선이 움직인다(손가락이 우주선을 가리지 않게)
 let bossFrom: [number, number, number, number] = [0, 0, 0, 0];
 const BOSS_DRAG_K = 1.15;
@@ -405,6 +409,24 @@ function startInfinity(mode: InfinityMode = 'random'): void {
  * 분사 (§22.1). 비행 중 탭한 곳 쪽으로 꺾는다. 방향은 화면에 보이는 우주선에서
  * 탭한 지점으로 — 월드 좌표로 바꿔 잰다(배율이 소수여도 같은 방향).
  */
+/** 스와이프 분사: 끈 방향(화면 벡터 = 월드 방향)으로. 꺾는 각 한계는 그대로 */
+function swipeTurn(dx: number, dy: number): void {
+  const dir = Math.atan2(dy, dx) * 180 / Math.PI;
+  if (!session.turn(dir)) { dudFeedback(); return; }
+  const [sx, sy] = session.shipPos();
+  const len = Math.hypot(dx, dy) || 1;
+  field.onTurn(sx + dx / len * 30, sy + dy / len * 30);
+  sfx.play('boost');
+  buzz(15);
+}
+
+/** 분사가 없을 때의 되먹임: 둔탁한 소리와 분사 판 흔들림 */
+function dudFeedback(): void {
+  if (session.state !== 'flying' || session.turnSlots <= 0 || session.turnsLeft > 0) return;
+  sfx.play('dud'); buzz(30);
+  hud.turns.classList.remove('shake'); void hud.turns.offsetWidth; hud.turns.classList.add('shake');
+}
+
 function tapTurn(x: number, y: number): void {
   const [sx, sy] = session.shipPos();
   const wx = cam.x + x / cam.scale, wy = cam.y + y / cam.scale;
@@ -423,14 +445,7 @@ function tapTurn(x: number, y: number): void {
     const dot = (c: number): number => Math.cos(c * Math.PI / 180) * ux + Math.sin(c * Math.PI / 180) * uy;
     dir = [head - m, head + m].reduce((best, c) => (dot(c) > dot(best) ? c : best));
   }
-  if (!session.turn(dir)) {
-    // 분사가 없다: 소리 없이 넘어가면 "안 꺾인다"로 느껴진다 — 둔탁한 소리와 분사 판 흔들림
-    if (session.state === 'flying' && session.turnSlots > 0 && session.turnsLeft <= 0) {
-      sfx.play('dud'); buzz(30);
-      hud.turns.classList.remove('shake'); void hud.turns.offsetWidth; hud.turns.classList.add('shake');
-    }
-    return;
-  }
+  if (!session.turn(dir)) { dudFeedback(); return; }
   field.onTurn(wx, wy);
   sfx.play('boost');
   buzz(15);
@@ -459,7 +474,11 @@ canvas.addEventListener('pointerdown', (e) => {
   if (session.state === 'flying') {
     // 궤도 행성에서 도는 중이면 탭은 "나가기"다 (§22.4). 분사를 쓰지 않는다
     if (session.release()) { sfx.play('launch'); buzz(15); field.onRelease(); return; }
-    tapTurn(...pos(e));
+    // 분사: 끌면 스와이프 방향, 떼면 탭 방향 (§22.1, 폰 피드백)
+    flickFrom = pos(e);
+    canvas.setPointerCapture(e.pointerId);
+    dragPointer = e.pointerId;
+    dragMode = 'flick';
     return;
   }
   if (session.state === 'ending') {
@@ -491,13 +510,20 @@ canvas.addEventListener('pointermove', (e) => {
   if (!dragMode || e.pointerId !== dragPointer) return;
   const [x, y] = pos(e);
   if (dragMode === 'aim') updateAim(x, y);
-  else if (dragMode === 'boss') {
+  else if (dragMode === 'flick') {
+    const dx = x - flickFrom[0], dy = y - flickFrom[1];
+    if (dx * dx + dy * dy >= FLICK_PX * FLICK_PX) {
+      swipeTurn(dx, dy);
+      dragMode = null; dragPointer = -1;
+    }
+  } else if (dragMode === 'boss') {
     session.bossAim(bossFrom[2] + (x - bossFrom[0]) / cam.scale * BOSS_DRAG_K,
       bossFrom[3] + (y - bossFrom[1]) / cam.scale * BOSS_DRAG_K);
   } else moveCamTo(x, y);
 });
 
 function endDrag(): void {
+  if (dragMode === 'flick') tapTurn(...flickFrom);      // 끌지 않고 뗐다: 탭
   if (dragMode === 'aim') {
     if (aim.shouldLaunch()) {
       session.launch();

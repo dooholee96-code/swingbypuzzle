@@ -100,7 +100,7 @@ export const ko = {
   'intro.wide': '넓은 맵',
   'intro.wide.body': '한눈에 안 들어와요. 구석의 미니맵을 눌러 항로를 살펴보세요.',
   'intro.turn': '분사',
-  'intro.turn.body': '날아가는 중에 화면을 탭하면 그쪽으로 꺾여요. 한 번에 꺾이는 각도에는 한계가 있고, 그 범위가 우주선 앞에 점선으로 보여요. 횟수는 왼쪽 위에 있어요.',
+  'intro.turn.body': '날아가는 중에 화면을 쓸어 넘기면 그 방향으로, 탭하면 그쪽으로 꺾여요. 한 번에 꺾이는 각도에는 한계가 있고, 그 범위가 우주선 앞에 점선으로 보여요. 횟수는 왼쪽 위에 있어요.',
   'intro.infinity': '인피니티',
   'intro.infinity.body': '끝없는 우주에서 부딪히지 않고 오래 버티세요. 당근은 경험치예요. 레벨이 오르면 능력을 하나 고르세요.',
   'intro.dock': '궤도 행성',
@@ -126,7 +126,7 @@ export const ko = {
   'inf.shareTextRandom': '스윙바이 인피니티 — {sec}초 버텼어요',
   // §22.5 레벨업·패시브
   'lvl.title': '레벨 {n}!',
-  'lvl.pick': '하나를 고르세요',
+  'lvl.pick': '하나를 고르세요 · 분사 +1',
   'hud.level': 'Lv {n}',
   'perk.boost': '분사 하나 더',
   'perk.boost.desc': '분사 최대 {v}개. 지금 하나 보충',
