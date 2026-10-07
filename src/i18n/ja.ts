@@ -164,6 +164,11 @@ export const ja: Dict = {
   'set.sfx': '効果音',
   'set.haptics': '振動',
   'set.reduceMotion': 'モーションを減らす',
+  'set.zoom': '画面の拡大',
+  'set.zoomFit': '標準',
+  'set.zoom15': '大きく',
+  'set.zoom2': 'とても大きく',
+  'set.fps': 'フレームレート',
   'set.language': '言語',
   // 못 읽는 언어로 바뀌어도 언어 칸을 찾을 수 있게 모든 언어에서 영어로 둔다 (§13.7)
   'set.languageEn': 'Language',

@@ -27,6 +27,10 @@ export interface SaveData {
     /** 사용자가 모션 줄이기를 직접 건드린 적이 있는가.
      *  없으면 OS 의 prefers-reduced-motion 을 따른다 (§12.4) */
     reduce_motion_set: boolean;
+    /** 화면 배율 (§11). 폰에서 요소가 작아 1.5배가 기본 */
+    zoom: 'fit' | 'x15' | 'x2';
+    /** 그리는 프레임. 물리는 240Hz 고정이라 30 이어도 결과가 같다 (§5.8) */
+    fps: 60 | 30;
   };
   ads: {
     free_hint_used: boolean; clears_since_interstitial: number;
@@ -44,7 +48,7 @@ const defaults = (): SaveData => ({
   seen_intros: [],
   settings: {
     sfx: true, haptics: true, glow: 'normal',
-    reduce_motion: false, reduce_motion_set: false, lang: 'auto',
+    reduce_motion: false, reduce_motion_set: false, lang: 'auto', zoom: 'x15', fps: 60,
   },
   ads: {
     free_hint_used: false, clears_since_interstitial: 0,

@@ -38,6 +38,8 @@ export interface ScreenDeps {
     sfx: boolean; haptics: boolean;
     glow: 'normal' | 'low'; reduce_motion: boolean; reduce_motion_set?: boolean;
     lang: LangSetting;
+    zoom: 'fit' | 'x15' | 'x2';
+    fps: 60 | 30;
   };
   /** 자동일 때 실제로 고른 언어의 이름. 설정 화면에 "자동 (日本語)" 처럼 보인다 */
   autoLangName(): string;
@@ -298,6 +300,12 @@ export class Screens {
           <button data-set="${k}" data-v="1" aria-pressed="${on}" type="button">${t('set.on')}</button>
           <button data-set="${k}" data-v="0" aria-pressed="${!on}" type="button">${t('set.off')}</button>
         </div></div>`;
+    // 값이 셋 이상인 설정(화면 배율·프레임). data-v 는 문자열로 두고 바꿀 때 종류별로 돌려놓는다
+    const seg = (k: string, label: string, cur: string, opts: [string, string][]): string => `
+      <div class="row2"><span class="label">${label}</span>
+        <div class="seg">${opts.map(([v, text]) =>
+          `<button data-set="${k}" data-v="${v}" aria-pressed="${cur === v}" type="button">${text}</button>`).join('')}
+        </div></div>`;
 
     // 언어 이름은 각 언어로 쓴다 — 못 읽는 언어로 바뀌어도 자기 언어를 찾을 수 있게.
     // 항목 이름에도 영어를 곁들인다. 같은 이유다.
@@ -316,6 +324,8 @@ export class Screens {
         ${toggle('sfx', t('set.sfx'), s.sfx)}
         ${toggle('haptics', t('set.haptics'), s.haptics)}
         ${toggle('reduce_motion', t('set.reduceMotion'), s.reduce_motion)}
+        ${seg('zoom', t('set.zoom'), s.zoom, [['fit', t('set.zoomFit')], ['x15', t('set.zoom15')], ['x2', t('set.zoom2')]])}
+        ${seg('fps', t('set.fps'), String(s.fps), [['60', '60'], ['30', '30']])}
         ${this.d.canOpenPrivacyOptions?.()
           ? `<div class="row2"><span class="label">${t('set.privacyOptions')}</span>`
             + `<button class="btn" data-a="privacy" type="button">${t('set.open')}</button></div>`
@@ -343,7 +353,7 @@ export class Screens {
       b.addEventListener('click', () => {
         const k = b.dataset['set']!, v = b.dataset['v']!;
         const st = this.d.settings as unknown as Record<string, unknown>;
-        st[k] = k === 'glow' ? v : v === '1';
+        st[k] = k === 'glow' || k === 'zoom' ? v : k === 'fps' ? Number(v) : v === '1';
         // 직접 건드린 뒤로는 OS 의 prefers-reduced-motion 을 따르지 않는다 (§12.4)
         if (k === 'reduce_motion') st['reduce_motion_set'] = true;
         this.d.onSettingChange();

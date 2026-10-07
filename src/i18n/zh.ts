@@ -164,6 +164,11 @@ export const zh: Dict = {
   'set.sfx': '音效',
   'set.haptics': '振动',
   'set.reduceMotion': '减少动态效果',
+  'set.zoom': '画面缩放',
+  'set.zoomFit': '标准',
+  'set.zoom15': '放大',
+  'set.zoom2': '特大',
+  'set.fps': '帧率',
   'set.language': '语言',
   // 못 읽는 언어로 바뀌어도 언어 칸을 찾을 수 있게 모든 언어에서 영어로 둔다 (§13.7)
   'set.languageEn': 'Language',

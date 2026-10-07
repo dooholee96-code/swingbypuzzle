@@ -28,13 +28,17 @@ export class Camera {
   top = 0;
   bottom = 0;
 
-  /** insetTop·insetBottom 은 CSS px — HUD 아래 끝, 각도 판 위 끝까지의 거리 */
-  layout(cssW: number, cssH: number, insetTop = 0, insetBottom = 0): void {
+  /**
+   * insetTop·insetBottom 은 CSS px — HUD 아래 끝, 각도 판 위 끝까지의 거리.
+   * zoom 은 설정의 화면 배율(§11, 2026-10 폰 피드백 "요소가 작다") — 1.5 면 모든 것이 1.5배로
+   * 보이고 맵이 화면을 넘는 만큼 카메라가 따라가며 미니맵이 뜬다. 보스전 아레나는 1 로 돈다
+   */
+  layout(cssW: number, cssH: number, insetTop = 0, insetBottom = 0, zoom = 1): void {
     const clearH = Math.max(cssH - insetTop - insetBottom, 120);
     const full = Math.min(cssW / REF_W, clearH / REF_H);
-    this.scale = full >= FULL_VIEW_MIN_SCALE
+    this.scale = (full >= FULL_VIEW_MIN_SCALE
       ? full
-      : Math.min(cssW / REF_W, cssH / MIN_VIEW_H);
+      : Math.min(cssW / REF_W, cssH / MIN_VIEW_H)) * zoom;
     this.viewW = cssW / this.scale;
     this.viewH = cssH / this.scale;
     this.top = insetTop / this.scale;

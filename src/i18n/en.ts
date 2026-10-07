@@ -164,6 +164,11 @@ export const en: Dict = {
   'set.sfx': 'Sound Effects',
   'set.haptics': 'Vibration',
   'set.reduceMotion': 'Reduce Motion',
+  'set.zoom': 'Zoom',
+  'set.zoomFit': 'Normal',
+  'set.zoom15': 'Large',
+  'set.zoom2': 'Huge',
+  'set.fps': 'Frame rate',
   'set.language': 'Language',
   // 못 읽는 언어로 바뀌어도 언어 칸을 찾을 수 있게 모든 언어에서 영어로 둔다 (§13.7)
   'set.languageEn': 'Language',
