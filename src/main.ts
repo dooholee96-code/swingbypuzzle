@@ -999,6 +999,8 @@ if (import.meta.env.DEV) {
     session, cam, field, save, hud, startPlay, tapTurn, startInfinity, levelup, ads: () => ads,
     // 광고 시간 조건(§14.4·§14.7)을 시험하려고 앱 시작 시각을 과거로 당긴다
     backdate: (sec: number) => { started -= sec * 1000; },
+    // itch 빌드(광고 없는 제공자)의 문구·흐름을 개발 서버에서 보려고
+    adFree: () => { ads = new FreeHintProvider(); },
     fire: (deg: number) => { session.setAngle(deg); session.launch(); },
   };
 }
