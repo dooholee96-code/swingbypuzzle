@@ -8,7 +8,7 @@ export const zh: Dict = {
   'title.sub': '引力弹弓',
   'title.stage': '关卡',
   'title.infinity': '无尽模式',
-  'title.infLocked': '通关 6-1 后解锁',
+  'title.infLocked': '通关 1-8 后解锁',
   'title.settings': '设置',
 
   'picker.title': '选择关卡',
@@ -93,7 +93,7 @@ export const zh: Dict = {
   'intro.turn': '喷射',
   'intro.turn.body': '飞行中滑动即可朝滑动方向转向，点击则朝那一侧转向。每次转向的角度有限，范围会以虚线显示在飞船前方。剩余次数在左上角。',
   'intro.infinity': '无尽模式',
-  'intro.infinity.body': '在无尽的宇宙中别撞上任何东西，坚持得越久越好。胡萝卜是经验值，升级后选择一项能力。',
+  'intro.infinity.body': '在无尽的宇宙中别撞上任何东西，坚持得越久越好。飞行中滑动或点击屏幕，就会朝那个方向转向（喷射）。胡萝卜是经验值，升级后选择一项能力。',
   'intro.dock': '轨道行星',
   'intro.dock.body': '碰到绿色虚线圆就会被抓住绕圈。点击屏幕，就会从那里朝前飞出去。',
   'inf.time': '{sec}秒',

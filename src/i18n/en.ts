@@ -8,7 +8,7 @@ export const en: Dict = {
   'title.sub': '',
   'title.stage': 'Stages',
   'title.infinity': 'Infinity',
-  'title.infLocked': 'Clear 6-1 to unlock',
+  'title.infLocked': 'Clear 1-8 to unlock',
   'title.settings': 'Settings',
 
   'picker.title': 'Select Level',
@@ -93,7 +93,7 @@ export const en: Dict = {
   'intro.turn': 'Boost',
   'intro.turn.body': 'Swipe mid-flight to veer that way, or tap toward a side. Each boost turns only so far — the dotted lines ahead of the ship show the range. Boosts left are at the top left.',
   'intro.infinity': 'Infinity',
-  'intro.infinity.body': 'Survive as long as you can in endless space without crashing. Carrots are experience: level up and pick a power.',
+  'intro.infinity.body': 'Survive as long as you can in endless space without crashing. Swipe or tap mid-flight to veer that way (boost). Carrots are experience: level up and pick a power.',
   'intro.dock': 'Orbit Station',
   'intro.dock.body': 'Touch the green dotted circle to get caught in orbit. Tap to fly off straight ahead.',
   'inf.time': '{sec}s',

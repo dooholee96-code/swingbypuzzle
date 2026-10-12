@@ -10,7 +10,7 @@ export const ko = {
   'title.sub': '스윙바이',
   'title.stage': '스테이지',
   'title.infinity': '인피니티',
-  'title.infLocked': '6-1 을 깨면 열려요',
+  'title.infLocked': '1-8 을 깨면 열려요',
   'title.settings': '설정',
 
   // §13.2 단계 선택
@@ -102,7 +102,7 @@ export const ko = {
   'intro.turn': '분사',
   'intro.turn.body': '날아가는 중에 화면을 쓸어 넘기면 그 방향으로, 탭하면 그쪽으로 꺾여요. 한 번에 꺾이는 각도에는 한계가 있고, 그 범위가 우주선 앞에 점선으로 보여요. 횟수는 왼쪽 위에 있어요.',
   'intro.infinity': '인피니티',
-  'intro.infinity.body': '끝없는 우주에서 부딪히지 않고 오래 버티세요. 당근은 경험치예요. 레벨이 오르면 능력을 하나 고르세요.',
+  'intro.infinity.body': '끝없는 우주에서 부딪히지 않고 오래 버티세요. 날다가 화면을 쓸거나 탭하면 그쪽으로 꺾여요(분사). 당근은 경험치예요. 레벨이 오르면 능력을 하나 고르세요.',
   'intro.dock': '궤도 행성',
   'intro.dock.body': '초록 점선 원에 닿으면 붙잡혀 돌아요. 탭하면 그 자리에서 앞쪽으로 날아가요.',
   'inf.time': '{sec}초',

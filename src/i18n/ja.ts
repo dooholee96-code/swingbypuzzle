@@ -8,7 +8,7 @@ export const ja: Dict = {
   'title.sub': 'スイングバイ',
   'title.stage': 'ステージ',
   'title.infinity': 'インフィニティ',
-  'title.infLocked': '6-1 クリアで解放',
+  'title.infLocked': '1-8 クリアで解放',
   'title.settings': '設定',
 
   'picker.title': 'ステージ選択',
@@ -93,7 +93,7 @@ export const ja: Dict = {
   'intro.turn': 'ブースト',
   'intro.turn.body': '飛んでいる最中にスワイプするとその方向へ、タップするとその側へ曲がります。一度に曲がれる角度には限りがあり、その範囲が機体の前に点線で出ます。残り回数は左上に。',
   'intro.infinity': 'インフィニティ',
-  'intro.infinity.body': '果てしない宇宙で、ぶつからずにできるだけ長く飛び続けましょう。にんじんは経験値。レベルが上がったら能力をひとつ選びます。',
+  'intro.infinity.body': '果てしない宇宙で、ぶつからずにできるだけ長く飛び続けましょう。飛行中に画面をスワイプかタップすると、その方向へ曲がります（ブースト）。にんじんは経験値。レベルが上がったら能力をひとつ選びます。',
   'intro.dock': '軌道惑星',
   'intro.dock.body': '緑の点線の円にふれるとつかまって回ります。タップすると、その場から前へ飛び出します。',
   'inf.time': '{sec}秒',

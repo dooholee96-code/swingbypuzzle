@@ -136,7 +136,7 @@ const screens = new Screens({
   // 타이틀이 보이면 뒤에서 데모가 돌아야 한다 (§13.1). 단계 선택·설정에서 타이틀로
   // 돌아올 때 전에는 멈춘 단계가 그대로 비쳤다
   onTitle: () => { if (!demo) replayDemo(); },
-  infinityOpen: () => TEST_OPEN || save.cleared('6-1'),
+  infinityOpen: () => TEST_OPEN || save.cleared('1-8'),   // 1장을 끝내면 열린다 (§22.8 방송판 준비, 전에는 6-1)
   onPick: (id) => startPlay(id),
   onSettingChange: () => { applySettings(); save.touch(); },
   canOpenPrivacyOptions: () => ads.canOpenPrivacyOptions(),
@@ -1009,5 +1009,8 @@ if (import.meta.env.DEV) {
 document.documentElement.style.setProperty('--stars', `url(${toDataUrl(starTile(3, 192, 192))})`);
 
 resize();
-startDemo();
+// 첫 실행(어느 단계도 시도한 적 없음)은 타이틀을 건너뛰고 바로 1-1 — 웹 포털은 첫 몇 초에 판단한다 (§13.1, 2026-10)
+// save.level() 은 읽기만 해도 칸을 만들므로 "시도한 적 있음" 으로 본다
+const neverPlayed = Object.values(save.data.levels).every((l) => l.attempts === 0 && !l.cleared && !l.skipped);
+if (neverPlayed && !TEST_OPEN) startPlay('1-1'); else startDemo();
 requestAnimationFrame(frame);
