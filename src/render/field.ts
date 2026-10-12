@@ -236,6 +236,47 @@ export class FieldRenderer {
     this.turnPuff(ctx, t);
     this.ship(ctx, s, t);
     this.shield(ctx, s, t);
+    this.broadcast(ctx, s, t);
+  }
+
+  /** 방송판 (§22.8): 위성 당근, 스침 반짝임, 블랙홀 서핑 나온 자리, 반중력 링 */
+  private grazeFx: { t: number; x: number; y: number }[] = [];
+  private warpAt: { t: number; x: number; y: number } | null = null;
+  private broadcast(ctx: CanvasRenderingContext2D, s: Session, t: number): void {
+    if (!s.world) return;
+    // 세션이 쌓은 이번 프레임의 스침 자리 — 가져가며 비운다
+    if (s.grazeFx.length) { for (const [x, y] of s.grazeFx.splice(0)) this.grazeFx.push({ t, x, y }); }
+    if (s.warpFx) { this.warpAt = { t, x: s.warpFx[0], y: s.warpFx[1] }; s.warpFx = null; }
+    if (s.state === 'flying' || s.state === 'ending') {
+      for (const [x, y] of s.satellites()) put(ctx, this.fx('carrot'), x, y);
+      if (s.antigrav && s.state === 'flying') {
+        // 반중력: 우주선 둘레에 붉은 점 링이 바깥으로 퍼진다
+        const [sx, sy] = s.shipPos();
+        const r = 16 + ((t * 40) % 12);
+        const d = this.fx('bossShot');
+        for (let i = 0; i < 8; i++) {
+          const q = i * Math.PI / 4 + t * 2;
+          put(ctx, d, sx + Math.cos(q) * r, sy + Math.sin(q) * r);
+        }
+      }
+    }
+    this.grazeFx = this.grazeFx.filter((g) => t - g.t < 0.35);
+    for (const g of this.grazeFx) {
+      const age = t - g.t;
+      put(ctx, this.fx(Math.floor(age * 20) % 2 ? 'sparkle0' : 'sparkle1'), g.x, g.y - age * 20);
+    }
+    const w = this.warpAt;
+    if (w) {
+      const age = t - w.t;
+      if (age > 0.5) this.warpAt = null;
+      else {
+        const sp = this.fx('sparkle1');
+        for (let i = 0; i < 10; i++) {
+          const q = i * Math.PI / 5 - age * 4, d = 6 + age * 70;
+          put(ctx, sp, w.x + Math.cos(q) * d, w.y + Math.sin(q) * d);
+        }
+      }
+    }
   }
 
   /**

@@ -118,3 +118,14 @@ describe('이어하기 (§14.7)', () => {
     expect(b.revive(BOSS_LIVES)).toBe(false); // 지지 않았으면 거짓
   });
 });
+
+describe('최종 보스 (§22.8)', () => {
+  it('체력 두 배, 회차는 최소 3(모든 패턴), final 표시', () => {
+    const b = new BossSim(1, 1, 3, true);
+    expect(b.final).toBe(true);
+    expect(b.round).toBe(3);
+    expect(b.hpMax).toBe(bossHp(3) * 2);
+    const n = new BossSim(1, 7, 3, true);
+    expect(n.hpMax).toBe(bossHp(7) * 2);
+  });
+});

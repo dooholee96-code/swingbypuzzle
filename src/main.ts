@@ -18,7 +18,7 @@ import { DOME_DRAW_R, FieldRenderer } from './render/field.js';
 import { drawMinimap, miniRect } from './render/minimap.js';
 import type { MiniRect } from './render/minimap.js';
 import { Hud } from './ui/hud.js';
-import { InfinityWorld } from './tools-shared/infinity.js';
+import { InfinityWorld, codeFromSeed, seedBits } from './tools-shared/infinity.js';
 import { HintSheet } from './ui/hints.js';
 import { LevelUpSheet } from './ui/levelup.js';
 import { seenKey } from './ui/intro.js';
@@ -83,6 +83,7 @@ let glide: { t: number; fx: number; fy: number; tx: number; ty: number } | null 
 const GLIDE_HOLD = 0.6, GLIDE_MOVE = 0.9;
 let paused = false;                // 힌트 시트가 열려 있으면 단계 시계를 멈춘다 (§13.5)
 let absorbs = 0;                   // 지난 프레임까지 방패로 튕긴 횟수 (§22.5)
+let grazesSeen = 0, warpsSeen = 0, smashedSeen = 0;   // 방송판 되먹임 (§22.8)
 let ads: AdProvider = new NoAdProvider();
 let started = performance.now();
 
@@ -130,7 +131,7 @@ const screens = new Screens({
     }));
     screens.showSelect();
   },
-  onInfinity: (mode) => startInfinity(mode),
+  onInfinity: (mode, seed) => startInfinity(mode, seed),
   dailyInfo: () => { const d = dailyRecord(); return { date: shortDate(d.day), best: d.best }; },
   catalog: () => save.data.messier,
   // 타이틀이 보이면 뒤에서 데모가 돌아야 한다 (§13.1). 단계 선택·설정에서 타이틀로
@@ -413,13 +414,16 @@ function dailyRecord(): { day: string; best: number; runs: number } {
   if (d.day !== today) { d.day = today; d.best = 0; d.runs = 0; }
   return d;
 }
-function startInfinity(mode: InfinityMode = 'random'): void {
+let infSeed = 0;
+function startInfinity(mode: InfinityMode = 'random', seed?: number): void {
   demo = false;
   infMode = mode;
+  // 시드는 30비트 — 6자리 코드(§22.8)가 그대로 되살린다. 코드 모드의 [다시] 는 같은 우주
+  infSeed = mode === 'daily' ? seedBits(dailySeed(dailyRecord().day))
+    : mode === 'code' ? (seed ?? infSeed) : seedBits(Math.random() * 2 ** 32);
   session.bonusTurns = TEST_TURNS;
   // 오늘의 우주는 날짜가 시드다 — 그날은 모두가 같은 우주 (§22.3). 무작위는 매번 새 판
-  const seed = mode === 'daily' ? dailySeed(dailyRecord().day) : (Math.random() * 2 ** 31) | 0;
-  session.setupInfinity(new InfinityWorld(seed));
+  session.setupInfinity(new InfinityWorld(infSeed));
   infCounted = false;
   field.rebuild(session.level);
   field.directionArc = null;
@@ -428,7 +432,7 @@ function startInfinity(mode: InfinityMode = 'random'): void {
   hud.hideResult();
   hints.close();
   levelup.close();
-  absorbs = 0;
+  absorbs = 0; grazesSeen = 0; warpsSeen = 0; smashedSeen = 0;
   bossShots = 0; bossHits = 0; bossAlarm = -1;
   panning = false;
   resize();
@@ -718,10 +722,12 @@ hud.onHints = () => hints.show();
 hud.onShare = async () => {
   if (!infResult) return null;
   const sec = infResult.sec.toFixed(1);
-  let text = infMode === 'daily'
-    ? t('inf.shareText', { date: shortDate(dailyRecord().day), sec })
-    : t('inf.shareTextRandom', { sec });
+  let text = infResult.cleared ? t('inf.shareClear', { g: infResult.grazes })
+    : infMode === 'daily'
+      ? t('inf.shareText', { date: shortDate(dailyRecord().day), sec })
+      : t('inf.shareTextRandom', { sec });
   if (session.revived) text += ` · ${t('inf.revived')}`;   // 이어하기를 쓴 기록임을 밝힌다 (§14.7)
+  if (infMode !== 'daily') text += ` · ${t('inf.code', { code: codeFromSeed(infSeed) })}`;   // 같은 우주를 날 수 있게 (§22.8)
   const url = shareUrl();
   const nav = navigator as Navigator & { share?: (d: { text: string; url?: string }) => Promise<void> };
   if (typeof nav.share === 'function') {
@@ -767,7 +773,7 @@ async function goNext(): Promise<void> {
  * 기록했는데, 그 사이에 "다시"·"단계"·뒤로 가기를 누르면 기록이 사라졌다 —
  * 깬 단계가 클리어로 남지 않고, 실패 횟수가 안 올라 힌트(§14.3)가 열리지 않았다.
  */
-let infResult: { sec: number; best: number; isBest: boolean } | null = null;
+let infResult: { sec: number; best: number; isBest: boolean; grazes: number; combo: number; cleared: boolean } | null = null;
 /** 이번 인피니티 판을 판 수에 넣었는가. 이어하기(§14.7)로 두 번 끝나도 한 판이다 */
 let infCounted = false;
 function recordOutcome(): void {
@@ -783,11 +789,12 @@ function recordOutcome(): void {
       saveAdState(afterInfinityRun(adState()));
     }
     if (sec > inf.best) inf.best = sec;         // 전체 최고는 어느 우주든 센다
+    if (session.cleared) inf.clears++;          // 클리어(§22.8)는 판을 끝내므로 한 판에 한 번이다
     // 오늘의 우주는 오늘 기록으로 보여 준다 — "오늘 최고" 가 공유의 단위다
     const isBest = sec > rec.best || (infMode === 'daily' && rec.best === 0 && sec > 0 && rec.runs === 1);
     if (sec > rec.best) rec.best = sec;
     save.touch();
-    infResult = { sec, best: rec.best, isBest };
+    infResult = { sec, best: rec.best, isBest, grazes: session.grazes, combo: session.maxCombo, cleared: session.cleared };
     return;
   }
   const l = save.level(session.level.id);
@@ -875,6 +882,10 @@ function frame(now: number): void {
     }
     sfx.play('found'); buzz([15, 30, 15]);
   }
+  // 방송판 (§22.8): 스침·블랙홀 서핑·소행성 부숨의 순간
+  if (session.grazes !== grazesSeen) { grazesSeen = session.grazes; sfx.play('graze'); }
+  if (session.warps !== warpsSeen) { warpsSeen = session.warps; sfx.play('warp'); buzz([20, 30, 40]); }
+  if (session.smashed !== smashedSeen) { smashedSeen = session.smashed; sfx.play('smash'); buzz(30); field.onAbsorb(); }
   // 방패로 튕긴 순간 (§22.5)
   if (session.sim.absorbs !== absorbs) {
     absorbs = session.sim.absorbs;
@@ -898,7 +909,8 @@ function frame(now: number): void {
     if (session.world) {
       if (infResult) {
         hud.showInfinityResult(infResult.sec, infResult.best, infResult.isBest, infMode === 'daily',
-          session.canRevive ? rewardMode() : null);
+          session.canRevive ? rewardMode() : null,
+          { grazes: infResult.grazes, combo: infResult.combo, code: infMode === 'daily' ? null : codeFromSeed(infSeed), cleared: infResult.cleared });
       }
     } else {
       const p = {

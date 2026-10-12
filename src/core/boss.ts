@@ -70,9 +70,13 @@ export class BossSim {
   private ringAt: number;
   private dieT = 0;
 
-  constructor(readonly seed: number, round: number, lives = BOSS_LIVES) {
-    this.round = Math.max(1, round);
-    this.hpMax = bossHp(this.round);
+  /** 최종 보스 (§22.8): 15분에 나온다. 체력 두 배, 모든 패턴 */
+  readonly final: boolean;
+
+  constructor(readonly seed: number, round: number, lives = BOSS_LIVES, final = false) {
+    this.final = final;
+    this.round = final ? Math.max(3, round) : Math.max(1, round);
+    this.hpMax = final ? bossHp(this.round) * 2 : bossHp(this.round);
     this.hp = this.hpMax;
     this.lives = lives;
     this.rnd = mulberry32(seed | 0);

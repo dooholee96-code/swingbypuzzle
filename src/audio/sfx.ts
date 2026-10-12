@@ -8,7 +8,7 @@
 // 화면이 숨겨지면 음소거한다(§15.3).
 
 export type Sfx = 'launch' | 'enterField' | 'shoot' | 'explode' | 'arrive' | 'tick' | 'boost' | 'dock'
-  | 'shield' | 'levelup' | 'pick' | 'alarm' | 'hurt' | 'bossdown' | 'found' | 'dud';
+  | 'shield' | 'levelup' | 'pick' | 'alarm' | 'hurt' | 'bossdown' | 'found' | 'dud' | 'graze' | 'warp' | 'smash';
 
 import { Bgm } from './bgm.js';
 
@@ -74,6 +74,13 @@ export class Audio {
       case 'dud': return this.tone(160, 110, 0.12, 'square', 0.35);
       // 메시에 천체 발견 (§22.7): 반짝이는 상행 아르페지오
       case 'found': return this.chord([659.25, 880, 1174.66, 1567.98], 0.4);
+      // 스침 (§22.8): 아주 짧은 높은 틱 — 콤보마다 울린다
+      case 'graze': return this.tone(1500, 2100, 0.04, 'square', 0.22);
+      // 블랙홀 서핑 (§22.8): 쭉 내려갔다 올라오는 소리
+      case 'warp': this.tone(900, 120, 0.18, 'sawtooth', 0.4);
+        return void setTimeout(() => this.tone(120, 1200, 0.2, 'sawtooth', 0.4), 180);
+      // 위성이 소행성을 부숨 (§22.8)
+      case 'smash': return this.noise(0.2);
       // 보스 경보 (§22.6): 두 음이 오르내리는 사이렌
       case 'alarm': this.tone(440, 660, 0.18, 'square', 0.35);
         return void setTimeout(() => this.tone(660, 440, 0.18, 'square', 0.35), 190);

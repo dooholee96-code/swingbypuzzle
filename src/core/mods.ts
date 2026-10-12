@@ -14,10 +14,14 @@ export interface Mods {
   bulletScale: number;
   /** 방패 — 충돌을 튕겨 낼 수 있는 남은 횟수. 기본 0 */
   shield: number;
+  /** 중력 배율 (§22.8 반중력). 1 이면 그대로, -1 이면 밀어낸다 */
+  gravScale: number;
+  /** 블랙홀 서핑 (§22.8): 빨리면 죽지 않고 반대편으로 나온다. 방패보다 먼저다 */
+  holePass: boolean;
 }
 
 export function defaultMods(): Mods {
-  return { turnMax: TURN_MAX, bulletScale: 1, shield: 0 };
+  return { turnMax: TURN_MAX, bulletScale: 1, shield: 0, gravScale: 1, holePass: false };
 }
 
 /** 방패로 튕긴 뒤 무적 스텝 수 (1.5초). 그동안의 충돌은 횟수를 쓰지 않고 다시 튕긴다 */

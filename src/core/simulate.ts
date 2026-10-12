@@ -10,7 +10,7 @@ import { DOCK_HOLD_LAPS, DOCK_LAP, DT, MAX_FLIGHT, PAD_R, SHIP_R, TURN_MAX } fro
 import { fireUfos, stepBullets } from './hazards.js';
 import { INVULN_STEPS, type Mods, defaultMods } from './mods.js';
 import { bodyPos, dist, gravs, stepShip } from './physics.js';
-import type { Dock, Grav, Level, Outcome, ShipState, SimState, Turn, Ufo } from './types.js';
+import type { Dock, Grav, Hole, Level, Outcome, ShipState, SimState, Turn, Ufo } from './types.js';
 
 /** 궤도 행성을 도는 각속도(rad/s) */
 const DOCK_OMEGA = 2 * Math.PI / DOCK_LAP;
@@ -110,6 +110,8 @@ export class Sim {
   absorbs = 0;
   /** step() 이 마지막으로 돌려준 결과. 이어하기(revive)가 무엇에 부딪혔는지 안다 */
   lastOutcome: Outcome | '' = '';
+  /** 블랙홀을 통과한 횟수 (§22.8). 세션이 변화를 보고 보상한다 */
+  holePasses = 0;
 
   private L!: Level;
   private G: Grav[] = [];
@@ -154,6 +156,7 @@ export class Sim {
     this.invuln = 0;
     this.absorbs = 0;
     this.lastOutcome = '';
+    this.holePasses = 0;
 
     const a = angleDeg * Math.PI / 180;
     // 돔 표면에서 이륙한다 (§5.9)
@@ -204,6 +207,39 @@ export class Sim {
     return r;
   }
 
+  /** 중력 배율(§22.8)이 1 이면 원래 목록, 아니면 g 를 곱한 사본(배율·목록이 같으면 재사용) */
+  private gravList(): Grav[] {
+    const k = this.mods.gravScale;
+    if (k === 1) return this.G;
+    if (this.scaledG && this.scaledFor === this.G && this.scaledK === k) return this.scaledG;
+    this.scaledG = this.G.map((b) => ({ ...b, g: b.g * k }));
+    this.scaledFor = this.G; this.scaledK = k;
+    return this.scaledG;
+  }
+  private scaledG: Grav[] | null = null;
+  private scaledFor: Grav[] | null = null;
+  private scaledK = 1;
+
+  /**
+   * 블랙홀 통과 (§22.8 "블랙홀 서핑"). 흡수된 자리에서 반대편 중력 범위 밖으로 나온다 —
+   * 속도는 그대로, 무적 0.5초. 마지막 결과가 블랙홀이 아니면 거짓
+   */
+  passHole(): boolean {
+    if (this.lastOutcome !== 'hole') return false;
+    const s = this.ship;
+    let best: Hole | null = null, bd = Infinity;
+    for (const h of this.L.holes ?? []) { const d = dist(h.x, h.y, s.x, s.y); if (d < bd) { bd = d; best = h; } }
+    if (!best) return false;
+    let nx = s.x - best.x, ny = s.y - best.y;
+    const len = Math.sqrt(nx * nx + ny * ny);
+    if (len < 1e-9) { const v = Math.sqrt(s.vx * s.vx + s.vy * s.vy) || 1; nx = -s.vx / v; ny = -s.vy / v; } else { nx /= len; ny /= len; }
+    s.x = best.x - nx * (best.R + 4);
+    s.y = best.y - ny * (best.R + 4);
+    this.lastOutcome = '';
+    this.invuln = 120;
+    return true;
+  }
+
   /**
    * 이어하기 (§14.7). 끝난 자리에서 다시 난다 — 부딪힌 것의 바깥으로 밀어내고 속도를
    * 반사한다(방패와 같은 식). 블랙홀은 중력 범위 밖까지 내보낸다 — 흡수 반경 곁에 두면
@@ -250,10 +286,15 @@ export class Sim {
       this.queued = null;
     }
     if (this.invuln > 0) this.invuln -= 1;
-    const r = stepShip(this.L, this.G, this.ship, this.t);
+    let r = stepShip(this.L, this.gravList(), this.ship, this.t);
     this.t += DT;
     this.n += 1;
     if (this.recordPath) this.path.push(this.ship.x, this.ship.y);
+    if (r === 'hole' && this.mods.holePass) {
+      // 블랙홀 서핑 (§22.8): 방패를 쓰기 전에 통과한다
+      this.lastOutcome = 'hole';
+      if (this.passHole()) { this.holePasses += 1; r = ''; }
+    }
     if (r && !this.absorb(r)) return r;
     if (this.L.docks?.length) {
       const s = this.ship;

@@ -350,3 +350,15 @@ img.px{image-rendering:pixelated;image-rendering:crisp-edges}
 #mockad{position:fixed;inset:0;z-index:99;display:grid;place-items:center;
   background:var(--deep);text-align:center;color:var(--white)}
 #mockad p{margin:4px 0}
+
+/* 스침 콤보 (§22.8): 왼쪽, 패시브 줄 아래. 바는 콤보가 끊기기까지 남은 시간 */
+#graze{position:absolute;left:12px;top:calc(142px + env(safe-area-inset-top,0px));pointer-events:none;
+  display:flex;align-items:center;gap:6px;padding:3px 8px;
+  background:var(--yellow);border:3px solid var(--ink);box-shadow:3px 3px 0 var(--ink);animation:pop .25s ease-out both}
+#graze[hidden]{display:none}
+#graze .lb{font:700 13px/1 var(--text)}
+#graze .bar{display:block;width:40px;height:8px;border:2px solid var(--ink);background:var(--gray-light)}
+#graze .bar b{display:block;height:100%;background:var(--orange);width:100%}
+/* 시드 코드 입력 (§22.8) */
+.panel input.code{font:400 16px/1.2 var(--text);letter-spacing:2px;text-transform:uppercase;width:100%;
+  padding:8px 10px;border:3px solid var(--ink);background:var(--white);color:var(--ink);border-radius:0}

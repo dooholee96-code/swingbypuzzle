@@ -14,6 +14,7 @@ import { LANGS, LANG_NAME, type LangSetting, t } from '../i18n/index.js';
 import { chapterName } from '../i18n/levels.js';
 import { img, introArt, messierIcon, rabbitIcon } from './art.js';
 import { MESSIER, MESSIER_COUNT } from '../tools-shared/messier.js';
+import { seedFromCode } from '../tools-shared/infinity.js';
 import { messierLabel, messierLineOf } from '../i18n/messier.js';
 import type { IntroKey } from './intro.js';
 import type { Level } from '../core/types.js';
@@ -21,7 +22,7 @@ import type { Level } from '../core/types.js';
 declare const __APP_VERSION__: string;
 
 export type Screen = 'title' | 'select' | 'play';
-export type InfinityMode = 'daily' | 'random';
+export type InfinityMode = 'daily' | 'random' | 'code';
 
 const $ = (id: string): HTMLElement => {
   const el = document.getElementById(id);
@@ -51,7 +52,7 @@ export interface ScreenDeps {
   noAds?: { owned(): boolean; canBuy(): boolean; buy(): void };
   onStart(): void;                 // 타이틀 → 스테이지(단계 선택)
   /** 인피니티 시작 (§22.3). daily 는 오늘의 우주, random 은 매번 새 판 */
-  onInfinity(mode: InfinityMode): void;
+  onInfinity(mode: InfinityMode, seed?: number): void;
   /** 오늘의 우주 고르기 판에 보일 것: 오늘 날짜(짧게)와 오늘 최고(없으면 0) */
   dailyInfo(): { date: string; best: number };
   /** 메시에 도감 (§22.7): 번호 → 처음 찾은 곳 */
@@ -137,11 +138,21 @@ export class Screens {
       <h2>${t('title.infinity')}</h2>
       <button class="btn next" data-a="daily" type="button">${t('inf.daily')}<small>${sub}</small></button>
       <button class="btn" data-a="random" type="button">${t('inf.random')}<small>${t('inf.randomSub')}</small></button>
+      <input class="code" id="seedcode" maxlength="6" placeholder="${t('inf.codePh')}" autocomplete="off" spellcheck="false">
+      <button class="btn" data-a="code" type="button">${t('inf.codeStart')}</button>
+      <p class="tapnote codenote" hidden>${t('inf.codeBad')}</p>
       <button class="btn" data-a="back" type="button">${t('set.back')}</button></div>`;
     this.introBack = 'title';
     this.bind(this.introEl, {
       daily: () => { this.introEl.hidden = true; this.d.onInfinity('daily'); },
       random: () => { this.introEl.hidden = true; this.d.onInfinity('random'); },
+      code: () => {
+        const v = (this.introEl.querySelector('#seedcode') as HTMLInputElement).value;
+        const seed = seedFromCode(v);
+        const note = this.introEl.querySelector<HTMLElement>('.codenote')!;
+        if (seed === null) { note.hidden = false; return; }
+        this.introEl.hidden = true; this.d.onInfinity('code', seed);
+      },
       back: () => { this.introEl.hidden = true; this.showTitle(); },
     });
     this.introEl.hidden = false;

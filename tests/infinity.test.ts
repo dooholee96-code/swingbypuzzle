@@ -6,7 +6,7 @@ import { mulberry32 } from '../src/core/rng.js';
 import { Sim } from '../src/core/simulate.js';
 import type { Level } from '../src/core/types.js';
 import {
-  CHUNK, ITEM_R, InfinityWorld, ORIGIN, START_CLEAR, chunkOf, makeChunk,
+  CHUNK, ITEM_R, InfinityWorld, ORIGIN, START_CLEAR, chunkOf, codeFromSeed, makeChunk, seedBits, seedFromCode,
 } from '../src/tools-shared/infinity.js';
 
 const near = (ax: number, ay: number, bx: number, by: number): number =>
@@ -172,5 +172,30 @@ describe('창 갈아 끼우기와 비행', () => {
     w.sync(ORIGIN + 40 * CHUNK, ORIGIN);
     w.sync(it!.x, it!.y);
     expect(w.items.some((x) => x.id === it!.id)).toBe(false);
+  });
+});
+
+describe('시드 코드 (§22.8)', () => {
+  it('시드 → 6자리 → 같은 시드. 소문자·0·1 도 읽는다', () => {
+    for (const seed of [0, 1, 42, 2 ** 30 - 1, 123456789, seedBits(-7), seedBits(2 ** 31 - 1)]) {
+      const c = codeFromSeed(seed);
+      expect(c).toHaveLength(6);
+      expect(seedFromCode(c)).toBe(seed);
+      expect(seedFromCode(c.toLowerCase())).toBe(seed);
+    }
+    expect(seedBits(-7)).toBeLessThanOrEqual(2 ** 30 - 1);
+    expect(seedFromCode('ABCDE')).toBeNull();
+    expect(seedFromCode('ABCDEF!')).toBeNull();
+    expect(seedFromCode('AB0DEF')).toBe(seedFromCode('ABODEF'));
+  });
+  it('부순 소행성은 창을 갈아 끼워도 돌아오지 않는다', () => {
+    const w = new InfinityWorld(9);
+    const q = w.level.rocks![0]!;
+    const n = w.level.rocks!.length;
+    w.breakRock(q);
+    expect(w.level.rocks).toHaveLength(n - 1);
+    w.sync(ORIGIN + CHUNK * 2, ORIGIN);   // 창을 옮겼다가
+    w.sync(ORIGIN, ORIGIN);                // 돌아온다
+    expect(w.level.rocks!.some((r) => r.x === q.x && r.y === q.y)).toBe(false);
   });
 });

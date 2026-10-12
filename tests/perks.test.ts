@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { INF_TURN, MAX_TURNS, START_TURNS, makeChunk } from '../src/tools-shared/infinity.js';
 import {
-  CARROT_XP, PERK_KINDS, PERK_MAX, levelOf, noPerks, offerPerks, perkValueText, perkValues,
+  CARROT_XP, PERK_KINDS, PERK_MAX, STORM_SATELLITES, canEvolve, comboMult, levelOf, noPerks, offerPerks, perkValueText, perkValues,
   raise, threatOf, xpForLevel,
 } from '../src/tools-shared/perks.js';
 
@@ -134,5 +134,41 @@ describe('칸 보정 (§22.5)', () => {
       expect(b.planets).toEqual(a.planets);
     }
     expect(found).toBe(true);
+  });
+});
+
+describe('방송판 (§22.8)', () => {
+  it('새 패시브 셋은 추첨에 들어가고 진화는 조건이 돼야 첫 카드로 나온다', () => {
+    const p = noPerks();
+    const seen = new Set<string>();
+    for (let lv = 2; lv < 40; lv++) for (const k of offerPerks(3, lv, p)) seen.add(k);
+    expect(seen.has('satellite') && seen.has('warp') && seen.has('antigrav')).toBe(true);
+    expect(seen.has('storm')).toBe(false);
+    let q = p;
+    for (let i = 0; i < 3; i++) q = raise('satellite', raise('magnet', q));
+    expect(canEvolve(q)).toBe(true);
+    expect(offerPerks(3, 5, q)[0]).toBe('storm');
+    const e = raise('storm', q);
+    expect(perkValues(e).satellites).toBe(STORM_SATELLITES);
+    expect(perkValues(e).storm).toBe(true);
+    expect(canEvolve(e)).toBe(false);
+    expect(offerPerks(3, 6, e)).not.toContain('storm');
+  });
+  it('값: 위성 0~3, 반중력 0·1.5·2.5·4초, 서핑 단계', () => {
+    expect(perkValues(noPerks()).satellites).toBe(0);
+    expect(perkValues(raise('satellite', noPerks())).satellites).toBe(1);
+    expect(perkValues(raise('antigrav', noPerks())).antigravSec).toBe(1.5);
+    expect(perkValues(raise('warp', noPerks())).warp).toBe(1);
+    expect(perkValueText('antigrav', 3)).toBe('4.0');
+  });
+  it('콤보 배율은 1 에서 4 까지', () => {
+    expect(comboMult(0)).toBe(1);
+    expect(comboMult(4)).toBe(2);
+    expect(comboMult(12)).toBe(4);
+    expect(comboMult(40)).toBe(4);
+  });
+  it('기존 패시브만 있으면 전과 같은 값 — 새 보정값은 기본', () => {
+    const v = perkValues(noPerks());
+    expect(v.antigravSec).toBe(0); expect(v.warp).toBe(0); expect(v.storm).toBe(false);
   });
 });

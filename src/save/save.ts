@@ -45,7 +45,7 @@ export interface SaveData {
     removed: boolean;
   };
   /** 인피니티(§22.3): 최고 기록(초)과 판 수. daily 는 오늘의 우주 — 날짜가 바뀌면 비운다 */
-  infinity: { best: number; runs: number; daily: { day: string; best: number; runs: number } };
+  infinity: { best: number; runs: number; daily: { day: string; best: number; runs: number }; clears: number };
   /** 메시에 도감 (§22.7): 번호 → 처음 찾은 곳(단계 ID 또는 'infinity') */
   messier: Record<string, string>;
 }
@@ -63,7 +63,7 @@ const defaults = (): SaveData => ({
     last_interstitial_at: null, last_rewarded_at: null,
     runs_since_interstitial: 0, removed: false,
   },
-  infinity: { best: 0, runs: 0, daily: { day: '', best: 0, runs: 0 } },
+  infinity: { best: 0, runs: 0, daily: { day: '', best: 0, runs: 0 }, clears: 0 },
   messier: {},
 });
 

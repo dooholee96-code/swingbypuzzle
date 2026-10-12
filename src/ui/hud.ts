@@ -46,6 +46,8 @@ export class Hud {
   /** 경험치 바와 레벨, 받은 패시브 줄 (§22.5). 인피니티에서만 */
   readonly xp = $('xp');
   readonly perks = $('perks');
+  readonly graze = $('graze');
+  private grazeKey = '';
   private xpKey = '';
   private perksKey = '';
   /** 보스전 (§22.6): 체력 바와 목숨 */
@@ -130,7 +132,25 @@ export class Hud {
     // 첫 시도의 ready 상태에서만 레벨 hint (§13.3)
     set(this.hint, s.firstTry && s.state === 'ready' ? (levelHint(s.level) ?? '') : '');
     this.refreshPerks(s);
+    this.refreshGraze(s);
     this.refreshBoss(s);
+  }
+
+  /** 스침 콤보 (§22.8). 콤보가 있을 때만, 바뀔 때만 쓴다 */
+  private refreshGraze(s: Session): void {
+    const on = !!s.world && s.combo > 0 && s.state === 'flying' && !s.boss;
+    if (!on) { if (!this.graze.hidden) { this.graze.hidden = true; this.grazeKey = ''; } return; }
+    const left = Math.max(0, Math.min(1, s.grazeLeft()));
+    const key = `${s.combo}/${Math.round(left * 20)}`;
+    if (key === this.grazeKey) return;
+    const was = this.grazeKey.split('/')[0];
+    this.grazeKey = key;
+    this.graze.hidden = false;
+    if (was !== String(s.combo)) {
+      this.graze.querySelector('.lb')!.textContent = t('hud.graze', { n: s.combo });
+      this.graze.classList.remove('pop'); void this.graze.offsetWidth; this.graze.classList.add('pop');
+    }
+    (this.graze.querySelector('.bar b') as HTMLElement).style.width = `${Math.round(left * 100)}%`;
   }
 
   /** 보스 체력 바와 목숨. 바뀔 때만 쓴다 */
@@ -244,28 +264,31 @@ export class Hud {
    */
   showInfinityResult(
     sec: number, best: number, isBest: boolean, daily = false, revive: 'free' | 'ad' | null = null,
+    info: { grazes: number; combo: number; code: string | null; cleared: boolean } = { grazes: 0, combo: 0, code: null, cleared: false },
   ): void {
     if (!this.result.hidden) return;
-    this.result.className = 'sheet lose';
-    this.result.dataset['hold'] = revive ? '1' : '';
+    this.result.className = info.cleared ? 'sheet win' : 'sheet lose';
+    this.result.dataset['hold'] = revive || info.cleared ? '1' : '';
     // 이어하기(§14.7)는 판마다 한 번. 광고가 없는 빌드는 그냥 잇고, 광고를 못 불러오면 버튼이 없다
     const reviveBtn = revive
       ? `<button class="btn next" data-a="revive" type="button">${t(revive === 'ad' ? 'inf.reviveAd' : 'inf.revive')}</button>`
       : '';
     this.result.innerHTML = `<div class="panel">
-      <div class="head">${img(rabbitIcon(isBest ? 'win' : 'sad'))}<h2></h2></div>
+      <div class="head">${img(rabbitIcon(isBest || info.cleared ? 'win' : 'sad'))}<h2></h2></div>
       <p class="msg"></p>
-      <div class="row">${reviveBtn}
+      <p class="tapnote">${t('inf.statsGraze', { g: info.grazes, c: info.combo })}${info.code ? ` · ${t('inf.code', { code: info.code })}` : ''}</p>
+      <div class="row">${info.cleared ? '' : reviveBtn}
         <button class="btn primary" data-a="retry" type="button">${t('result.retry')}</button>
         <button class="btn hint" data-a="share" type="button">${t('inf.share')}</button>
         <button class="btn" data-a="pick" type="button">${t('picker.toTitle')}</button>
       </div>
       ${isBest ? `<p class="tapnote">${t(daily ? 'inf.newBestDaily' : 'inf.newBest')}</p>` : ''}
       <p class="tapnote sharenote" hidden></p>
-      ${revive ? '' : `<p class="tapnote">${t('result.tapRetry')}</p>`}</div>`;
-    this.result.querySelector('h2')!.textContent = t('inf.over');
-    this.result.querySelector('.msg')!.textContent =
-      t(daily ? 'inf.statsDaily' : 'inf.stats', { sec: sec.toFixed(1), best: best.toFixed(1) });
+      ${revive || info.cleared ? '' : `<p class="tapnote">${t('result.tapRetry')}</p>`}</div>`;
+    this.result.querySelector('h2')!.textContent = t(info.cleared ? 'inf.cleared' : 'inf.over');
+    this.result.querySelector('.msg')!.textContent = info.cleared
+      ? t('inf.clearStats', { g: info.grazes })
+      : t(daily ? 'inf.statsDaily' : 'inf.stats', { sec: sec.toFixed(1), best: best.toFixed(1) });
     const note = this.result.querySelector<HTMLElement>('.sharenote')!;
     for (const b of this.result.querySelectorAll<HTMLButtonElement>('button')) {
       b.addEventListener('click', () => {

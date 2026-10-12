@@ -5,17 +5,23 @@
 import { DT } from '../core/constants.js';
 import { padAngle } from '../core/angle.js';
 import { ARENA_H, ARENA_W, BOSS_EVERY, BOSS_LIVES, BOSS_WARN, BossSim } from '../core/boss.js';
+import { SHIP_R } from '../core/constants.js';
+import { CLEAR_AT } from '../tools-shared/infinity.js';
 import { defaultMods } from '../core/mods.js';
 import { Sim, launchPos } from '../core/simulate.js';
 import type { Preview } from '../core/simulate.js';
 import type { Level, Outcome, ShipState } from '../core/types.js';
 import type { InfinityWorld } from '../tools-shared/infinity.js';
 import { COLLECT_R } from '../tools-shared/messier.js';
-import { dist } from '../core/physics.js';
+import { bodyPos, dist } from '../core/physics.js';
 import {
-  CARROT_XP, type OfferKind, type PerkLevels, type PerkValues, noPerks, offerPerks, perkValues,
-  raise, threatOf, xpForLevel,
+  CARROT_XP, GRAZE_BAND, GRAZE_BOOST_EVERY, GRAZE_HOLE_BAND, GRAZE_HOLE_XP, GRAZE_WINDOW, GRAZE_XP,
+  type OfferKind, type PerkLevels, type PerkValues, WARP_BOOST, WARP_XP, comboMult, noPerks, offerPerks,
+  perkValues, raise, threatOf, xpForLevel,
 } from '../tools-shared/perks.js';
+
+/** 위성 당근(§22.8)이 도는 반지름·각속도(rad/s)·막는 반경 */
+export const SAT_R = 22, SAT_OMEGA = 3.2, SAT_HIT = 6;
 import { Clock } from './clock.js';
 
 export type State = 'ready' | 'aiming' | 'flying' | 'ending';
@@ -54,6 +60,25 @@ export class Session {
   /** 이번 판에 이어하기를 썼는가 (§14.7). 판마다 한 번 */
   revived = false;
   private rechargeAcc = 0;
+  // ── 방송판 (§22.8) ──
+  /** 스침: 이번 판 횟수, 지금 콤보, 최대 콤보, 스침으로 번 경험치(초 단위) */
+  grazes = 0;
+  combo = 0;
+  maxCombo = 0;
+  grazeXp = 0;
+  /** 마지막 스침 뒤 흐른 스텝. GRAZE_WINDOW 를 넘으면 콤보가 끊긴다 */
+  private grazeIdle = 0;
+  /** 지금 스침 띠 안에 있는 것들 — 하나에 한 번만 센다 */
+  private grazing = new Set<object>();
+  /** 이번 프레임의 스침 자리. 화면이 꺼내 간다(반짝임·소리) */
+  grazeFx: [number, number][] = [];
+  /** 블랙홀 서핑·위성이 막은 탄·부순 소행성 — 화면 되먹임용 */
+  warps = 0; blocked = 0; smashed = 0;
+  warpFx: [number, number] | null = null;
+  /** 반중력이 끝나는 비행 스텝 (§22.8). 0 이면 꺼짐 */
+  antigravUntil = 0;
+  /** 15분 최종 보스를 이겼다 (§22.8) */
+  cleared = false;
   // ── 보스전 (§22.6) ──
   /** fly 는 중력 비행, boss 는 슈팅 구간. 인피니티에서만 boss 가 된다 */
   mode: 'fly' | 'boss' = 'fly';
@@ -91,8 +116,86 @@ export class Session {
     this.rerolls = 0;
     this.revived = false;
     this.rechargeAcc = 0;
+    this.grazes = 0; this.combo = 0; this.maxCombo = 0; this.grazeXp = 0; this.grazeIdle = 0;
+    this.grazing = new Set(); this.grazeFx = [];
+    this.warps = 0; this.blocked = 0; this.smashed = 0; this.warpFx = null;
+    this.antigravUntil = 0;
+    this.cleared = false;
     this.applyPerks();
     this.turnsLeft = this.maxTurns;
+  }
+
+  /** 콤보가 끊기기까지 남은 비율 0~1 (§22.8 HUD) */
+  grazeLeft(): number { return 1 - this.grazeIdle / (GRAZE_WINDOW * 240); }
+
+  /** 반중력(§22.8)이 켜져 있는가 */
+  get antigrav(): boolean { return this.antigravUntil > this.sim.flightStep; }
+
+  /** 위성 당근의 자리들 (§22.8). 비행 시각으로 돈다 — 그리기와 판정이 같은 식 */
+  satellites(): [number, number][] {
+    const n = this.values.satellites;
+    if (n <= 0 || !this.world) return [];
+    const { x, y } = this.sim.ship;
+    const base = this.sim.time * SAT_OMEGA;
+    const out: [number, number][] = [];
+    for (let i = 0; i < n; i++) {
+      const q = base + i * Math.PI * 2 / n;
+      out.push([x + Math.cos(q) * SAT_R, y + Math.sin(q) * SAT_R]);
+    }
+    return out;
+  }
+
+  /**
+   * 스침 판정 (§22.8). 판정 경계 밖 좁은 띠를 지나면 한 물체에 한 번. 콤보가 오르고
+   * 경험치가 붙는다. 다섯 번마다 분사 하나. GRAZE_WINDOW 동안 없으면 콤보가 끊긴다
+   */
+  private graze(): void {
+    const L = this.level, s = this.sim.ship, t = this.sim.time;
+    const seen = new Set<object>();
+    const check = (o: object, x: number, y: number, hitR: number, band: number, xp: number): void => {
+      const d = dist(x, y, s.x, s.y);
+      if (d >= hitR + band + 4) return;
+      seen.add(o);
+      if (this.grazing.has(o) || d < hitR) return;
+      this.grazing.add(o);
+      this.grazes++;
+      this.grazeXp += xp * comboMult(this.combo);
+      this.combo++;
+      if (this.combo > this.maxCombo) this.maxCombo = this.combo;
+      this.grazeIdle = 0;
+      this.grazeFx.push([x + (s.x - x) / d * hitR, y + (s.y - y) / d * hitR]);
+      if (this.grazes % GRAZE_BOOST_EVERY === 0) this.turnsLeft = Math.min(this.maxTurns, this.turnsLeft + 1);
+    };
+    for (const p of L.planets ?? []) {
+      const [px, py] = bodyPos(p, t);
+      check(p, px, py, p.r + SHIP_R, GRAZE_BAND, GRAZE_XP);
+    }
+    for (const a of L.rocks ?? []) check(a, a.x, a.y, a.r * 0.85 + SHIP_R, GRAZE_BAND, GRAZE_XP);
+    for (const h of L.holes ?? []) check(h, h.x, h.y, h.rH + 2, GRAZE_HOLE_BAND, GRAZE_HOLE_XP);
+    for (const u of L.ufos ?? []) check(u, u.x, u.y, 13 + SHIP_R, GRAZE_BAND, GRAZE_XP);
+    for (const b of this.sim.state.bullets) check(b, b.x, b.y, 3 + SHIP_R, GRAZE_BAND, GRAZE_XP);
+    for (const o of this.grazing) if (!seen.has(o)) this.grazing.delete(o);
+    if (this.combo > 0 && ++this.grazeIdle > GRAZE_WINDOW * 240) this.combo = 0;
+  }
+
+  /** 위성 당근 (§22.8): 닿은 탄을 지우고, 폭풍이면 소행성을 부순다 */
+  private satellitesStep(): void {
+    const sats = this.satellites();
+    if (!sats.length) return;
+    const st = this.sim.state;
+    const before = st.bullets.length;
+    if (before) {
+      st.bullets = st.bullets.filter((b) => !sats.some(([x, y]) => dist(x, y, b.x, b.y) < SAT_HIT + 3));
+      this.blocked += before - st.bullets.length;
+    }
+    if (this.values.storm && this.world) {
+      const hit = (this.level.rocks ?? []).filter((q) => sats.some(([x, y]) => dist(x, y, q.x, q.y) < SAT_HIT + q.r * 0.85));
+      if (hit.length) {
+        for (const q of hit) this.world.breakRock(q);
+        this.smashed += hit.length;
+        this.sim.refreshBodies();
+      }
+    }
   }
 
   /** 이어하기를 권할 수 있는가 — 인피니티의 끝이고 아직 안 썼다 (§14.7) */
@@ -145,13 +248,13 @@ export class Session {
    * 보스전 시작. 우주선이 있던 자리가 아레나의 출발 자리(가운데 아래)가 되도록 원점을 잡는다.
    * 중력 비행의 상태는 그대로 얼려 두고(Sim 은 돌지 않는다) 끝나면 되돌린다.
    */
-  startBoss(): void {
+  startBoss(final = false): void {
     if (!this.world || this.mode === 'boss') return;
     const s = this.sim.ship;
     this.bossReturn = { ...s };
     this.bossOrigin = [Math.round(s.x - ARENA_W / 2), Math.round(s.y - (ARENA_H - 90))];
     const seed = (this.world.seed ^ Math.imul(this.bossIndex + 1, 0x85ebca6b)) | 0;
-    this.boss = new BossSim(seed, this.bossIndex + 1, BOSS_LIVES + (this.perks.shield > 0 ? 1 : 0));
+    this.boss = new BossSim(seed, this.bossIndex + 1, BOSS_LIVES + (this.perks.shield > 0 ? 1 : 0), final);
     this.bossTarget = [ARENA_W / 2, ARENA_H - 90];
     this.mode = 'boss';
   }
@@ -178,7 +281,17 @@ export class Session {
       this.endElapsed = 0;
       return true;
     }
-    if (ph === 'done') { this.endBoss(); return true; }
+    if (ph === 'done') {
+      // 최종 보스(§22.8)를 꺾으면 판이 끝난다 — 클리어
+      if (b.final) {
+        this.cleared = true;
+        this.outcome = 'win';
+        this.state = 'ending';
+        this.endElapsed = 0;
+        return true;
+      }
+      this.endBoss(); return true;
+    }
     return this.checkLevel();
   }
 
@@ -248,7 +361,7 @@ export class Session {
 
   // ── 경험치·레벨업 (§22.5) ─────────────────────────────────────────
   /** 경험치 = 버틴 초 + 당근 × CARROT_XP. 스테이지는 0 */
-  get xp(): number { return this.world ? this.freeSeconds() + this.itemsEaten * CARROT_XP : 0; }
+  get xp(): number { return this.world ? this.freeSeconds() + this.itemsEaten * CARROT_XP + this.grazeXp : 0; }
   get xpPrev(): number { return xpForLevel(this.xpLevel); }
   get xpNext(): number { return xpForLevel(this.xpLevel + 1); }
   get levelUpPending(): boolean { return this.pendingLevels > 0; }
@@ -270,6 +383,7 @@ export class Session {
       this.perks = raise(kind, this.perks);
       this.applyPerks();
       if (kind === 'boost') this.turnsLeft = Math.min(this.maxTurns, this.turnsLeft + 1);
+      if (kind === 'storm' && this.values.storm) this.sim.refreshBodies();
       if (kind === 'dockwide') { this.world.setDockScale(this.values.dockScale); this.sim.refreshBodies(); }
     }
     this.clock.reset();                    // 멈춘 동안 쌓인 시간을 버린다
@@ -280,6 +394,7 @@ export class Session {
     this.sim.mods.turnMax = this.values.turnMax;
     this.sim.mods.bulletScale = this.values.bulletScale;
     this.sim.mods.shield = this.perks.shield;
+    this.sim.mods.holePass = this.values.warp > 0;
   }
 
   /**
@@ -305,6 +420,9 @@ export class Session {
   turn(dirDeg: number): boolean {
     if (this.state !== 'flying' || this.turnsLeft <= 0 || this.sim.turnPending) return false;
     this.sim.queueTurn(dirDeg);
+    if (this.world && this.values.antigravSec > 0) {
+      this.antigravUntil = this.sim.flightStep + Math.round(this.values.antigravSec * 240);
+    }
     this.turnsLeft--;
     return true;
   }
@@ -372,7 +490,17 @@ export class Session {
     this.levelStep++;                      // 발사 전에도 흐른다 (§5.2)
     if (this.state !== 'flying') return false;
     if (this.mode === 'boss') return this.bossStep();
+    // 반중력 (§22.8): 분사 뒤 잠깐 행성이 밀어낸다. 스테이지는 언제나 1
+    this.sim.mods.gravScale = this.antigrav ? -1 : 1;
     const r = this.sim.step();
+    if (this.sim.holePasses !== this.warps) {
+      // 블랙홀 서핑 (§22.8): Sim 이 반대편으로 내보냈다. 경험치, 단계에 따라 분사
+      this.warps = this.sim.holePasses;
+      this.grazeXp += WARP_XP;
+      const add = WARP_BOOST[this.values.warp] ?? 0;
+      this.turnsLeft = Math.min(this.maxTurns, this.turnsLeft + add);
+      this.warpFx = [this.sim.ship.x, this.sim.ship.y];
+    }
     if (r) {
       this.outcome = r;
       this.state = 'ending';
@@ -393,6 +521,14 @@ export class Session {
       if (this.values.rechargeSteps > 0) {
         if (this.turnsLeft >= this.maxTurns) this.rechargeAcc = 0;
         else if (++this.rechargeAcc >= this.values.rechargeSteps) { this.rechargeAcc = 0; this.turnsLeft++; }
+      }
+      // 스침·위성 (§22.8)
+      this.graze();
+      this.satellitesStep();
+      // 15분 (§22.8): 최종 보스. 링에서 도는 중이면 나올 때까지
+      if (!this.sim.docked && this.freeSeconds() >= CLEAR_AT) {
+        this.startBoss(true);
+        return true;
       }
       // 보스 (§22.6): 2분마다. 링에서 도는 중이면 나올 때까지 기다린다
       if (!this.sim.docked && this.freeSeconds() >= BOSS_EVERY * (this.bossIndex + 1)) {

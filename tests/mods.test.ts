@@ -176,3 +176,43 @@ describe('이어하기 (§14.7)', () => {
     expect(wall.revive()).toBe(false);
   });
 });
+
+describe('방송판 (§22.8)', () => {
+  it('중력 배율 -1 이면 행성이 밀어낸다 — 가까워지지 않고 멀어진다', () => {
+    const L = level({ planets: [{ x: O, y: O - 200, r: 20, g: 800, R: 160, sides: 0 }] });
+    const pull = new Sim(); pull.begin(L, -90, 0);
+    const push = new Sim(); push.mods.gravScale = -1; push.begin(L, -90, 0);
+    for (let i = 0; i < 240 * 0.8; i++) { pull.step(); push.step(); }
+    const d = (s: Sim): number => Math.sqrt((s.ship.x - O) ** 2 + (s.ship.y - (O - 200)) ** 2);
+    expect(d(push)).toBeGreaterThan(d(pull));
+    // 배율 1 로 돌리면 원래 목록 — 스테이지 결정론 그대로
+    push.mods.gravScale = 1;
+    expect(push.step()).toBe('');
+  });
+  it('블랙홀 서핑: 빨린 자리에서 반대편 중력 범위 밖으로, 속도 그대로', () => {
+    const L = level({ holes: [{ x: O, y: O - 200, rH: 14, g: 900, R: 160 }] });
+    const sim = new Sim(); sim.begin(L, -90, 0);
+    let r = '';
+    for (let i = 0; i < 240 * 5 && !r; i++) r = sim.step();
+    expect(r).toBe('hole');
+    const v = speed(sim.ship);
+    expect(sim.passHole()).toBe(true);
+    expect(sim.ship.y).toBeLessThan(O - 200 - 160);          // 반대편(위쪽) 범위 밖
+    expect(speed(sim.ship)).toBeCloseTo(v, 9);
+    expect(sim.invuln).toBe(120);
+    expect(sim.passHole()).toBe(false);                      // 두 번은 없다
+  });
+});
+
+describe('블랙홀 서핑은 방패보다 먼저 (§22.8)', () => {
+  it('holePass 면 방패를 쓰지 않고 통과하고 횟수가 는다', () => {
+    const L = level({ holes: [{ x: O, y: O - 200, rH: 14, g: 900, R: 160 }] });
+    const sim = new Sim(); sim.mods.shield = 1; sim.mods.holePass = true; sim.begin(L, -90, 0);
+    let r = '';
+    for (let i = 0; i < 240 * 5 && !r; i++) r = sim.step();
+    expect(r).toBe('');
+    expect(sim.holePasses).toBe(1);
+    expect(sim.mods.shield).toBe(1);
+    expect(sim.ship.y).toBeLessThan(O - 200 - 150);
+  });
+});

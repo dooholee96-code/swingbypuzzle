@@ -38,6 +38,28 @@ export const MAX_TURNS = 7;   // 패시브 '분사 하나 더' 세 단계가 5·
  * 20초 못 버티는 비율이 47% → 13% (§22.4.4). 곧은 길 금지는 유닛 기준이라 그대로 유효하다
  */
 export const INF_SPEED = 130;
+/** 판의 끝 (§22.8 방송판): 이 시각에 최종 보스가 나오고, 이기면 클리어 */
+export const CLEAR_AT = 900;
+
+/**
+ * 시드 ↔ 6자리 코드 (§22.8). 시청자가 같은 우주를 함께 날 수 있게. 대소문자 구분 없음.
+ * 6자리 32진수 = 30비트라 **판 시드는 30비트로 만든다**(`seedBits`). 그래야 코드가 시드를 그대로 되살린다
+ */
+const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';   // 헷갈리는 I·O·0·1 은 뺀다
+export const SEED_MASK = 0x3fffffff;
+export const seedBits = (n: number): number => (n >>> 0) & SEED_MASK;
+export function codeFromSeed(seed: number): string {
+  let v = seedBits(seed), out = '';
+  for (let i = 0; i < 6; i++) { out = CODE_CHARS[v % 32]! + out; v = Math.floor(v / 32); }
+  return out;
+}
+export function seedFromCode(code: string): number | null {
+  const c = code.trim().toUpperCase().replace(/0/g, 'O').replace(/1/g, 'I');
+  if (c.length !== 6) return null;
+  let v = 0;
+  for (const ch of c) { const i = CODE_CHARS.indexOf(ch); if (i < 0) return null; v = v * 32 + i; }
+  return v | 0;
+}
 /** 인피니티의 기본 꺾는 각(°). 스테이지의 TURN_MAX(40)는 6장 검증에 묶여 있어 그대로 두고, 여기만 넉넉히 */
 export const INF_TURN = 60;
 /**
@@ -226,6 +248,8 @@ export class InfinityWorld {
   messiers: MessierSpot[] = [];
   private eaten = new Set<string>();
   private gathered = new Set<string>();
+  /** 위성 당근 폭풍(§22.8)이 부순 소행성. 창을 갈아 끼워도 돌아오지 않는다 */
+  private broken = new Set<string>();
   private cache = new Map<string, Chunk>();
   private at: [number, number] | null = null;
   private last: [number, number] = [ORIGIN, ORIGIN];
@@ -283,7 +307,8 @@ export class InfinityWorld {
       for (let dx = -WINDOW; dx <= WINDOW; dx++) {
         const c = this.chunk(cx + dx, cy + dy);
         planets.push(...c.planets); holes.push(...c.holes);
-        rocks.push(...c.rocks); ufos.push(...c.ufos); docks.push(...c.docks);
+        for (const q of c.rocks) if (!this.broken.has(`${q.x},${q.y}`)) rocks.push(q);
+        ufos.push(...c.ufos); docks.push(...c.docks);
         for (const it of c.items) if (!this.eaten.has(it.id)) items.push(it);
         if (c.messier && !this.gathered.has(c.messier.id)) messiers.push(c.messier);
       }
@@ -292,6 +317,12 @@ export class InfinityWorld {
     this.items = items;
     this.messiers = messiers;
     return true;
+  }
+
+  /** 소행성을 부순다 (§22.8). 창에서 빼고 기억한다. 부른 쪽이 Sim.refreshBodies 를 한다 */
+  breakRock(q: Rock): void {
+    this.broken.add(`${q.x},${q.y}`);
+    this.level.rocks = (this.level.rocks ?? []).filter((r) => r !== q);
   }
 
   /** 우주선 자리에서 스친 메시에 천체의 번호들. 이번 판에서는 다시 나오지 않는다 */
