@@ -467,24 +467,18 @@ function dudFeedback(): void {
   hud.turns.classList.remove('shake'); void hud.turns.offsetWidth; hud.turns.classList.add('shake');
 }
 
-function tapTurn(x: number, y: number): void {
-  const [sx, sy] = session.shipPos();
-  const wx = cam.x + x / cam.scale, wy = cam.y + y / cam.scale;
-  let dir = Math.atan2(wy - sy, wx - sx) * 180 / Math.PI;
-  // 손가락이 로켓을 가리면 탭이 로켓 바로 옆·뒤에 떨어진다. 뒤쪽(차이 150° 이상)이거나 너무
-  // 가까우면 각도의 부호가 작은 차이로 뒤집혀 반대로 꺾였다(폰 피드백) — 그때는 화면의
-  // 좌우로 쪽을 정한다: 탭이 로켓보다 왼쪽이면 왼쪽으로 꺾이는 후보를 고른다
+function tapTurn(x: number, _y: number): void {
+  // 화면 기준 좌우 (사용자 결정 2026-10, §22.4.5): 화면 왼쪽 반을 탭하면 왼쪽으로, 오른쪽 반이면
+  // 오른쪽으로. 진행 방향과 상관없다 — "탭한 쪽으로" 는 진행 방향이 바뀔 때마다 헷갈렸다.
+  // ±turnMax 두 후보 중 새 진행 방향의 가로 성분이 탭한 쪽을 더 향하는 것을 고른다.
+  // 끌기(스와이프)는 끈 방향 그대로다
+  const side = x < cssW / 2 ? -1 : 1;
   const head = session.shipHeading() * 180 / Math.PI;
-  let d = dir - head; d -= 360 * Math.round(d / 360);
-  const vx = wx - sx, vy = wy - sy;
-  const near = Math.hypot(vx, vy) < 14;
-  if (near || Math.abs(d) > 90) {
-    // 옆·뒤를 탭했다: ±turnMax 두 후보 중 탭 방향과 더 나란한 쪽. 너무 가까우면 화면 좌우만 본다
-    const m = session.sim.mods.turnMax;
-    const ux = near ? (Math.sign(vx) || 1) : vx, uy = near ? 0 : vy;
-    const dot = (c: number): number => Math.cos(c * Math.PI / 180) * ux + Math.sin(c * Math.PI / 180) * uy;
-    dir = [head - m, head + m].reduce((best, c) => (dot(c) > dot(best) ? c : best));
-  }
+  const m = session.sim.mods.turnMax;
+  const toward = (c: number): number => Math.cos(c * Math.PI / 180) * side;
+  const dir = [head - m, head + m].reduce((best, c) => (toward(c) > toward(best) ? c : best));
+  const [sx, sy] = session.shipPos();
+  const wx = sx + Math.cos(dir * Math.PI / 180) * 40, wy = sy + Math.sin(dir * Math.PI / 180) * 40;
   if (!session.turn(dir)) { dudFeedback(); return; }
   field.onTurn(wx, wy);
   sfx.play('boost');
