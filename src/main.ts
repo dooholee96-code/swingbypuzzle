@@ -67,6 +67,9 @@ const FLICK_PX = 20;
 let bossFrom: [number, number, number, number] = [0, 0, 0, 0];
 const BOSS_DRAG_K = 1.15;
 const heldKeys = new Set<string>();
+/** 조준 중 화살표를 누르고 있는 시간(초). 0.25초 뒤부터 매끄럽게 돈다 — 처음은 느리게, 1초 뒤엔 빠르게 */
+let aimHold = 0;
+let shiftHeld = false;
 let bossShots = 0, bossHits = 0, bossAlarm = -1;
 let dragPointer = -1;              // 조준·미니맵을 잡고 있는 손가락
 let last = performance.now();
@@ -474,12 +477,13 @@ function tapTurn(x: number, _y: number): void {
   sideTurn(x < cssW / 2 ? -1 : 1);
 }
 
-/** 화면 기준 왼쪽(-1)·오른쪽(1)으로 분사. ±turnMax 두 후보 중 새 진행 방향의 가로 성분이 그쪽을 더 향하는 것 */
+/**
+ * 로켓 기준 왼쪽(-1)·오른쪽(1)으로 분사 (사용자 결정 2026-10, §22.4.5). 로켓이 어느 쪽을 보고 있든
+ * 왼쪽은 로켓의 왼쪽(진행 방향에서 반시계), 오른쪽은 로켓의 오른쪽. 화면 왼쪽 반 탭·← 키가 왼쪽
+ */
 function sideTurn(side: -1 | 1): void {
   const head = session.shipHeading() * 180 / Math.PI;
-  const m = session.sim.mods.turnMax;
-  const toward = (c: number): number => Math.cos(c * Math.PI / 180) * side;
-  const dir = [head - m, head + m].reduce((best, c) => (toward(c) > toward(best) ? c : best));
+  const dir = head + side * session.sim.mods.turnMax;
   const [sx, sy] = session.shipPos();
   const wx = sx + Math.cos(dir * Math.PI / 180) * 40, wy = sy + Math.sin(dir * Math.PI / 180) * 40;
   if (!session.turn(dir)) { dudFeedback(); return; }
@@ -603,10 +607,11 @@ function moveCamTo(x: number, y: number): void {
 
 // ── 키보드 (§10.6). 데스크톱(itch.io)용. 손가락 입력과 같은 상태 머신을 두드린다 ──
 /** 진행 방향에서 ±delta° 로 분사 (§22.1). 연기는 그쪽 30 유닛 앞에 */
-addEventListener('keyup', (e) => { heldKeys.delete(e.key); });
+addEventListener('keyup', (e) => { heldKeys.delete(e.key); if (e.key === 'Shift') shiftHeld = false; });
 addEventListener('blur', () => heldKeys.clear());
 addEventListener('keydown', (e) => {
   if (e.key.startsWith('Arrow')) heldKeys.add(e.key);
+  if (e.key === 'Shift') shiftHeld = true;
   // 보스전 (§22.6): 방향키는 누르고 있는 동안 프레임마다 읽는다(아래 frame)
   if (session.boss && session.state === 'flying' && e.key.startsWith('Arrow')) { e.preventDefault(); return; }
   if (e.ctrlKey || e.metaKey || e.altKey || e.repeat && e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
@@ -624,11 +629,13 @@ addEventListener('keydown', (e) => {
   if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
     const sign = e.key === 'ArrowLeft' ? -1 : 1;
     if (st === 'ready' || st === 'aiming') {
-      // 0.5° 씩(Shift 5°). 화살표를 누르면 조준 중으로 쳐서 예측선과 각도가 보인다
+      // 한 번 누르면 0.5°(Shift 5°). 누르고 있으면 frame 이 매끄럽게 돌린다(aimHold) — 키 반복은 느리다
+      if (e.repeat) { e.preventDefault(); return; }
       if (glide) snapToStart();
       session.beginAim();
       session.aimFar = true;
       session.setAngle(clampArc(session.level, quantize(session.angle + sign * (e.shiftKey ? 5 : 0.5))));
+      aimHold = 0;
     } else if (st === 'flying' && !session.docked) {
       // 비행 중 방향키 = 화면 기준 좌우 분사(탭과 같다). 누르고 있어도 한 번만 — 반복 입력이 분사를 연달아 썼다
       if (!e.repeat) sideTurn(sign);
@@ -854,6 +861,17 @@ function frame(now: number): void {
     if (b.fired !== bossShots) { if (b.fired % 3 === 0) sfx.play('shoot'); bossShots = b.fired; }
     if (b.hitsTaken !== bossHits) { bossHits = b.hitsTaken; sfx.play('hurt'); buzz(50); field.onAbsorb(); }
     if (b.phase === 'dying' && bossAlarm !== -2) { bossAlarm = -2; sfx.play('bossdown'); buzz([30, 40, 30, 40, 60]); }
+  } else if (session.state === 'ready' || session.state === 'aiming') {
+    // 조준: 화살표를 누르고 있으면 돌린다. 0.25초는 기다리고(한 번 누름과 구분), 그 뒤 45°/s 에서 1초에 걸쳐 180°/s 로
+    const kx = (heldKeys.has('ArrowRight') ? 1 : 0) - (heldKeys.has('ArrowLeft') ? 1 : 0);
+    if (kx && session.state === 'aiming') {
+      aimHold += dt;
+      if (aimHold > 0.25) {
+        const u = Math.min(1, (aimHold - 0.25) / 1);
+        const rate = (45 + 135 * u) * (shiftHeld ? 2 : 1);
+        session.setAngle(clampArc(session.level, session.angle + kx * rate * dt));
+      }
+    } else aimHold = 0;
   } else if (session.state === 'flying') {
     const { x, y, vx, vy } = session.sim.ship;
     cam.follow(session.level, x, y, vx, vy, dt);
