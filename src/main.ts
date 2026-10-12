@@ -69,6 +69,7 @@ const BOSS_DRAG_K = 1.15;
 const heldKeys = new Set<string>();
 /** 조준 중 화살표를 누르고 있는 시간(초). 0.2초 뒤부터 매끄럽게 돈다 — 처음은 느리게, 0.8초 뒤엔 빠르게 */
 let aimHold = 0;
+let aimAcc = 0;
 let shiftHeld = false;
 let bossShots = 0, bossHits = 0, bossAlarm = -1;
 let dragPointer = -1;              // 조준·미니맵을 잡고 있는 손가락
@@ -869,9 +870,12 @@ function frame(now: number): void {
       if (aimHold > 0.2) {
         const u = Math.min(1, (aimHold - 0.2) / 0.8);
         const rate = (60 + 180 * u) * (shiftHeld ? 2 : 1);
-        session.setAngle(clampArc(session.level, session.angle + kx * rate * dt));
+        // 키보드 각도는 언제나 정수 도 — 소수로 쌓고 1° 단위로만 적용한다
+        aimAcc += kx * rate * dt;
+        const step = Math.trunc(aimAcc);
+        if (step !== 0) { aimAcc -= step; session.setAngle(clampArc(session.level, Math.round(session.angle) + step)); }
       }
-    } else aimHold = 0;
+    } else { aimHold = 0; aimAcc = 0; }
   } else if (session.state === 'flying') {
     const { x, y, vx, vy } = session.sim.ship;
     cam.follow(session.level, x, y, vx, vy, dt);
