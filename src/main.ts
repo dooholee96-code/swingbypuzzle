@@ -10,8 +10,7 @@ import {
 import { starFlags, starsOf } from './levels/stars.js';
 import { Camera } from './game/camera.js';
 import { ARENA_H, ARENA_W } from './core/boss.js';
-import { TURN_MAX } from './core/constants.js';
-import { clampArc, quantize } from './core/angle.js';
+import { clampArc, padAngle } from './core/angle.js';
 import { AimInput } from './game/input.js';
 import { END_SECONDS, Session } from './game/session.js';
 import { DOME_DRAW_R, FieldRenderer } from './render/field.js';
@@ -67,6 +66,17 @@ const FLICK_PX = 20;
 let bossFrom: [number, number, number, number] = [0, 0, 0, 0];
 const BOSS_DRAG_K = 1.15;
 const heldKeys = new Set<string>();
+/**
+ * 키보드 조준 각 (§10.6): 정수 도만. 발사 범위 끝에 걸리면 경계가 소수(돔 방향 ± 90°)라
+ * 안쪽 정수로 물러난다 — 34.4° 같은 값이 남지 않게
+ */
+function keyAngle(theta: number): number {
+  const v = clampArc(session.level, theta);
+  if (Number.isInteger(v)) return v;
+  const c = padAngle(session.level);
+  const d = v - c; const dn = d - 360 * Math.round(d / 360);
+  return dn > 0 ? Math.floor(v) : Math.ceil(v);
+}
 /** 조준 중 화살표를 누르고 있는 시간(초). 0.2초 뒤부터 매끄럽게 돈다 — 처음은 느리게, 0.8초 뒤엔 빠르게 */
 let aimHold = 0;
 let aimAcc = 0;
@@ -189,7 +199,7 @@ levelup.onPick = (kind) => { session.pick(kind); sfx.play('pick'); };
 // 다시 뽑기 (§14.7): 레벨업마다 한 번, 보상형 광고. 새 셋은 시드로 정해진다
 levelup.rerollMode = () => (session.rerolls > 0 ? null : rewardMode());
 levelup.onReroll = async () => {
-  const r = await reward('reroll');
+  const r = await reward('reroll').catch((): 'ok' | Key => 'hint.unavailable');
   if (r !== 'ok') return r;
   session.reroll();
   levelup.show(session.offers(), session.perks, session.xpLevel);
@@ -635,7 +645,7 @@ addEventListener('keydown', (e) => {
       if (glide) snapToStart();
       session.beginAim();
       session.aimFar = true;
-      session.setAngle(clampArc(session.level, Math.round(session.angle) + sign * (e.shiftKey ? 5 : 1)));
+      session.setAngle(keyAngle(Math.round(session.angle) + sign * (e.shiftKey ? 5 : 1)));
       aimHold = 0;
     } else if (st === 'flying' && !session.docked) {
       // 비행 중 방향키 = 화면 기준 좌우 분사(탭과 같다). 누르고 있어도 한 번만 — 반복 입력이 분사를 연달아 썼다
@@ -681,6 +691,7 @@ history.pushState({ depth: 1 }, '');
 addEventListener('visibilitychange', () => {
   session.pauseReset();
   sfx.setMuted(document.hidden);
+  sfx.bgm.setHidden(document.hidden);        // 스케줄러까지 멈춘다 — 숨은 탭에서 노드를 쌓지 않게
   if (document.hidden) save.flush();
 });
 addEventListener('pagehide', () => save.flush());
@@ -692,7 +703,13 @@ hud.onRetry = () => {
   session.reset(); hud.hideResult(); panning = false; snapToStart();
 };
 /** 인피니티 [다시]. **전면 광고는 여기서만 검토한다** (§14.7) — 타이틀로 나갈 때는 아니다 */
+let infBusy = false;
 async function nextInfinityRun(): Promise<void> {
+  if (infBusy) return;                        // 광고를 기다리는 동안 두 번 눌러도 한 판만
+  infBusy = true;
+  try { await nextInfinityRunInner(); } finally { infBusy = false; }
+}
+async function nextInfinityRunInner(): Promise<void> {
   const d = shouldShowInfinityInterstitial({ now: nowSeconds(), ads: adState(), revived: session.revived });
   if (d.show && ads.isInterstitialReady()) {
     const r = await ads.showInterstitial();
@@ -702,7 +719,8 @@ async function nextInfinityRun(): Promise<void> {
 }
 /** 이어하기 (§14.7): 보상형 광고 뒤 끝난 자리에서 다시 난다. 안내 문구 키를 돌려주면 시트가 보인다 */
 hud.onRevive = async () => {
-  const r = await reward('revive');
+  if (!session.canRevive) return 'hint.unavailable';   // 광고를 본 뒤 못 잇는 일이 없게 먼저 본다
+  const r = await reward('revive').catch((): 'ok' | Key => 'hint.unavailable');
   if (r !== 'ok') return r;
   if (!session.revive()) return 'hint.unavailable';
   hud.hideResult();
@@ -873,7 +891,7 @@ function frame(now: number): void {
         // 키보드 각도는 언제나 정수 도 — 소수로 쌓고 1° 단위로만 적용한다
         aimAcc += kx * rate * dt;
         const step = Math.trunc(aimAcc);
-        if (step !== 0) { aimAcc -= step; session.setAngle(clampArc(session.level, Math.round(session.angle) + step)); }
+        if (step !== 0) { aimAcc -= step; session.setAngle(keyAngle(Math.round(session.angle) + step)); }
       }
     } else { aimHold = 0; aimAcc = 0; }
   } else if (session.state === 'flying') {
@@ -991,7 +1009,7 @@ function draw(preview: { points: number[]; outcome: string } | null): void {
 
 // HUD 는 플레이 중에만 보인다.
 // 전에는 따로 도는 두 번째 rAF 루프가 매 프레임 스타일을 썼다. 바뀔 때만 쓴다.
-const hudEls = [document.querySelector('.hud.top'), hud.hint, hud.angle, hud.turns, hud.xp, hud.perks, hud.boss, hud.toastEl] as HTMLElement[];
+const hudEls = [document.querySelector('.hud.top'), hud.hint, hud.angle, hud.turns, hud.xp, hud.perks, hud.graze, hud.boss, hud.toastEl] as HTMLElement[];
 let hudShown: boolean | null = null;
 /** 지금 화면에 맞는 곡 (§17 M18): 타이틀·스테이지는 calm, 인피니티는 drive, 보스전은 boss */
 function syncBgm(): void {

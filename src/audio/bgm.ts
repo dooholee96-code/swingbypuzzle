@@ -4,7 +4,7 @@
 // 미리 재는(look-ahead) 스케줄러: 50ms 마다 깨어나 0.2초 앞까지 음을 심는다.
 // 효과음과 같은 AudioContext 를 쓰되 버스를 따로 둔다 — 비행 중 효과음이 묻히지 않게 낮게.
 
-import { type Song, type SongName, SONGS, events, noteHz } from './tracker.js';
+import { type Song, type SongName, SONGS, noteHz } from './tracker.js';
 
 const LOOKAHEAD = 0.2;      // 초
 const TICK_MS = 50;
@@ -45,13 +45,21 @@ export class Bgm {
     else if (this.wanted && !this.timer) this.play(this.wanted);
   }
 
+  private hidden = false;
+  /** 화면이 숨겨지면 스케줄러를 멈추고, 돌아오면 하던 곡을 처음부터 */
+  setHidden(on: boolean): void {
+    this.hidden = on;
+    if (on) this.stop();
+    else if (this.wanted && !this.timer) this.play(this.wanted);
+  }
+
   /** 곡을 고른다. 같은 곡이면 그대로, null 이면 멈춘다. 컨텍스트가 없으면 기억만 한다 */
   play(name: SongName | null): void {
     this.wanted = name;
     if (!this.ctx || !this.bus) return;
     if (name === this.name && this.timer) return;
     this.stop();
-    if (!name || !this.enabled) return;
+    if (!name || !this.enabled || this.hidden) return;
     this.name = name;
     this.song = SONGS[name];
     this.step = 0;

@@ -310,7 +310,7 @@ export class FieldRenderer {
   private foresight(ctx: CanvasRenderingContext2D, s: Session, t: number): void {
     const sec = s.values.foresight;
     if (!sec || s.state !== 'flying' || s.sim.docked) return;
-    const pr = s.sim.predictRelease(s.level, s.sim.ship, s.sim.time, sec);
+    const pr = s.sim.predictRelease(s.level, s.sim.ship, s.sim.time, sec, s.sim.activeGravs());
     const pts = pr.points, n = pts.length / 2;
     const spacing = 8;
     const phase = this.reduceMotion ? 0 : Math.floor((t * 34) % spacing);

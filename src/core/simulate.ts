@@ -207,6 +207,9 @@ export class Sim {
     return r;
   }
 
+  /** 지금 비행이 쓰는 중력 목록 — 반중력(§22.8)이면 뒤집힌 사본. 예측선이 같은 것을 쓴다 */
+  activeGravs(): Grav[] { return this.gravList(); }
+
   /** 중력 배율(§22.8)이 1 이면 원래 목록, 아니면 g 를 곱한 사본(배율·목록이 같으면 재사용) */
   private gravList(): Grav[] {
     const k = this.mods.gravScale;

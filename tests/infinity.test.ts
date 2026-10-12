@@ -186,7 +186,8 @@ describe('시드 코드 (§22.8)', () => {
     expect(seedBits(-7)).toBeLessThanOrEqual(2 ** 30 - 1);
     expect(seedFromCode('ABCDE')).toBeNull();
     expect(seedFromCode('ABCDEF!')).toBeNull();
-    expect(seedFromCode('AB0DEF')).toBe(seedFromCode('ABODEF'));
+    expect(seedFromCode('AB0DEF')).toBeNull();   // 0·O·1·I 는 알파벳에 없다
+    expect(seedFromCode('ABODEF')).toBeNull();
   });
   it('부순 소행성은 창을 갈아 끼워도 돌아오지 않는다', () => {
     const w = new InfinityWorld(9);

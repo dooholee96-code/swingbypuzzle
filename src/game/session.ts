@@ -209,15 +209,17 @@ export class Session {
    */
   revive(): boolean {
     if (!this.canRevive) return false;
+    // 이어하기는 방패 하나를 준다 — 보스전 목숨(startBoss 와 같은 규칙: 방패가 있으면 +1)도 그 뒤에 센다
+    const shield = Math.max(1, this.perks.shield);
     if (this.mode === 'boss') {
-      if (!this.boss?.revive(BOSS_LIVES + (this.perks.shield > 0 ? 1 : 0))) return false;
+      if (!this.boss?.revive(BOSS_LIVES + 1)) return false;
     } else if (!this.sim.revive()) return false;
     this.revived = true;
     this.outcome = '';
     this.state = 'flying';
     this.endElapsed = 0;
     this.turnsLeft = this.maxTurns;
-    if (this.perks.shield < 1) this.perks.shield = 1;
+    this.perks.shield = shield;
     this.sim.mods.shield = this.perks.shield;
     this.clock.reset();
     return true;

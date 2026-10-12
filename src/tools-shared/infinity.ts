@@ -54,7 +54,7 @@ export function codeFromSeed(seed: number): string {
   return out;
 }
 export function seedFromCode(code: string): number | null {
-  const c = code.trim().toUpperCase().replace(/0/g, 'O').replace(/1/g, 'I');
+  const c = code.trim().toUpperCase();          // 0·1·O·I 는 알파벳에 없어 그대로 거부된다
   if (c.length !== 6) return null;
   let v = 0;
   for (const ch of c) { const i = CODE_CHARS.indexOf(ch); if (i < 0) return null; v = v * 32 + i; }
