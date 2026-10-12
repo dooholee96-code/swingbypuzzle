@@ -67,7 +67,7 @@ const FLICK_PX = 20;
 let bossFrom: [number, number, number, number] = [0, 0, 0, 0];
 const BOSS_DRAG_K = 1.15;
 const heldKeys = new Set<string>();
-/** 조준 중 화살표를 누르고 있는 시간(초). 0.25초 뒤부터 매끄럽게 돈다 — 처음은 느리게, 1초 뒤엔 빠르게 */
+/** 조준 중 화살표를 누르고 있는 시간(초). 0.2초 뒤부터 매끄럽게 돈다 — 처음은 느리게, 0.8초 뒤엔 빠르게 */
 let aimHold = 0;
 let shiftHeld = false;
 let bossShots = 0, bossHits = 0, bossAlarm = -1;
@@ -629,12 +629,12 @@ addEventListener('keydown', (e) => {
   if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
     const sign = e.key === 'ArrowLeft' ? -1 : 1;
     if (st === 'ready' || st === 'aiming') {
-      // 한 번 누르면 0.5°(Shift 5°). 누르고 있으면 frame 이 매끄럽게 돌린다(aimHold) — 키 반복은 느리다
+      // 한 번 누르면 1°(Shift 5°). 누르고 있으면 frame 이 매끄럽게 돌린다(aimHold) — 키 반복은 느리다
       if (e.repeat) { e.preventDefault(); return; }
       if (glide) snapToStart();
       session.beginAim();
       session.aimFar = true;
-      session.setAngle(clampArc(session.level, quantize(session.angle + sign * (e.shiftKey ? 5 : 0.5))));
+      session.setAngle(clampArc(session.level, Math.round(session.angle) + sign * (e.shiftKey ? 5 : 1)));
       aimHold = 0;
     } else if (st === 'flying' && !session.docked) {
       // 비행 중 방향키 = 화면 기준 좌우 분사(탭과 같다). 누르고 있어도 한 번만 — 반복 입력이 분사를 연달아 썼다
@@ -862,13 +862,13 @@ function frame(now: number): void {
     if (b.hitsTaken !== bossHits) { bossHits = b.hitsTaken; sfx.play('hurt'); buzz(50); field.onAbsorb(); }
     if (b.phase === 'dying' && bossAlarm !== -2) { bossAlarm = -2; sfx.play('bossdown'); buzz([30, 40, 30, 40, 60]); }
   } else if (session.state === 'ready' || session.state === 'aiming') {
-    // 조준: 화살표를 누르고 있으면 돌린다. 0.25초는 기다리고(한 번 누름과 구분), 그 뒤 45°/s 에서 1초에 걸쳐 180°/s 로
+    // 조준: 화살표를 누르고 있으면 돌린다. 0.2초는 기다리고(한 번 누름과 구분), 그 뒤 60°/s 에서 0.8초에 걸쳐 240°/s 로
     const kx = (heldKeys.has('ArrowRight') ? 1 : 0) - (heldKeys.has('ArrowLeft') ? 1 : 0);
     if (kx && session.state === 'aiming') {
       aimHold += dt;
-      if (aimHold > 0.25) {
-        const u = Math.min(1, (aimHold - 0.25) / 1);
-        const rate = (45 + 135 * u) * (shiftHeld ? 2 : 1);
+      if (aimHold > 0.2) {
+        const u = Math.min(1, (aimHold - 0.2) / 0.8);
+        const rate = (60 + 180 * u) * (shiftHeld ? 2 : 1);
         session.setAngle(clampArc(session.level, session.angle + kx * rate * dt));
       }
     } else aimHold = 0;
