@@ -184,6 +184,7 @@ export const ko = {
   'set.on': '켬',
   'set.off': '끔',
   'set.sfx': '효과음',
+  'set.bgm': '배경음악',
   'set.haptics': '진동',
   'set.reduceMotion': '모션 줄이기',
   'set.zoom': '화면 배율',

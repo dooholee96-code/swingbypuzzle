@@ -10,8 +10,12 @@
 export type Sfx = 'launch' | 'enterField' | 'shoot' | 'explode' | 'arrive' | 'tick' | 'boost' | 'dock'
   | 'shield' | 'levelup' | 'pick' | 'alarm' | 'hurt' | 'bossdown' | 'found' | 'dud';
 
+import { Bgm } from './bgm.js';
+
 export class Audio {
   enabled = true;
+  /** 배경음악 (§17 M18). 같은 컨텍스트, 따로 버스 */
+  readonly bgm = new Bgm();
   private ctx: AudioContext | null = null;
   private bus: GainNode | null = null;
   /** 같은 소리가 한 프레임에 겹쳐 터지는 것을 막는다 */
@@ -28,6 +32,7 @@ export class Audio {
       this.bus = this.ctx.createGain();
       this.bus.gain.value = 0.22;            // 전체 음량. 선화 게임이라 조용한 편이 어울린다
       this.bus.connect(this.ctx.destination);
+      this.bgm.attach(this.ctx, this.bus);
     } catch { this.ctx = null; }
   }
 

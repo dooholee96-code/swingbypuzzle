@@ -35,7 +35,7 @@ export interface ScreenDeps {
   /** 단계의 별과 최고 비행 시간 (§13.2). 안 깼으면 별 0, 시간 null */
   levelStats(id: string): { stars: number; best: number | null };
   settings: {
-    sfx: boolean; haptics: boolean;
+    sfx: boolean; haptics: boolean; bgm: boolean;
     glow: 'normal' | 'low'; reduce_motion: boolean; reduce_motion_set?: boolean;
     lang: LangSetting;
     zoom: 'fit' | 'x15' | 'x2';
@@ -325,6 +325,7 @@ export class Screens {
         <div class="row2"><label class="label" for="set-lang">${langLabel()}</label>
           <select id="set-lang" class="pick">${langOpts}</select></div>
         ${toggle('sfx', t('set.sfx'), s.sfx)}
+        ${toggle('bgm', t('set.bgm'), s.bgm)}
         ${toggle('haptics', t('set.haptics'), s.haptics)}
         ${toggle('reduce_motion', t('set.reduceMotion'), s.reduce_motion)}
         ${seg('zoom', t('set.zoom'), s.zoom, [['fit', t('set.zoomFit')], ['x15', t('set.zoom15')], ['x2', t('set.zoom2')]])}

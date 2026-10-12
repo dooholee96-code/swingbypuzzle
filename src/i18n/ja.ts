@@ -170,6 +170,7 @@ export const ja: Dict = {
   'set.on': 'オン',
   'set.off': 'オフ',
   'set.sfx': '効果音',
+  'set.bgm': 'BGM',
   'set.haptics': '振動',
   'set.reduceMotion': 'モーションを減らす',
   'set.zoom': '画面の拡大',

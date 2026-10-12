@@ -170,6 +170,7 @@ export const en: Dict = {
   'set.on': 'On',
   'set.off': 'Off',
   'set.sfx': 'Sound Effects',
+  'set.bgm': 'Music',
   'set.haptics': 'Vibration',
   'set.reduceMotion': 'Reduce Motion',
   'set.zoom': 'Zoom',

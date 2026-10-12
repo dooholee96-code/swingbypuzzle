@@ -247,6 +247,7 @@ function applySettings(): void {
   if (session.level) resize();                                 // 화면 배율이 바뀌었을 수 있다
   document.documentElement.classList.toggle('reduce', field.reduceMotion);
   sfx.enabled = save.data.settings.sfx;
+  sfx.bgm.setEnabled(save.data.settings.bgm);
   applyLang();
 }
 
@@ -814,6 +815,7 @@ function frame(now: number): void {
   const inBoss = !!session.boss;
   if (inBoss !== wasBoss) { wasBoss = inBoss; resize(); }
   syncHudVisibility();
+  syncBgm();
   if (!session.level) return;
   elapsed += dt;
 
@@ -964,6 +966,12 @@ function draw(preview: { points: number[]; outcome: string } | null): void {
 // 전에는 따로 도는 두 번째 rAF 루프가 매 프레임 스타일을 썼다. 바뀔 때만 쓴다.
 const hudEls = [document.querySelector('.hud.top'), hud.hint, hud.angle, hud.turns, hud.xp, hud.perks, hud.boss, hud.toastEl] as HTMLElement[];
 let hudShown: boolean | null = null;
+/** 지금 화면에 맞는 곡 (§17 M18): 타이틀·스테이지는 calm, 인피니티는 drive, 보스전은 boss */
+function syncBgm(): void {
+  if (!session.level) { sfx.bgm.play(null); return; }
+  sfx.bgm.play(demo || !session.world ? 'calm' : session.boss ? 'boss' : 'drive');
+}
+
 function syncHudVisibility(): void {
   const show = !demo && !screens.overlayOpen && !hints.open && !levelup.open;
   if (show === hudShown) return;
@@ -996,7 +1004,7 @@ if (!import.meta.env.DEV && buildTarget() !== 'itch' && 'serviceWorker' in navig
 // 개발 서버에서만: 브라우저 확인 스크립트가 정확한 각도로 쏘려고 쓴다 (§16.6). 배포 번들에는 없다
 if (import.meta.env.DEV) {
   (window as unknown as { __swingby: unknown }).__swingby = {
-    session, cam, field, save, hud, startPlay, tapTurn, startInfinity, levelup, ads: () => ads,
+    session, cam, field, save, hud, sfx, startPlay, tapTurn, startInfinity, levelup, ads: () => ads,
     // 광고 시간 조건(§14.4·§14.7)을 시험하려고 앱 시작 시각을 과거로 당긴다
     backdate: (sec: number) => { started -= sec * 1000; },
     // itch 빌드(광고 없는 제공자)의 문구·흐름을 개발 서버에서 보려고

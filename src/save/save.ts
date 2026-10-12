@@ -22,6 +22,8 @@ export interface SaveData {
   seen_intros: string[];
   settings: {
     sfx: boolean; haptics: boolean; glow: 'normal' | 'low'; reduce_motion: boolean;
+    /** 배경음악 (§17 M18). 효과음과 따로 */
+    bgm: boolean;
     /** 화면 언어. auto 면 브라우저 언어를 따른다 */
     lang: LangSetting;
     /** 사용자가 모션 줄이기를 직접 건드린 적이 있는가.
@@ -53,7 +55,7 @@ const defaults = (): SaveData => ({
   levels: {},
   seen_intros: [],
   settings: {
-    sfx: true, haptics: true, glow: 'normal',
+    sfx: true, haptics: true, glow: 'normal', bgm: true,
     reduce_motion: false, reduce_motion_set: false, lang: 'auto', zoom: 'x2', fps: 30, display_set: false,
   },
   ads: {

@@ -170,6 +170,7 @@ export const zh: Dict = {
   'set.on': '开',
   'set.off': '关',
   'set.sfx': '音效',
+  'set.bgm': '背景音乐',
   'set.haptics': '振动',
   'set.reduceMotion': '减少动态效果',
   'set.zoom': '画面缩放',
