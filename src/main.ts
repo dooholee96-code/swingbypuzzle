@@ -470,9 +470,12 @@ function dudFeedback(): void {
 function tapTurn(x: number, _y: number): void {
   // 화면 기준 좌우 (사용자 결정 2026-10, §22.4.5): 화면 왼쪽 반을 탭하면 왼쪽으로, 오른쪽 반이면
   // 오른쪽으로. 진행 방향과 상관없다 — "탭한 쪽으로" 는 진행 방향이 바뀔 때마다 헷갈렸다.
-  // ±turnMax 두 후보 중 새 진행 방향의 가로 성분이 탭한 쪽을 더 향하는 것을 고른다.
-  // 끌기(스와이프)는 끈 방향 그대로다
-  const side = x < cssW / 2 ? -1 : 1;
+  // 끌기(스와이프)는 끈 방향 그대로다. 방향키(←·→)도 같은 규칙이다
+  sideTurn(x < cssW / 2 ? -1 : 1);
+}
+
+/** 화면 기준 왼쪽(-1)·오른쪽(1)으로 분사. ±turnMax 두 후보 중 새 진행 방향의 가로 성분이 그쪽을 더 향하는 것 */
+function sideTurn(side: -1 | 1): void {
   const head = session.shipHeading() * 180 / Math.PI;
   const m = session.sim.mods.turnMax;
   const toward = (c: number): number => Math.cos(c * Math.PI / 180) * side;
@@ -600,13 +603,6 @@ function moveCamTo(x: number, y: number): void {
 
 // ── 키보드 (§10.6). 데스크톱(itch.io)용. 손가락 입력과 같은 상태 머신을 두드린다 ──
 /** 진행 방향에서 ±delta° 로 분사 (§22.1). 연기는 그쪽 30 유닛 앞에 */
-function keyTurn(delta: number): void {
-  const a = session.shipHeading() * 180 / Math.PI + delta;
-  if (!session.turn(a)) return;
-  const [sx, sy] = session.shipPos();
-  field.onTurn(sx + Math.cos(a * Math.PI / 180) * 30, sy + Math.sin(a * Math.PI / 180) * 30);
-  sfx.play('boost');
-}
 addEventListener('keyup', (e) => { heldKeys.delete(e.key); });
 addEventListener('blur', () => heldKeys.clear());
 addEventListener('keydown', (e) => {
@@ -633,7 +629,10 @@ addEventListener('keydown', (e) => {
       session.beginAim();
       session.aimFar = true;
       session.setAngle(clampArc(session.level, quantize(session.angle + sign * (e.shiftKey ? 5 : 0.5))));
-    } else if (st === 'flying' && !session.docked) keyTurn(sign * TURN_MAX);
+    } else if (st === 'flying' && !session.docked) {
+      // 비행 중 방향키 = 화면 기준 좌우 분사(탭과 같다). 누르고 있어도 한 번만 — 반복 입력이 분사를 연달아 썼다
+      if (!e.repeat) sideTurn(sign);
+    }
     else used = false;
   } else if (e.key === ' ' || e.key === 'Enter') {
     if (st === 'ready' || st === 'aiming') {
