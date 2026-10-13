@@ -38,6 +38,10 @@
   --gray-light:#BCBCBC; /* $10 */
   --red:#F87858;        /* $26 */
   --navy:#0000BC;       /* $02 링크 */
+  --ice:#A4E4FC;        /* $31 로고 크롬 */
+  --cyan:#3CBCFC;       /* $21 로고 크롬 수평선 */
+  --rose:#F85898;       /* $25 로고 노을 */
+  --magenta:#D800CC;    /* $14 로고 노을 */
   /* 글꼴. 언어마다 픽셀 글꼴 → 그 언어의 시스템 글꼴 순서 */
   --pixel:'Galmuri11 Swingby','Fusion Pixel SC Swingby';
   --text:var(--pixel),'Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',system-ui,sans-serif;
@@ -234,14 +238,20 @@ img.px{image-rendering:pixelated;image-rendering:crisp-edges}
 /* 타이틀: 뒤에서 데모가 돈다. 판을 깔지 않는다 */
 #title{background:transparent;align-items:center;justify-content:center;gap:28px}
 #title .logo{display:flex;flex-direction:column;align-items:center;gap:12px}
-#title h1{margin:0;font:400 54px/1 var(--display);color:var(--white);letter-spacing:2px;
-  text-shadow:4px 0 0 var(--ink),-4px 0 0 var(--ink),0 4px 0 var(--ink),0 -4px 0 var(--ink),
-              4px 4px 0 var(--ink),-4px -4px 0 var(--ink),4px -4px 0 var(--ink),-4px 4px 0 var(--ink),
-              7px 7px 0 var(--deep)}
-#title h1 span{display:block;text-align:center}
-#title h1 span+span{margin-top:6px}
-#title .logo .ko{font:700 17px/1 var(--text);background:var(--paper);border:3px solid var(--ink);
-                 padding:6px 12px}
+/* 로고: 80년대 레트로(토르 4편 로고 참고). 글자는 띠 그라데이션, 외곽선·그림자는 drop-shadow 를 겹쳐서.
+   text-shadow 는 투명한 글자 속으로 비쳐 보여서 쓰지 않는다. 띠는 NES 칸만(§12.6) */
+#title h1{margin:0;font:700 55px/1 var(--pixel);letter-spacing:0;display:flex;flex-direction:column;align-items:center;
+  filter:drop-shadow(-1px -1px 0 var(--ink)) drop-shadow(2px 2px 0 var(--ink)) drop-shadow(3px 3px 0 var(--deep))}
+#title h1 span{display:inline-block;padding:0 2px;-webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;color:transparent}
+#title h1 span+span{margin-top:8px}
+#title h1 .chrome{background-image:linear-gradient(180deg,var(--white) 0 44%,var(--ice) 44% 54%,
+  var(--cyan) 54% 60%,var(--paper) 60% 78%,var(--yellow) 78% 100%)}
+#title h1 .moon{margin-top:12px;font-size:66px;background-image:linear-gradient(180deg,var(--yellow) 0 26%,
+  var(--orange) 26% 50%,var(--rose) 50% 74%,var(--magenta) 74% 100%)}
+:root:lang(en) #title h1 .moon{font-size:44px}
+:root:lang(ja) #title h1 .moon{font-size:55px}
+:root:lang(zh) #title h1 .chrome{font-family:'Galmuri11 Swingby'}
 #title .bar{flex-direction:column;align-items:stretch;width:min(288px,100%);gap:14px}
 #title .bar .btn{min-height:52px;font-size:18px}
 #title .pair{display:grid;grid-template-columns:1fr 1fr;gap:14px}

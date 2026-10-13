@@ -100,7 +100,7 @@ export class Screens {
     this.hideAll();
     this.titleEl.innerHTML = `
       <div class="spacer"></div>
-      <div class="logo"><h1><span>SPACE</span><span>SURFER</span></h1>${t('title.sub') ? `<span class="ko">${t('title.sub')}</span>` : ''}</div>
+      <div class="logo"><h1><span class="chrome">SPACE</span><span class="chrome">SURFER</span><span class="moon">${t('title.sub')}</span></h1></div>
       <div class="bar">
         <button class="btn primary" data-a="start" type="button">${t('title.stage')}</button>
         ${this.d.infinityOpen()
