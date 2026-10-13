@@ -20,8 +20,8 @@ zip 맨 위에 `index.html` 이 있다. 새 버전은 같은 명령으로 다시
 
 | 항목 | 값 |
 |---|---|
-| Title | `Swingby: Moon Rabbit` (스토어에 "Swingby" 가 많아 부제를 붙인다 — CLAUDE.md 11번) |
-| Project URL | `swingby-moon-rabbit` 같은 것 |
+| Title | `Space Surfer: Moon Rabbit` ("Space Surfer" 단독은 이미 있어 "Moon Rabbit" 을 꼭 붙인다 — CLAUDE.md 11번) |
+| Project URL | `space-surfer-moon-rabbit` |
 | Short description | `A one-finger gravity puzzle. Slingshot a carrot rocket around planets.` |
 | Classification | Games |
 | Kind of project | **HTML** |
@@ -47,7 +47,7 @@ zip 맨 위에 `index.html` 이 있다. 새 버전은 같은 명령으로 다시
 
 ### English (기본)
 
-> **Swingby: Moon Rabbit** — a one-finger gravity puzzle.
+> **Space Surfer: Moon Rabbit** — a one-finger gravity puzzle.
 >
 > A moon rabbit rides a carrot rocket from planet to planet. You get one launch:
 > drag to aim, let go, and let gravity bend your path into the burrow.
@@ -66,7 +66,7 @@ zip 맨 위에 `index.html` 이 있다. 새 버전은 같은 명령으로 다시
 
 ### 한국어
 
-> **스윙바이: 달토끼** — 한 손가락 중력 퍼즐.
+> **스페이스서퍼 달토끼** — 한 손가락 중력 퍼즐.
 >
 > 당근 로켓을 탄 달토끼가 행성 사이를 날아요. 기회는 한 번 — 끌어서 조준하고, 놓으면
 > 중력이 길을 꺾어 토끼굴로 데려가요.

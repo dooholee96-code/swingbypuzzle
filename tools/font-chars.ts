@@ -12,7 +12,7 @@ import { CHAPTERS } from '../src/levels/chapters.js';
 import { DATA_DIR } from './levels-fs.js';
 
 /** 모든 언어 화면에 공통으로 나오는 글자. 숫자·기호, 언어 선택 목록의 이름들 */
-const COMMON = '0123456789 .,:;!?-+−×·…°%()[]/\'"↷✓SWINGBYswingby'
+const COMMON = '0123456789 .,:;!?-+−×·…°%()[]/\'"↷✓SWINGBYswingbySPACEURF'
   + Object.values(LANG_NAME).join('');
 
 export function fontChars(): Record<Lang, string> {

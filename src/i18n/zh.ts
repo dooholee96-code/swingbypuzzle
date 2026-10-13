@@ -3,9 +3,9 @@
 import type { Dict } from './ko.js';
 
 export const zh: Dict = {
-  'doc.title': '引力弹弓',
+  'doc.title': '太空冲浪 月兔',
 
-  'title.sub': '引力弹弓',
+  'title.sub': '月兔',
   'title.stage': '关卡',
   'title.infinity': '无尽模式',
   'title.infLocked': '通关 1-8 后解锁',
@@ -112,8 +112,8 @@ export const zh: Dict = {
   'inf.share': '分享',
   'inf.copied': '已复制，粘贴去炫耀吧',
   'inf.shareFailed': '此环境无法分享',
-  'inf.shareText': '引力弹弓 今日宇宙 {date} — 我坚持了 {sec} 秒',
-  'inf.shareTextRandom': '引力弹弓 无尽模式 — 我坚持了 {sec} 秒',
+  'inf.shareText': '太空冲浪 月兔 今日宇宙 {date} — 我坚持了 {sec} 秒',
+  'inf.shareTextRandom': '太空冲浪 月兔 无尽模式 — 我坚持了 {sec} 秒',
   'inf.revive': '继续',
   'inf.reviveAd': '看广告继续',
   'inf.revived': '续命 1 次',
@@ -157,7 +157,7 @@ export const zh: Dict = {
   'inf.codeStart': '用代码开始',
   'inf.codePh': '朋友的 6 位代码',
   'inf.codeBad': '代码不正确',
-  'inf.shareClear': '引力弹弓 无尽模式 — 征服了 15 分钟宇宙！擦过 {g} 次',
+  'inf.shareClear': '太空冲浪 月兔 无尽模式 — 征服了 15 分钟宇宙！擦过 {g} 次',
   'perk.refill': '一口胡萝卜',
   'perk.refill.desc': '补满全部喷射',
   'intro.wideExtra': '这次横向也很宽。',

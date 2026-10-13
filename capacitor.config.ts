@@ -12,7 +12,7 @@
 // 이 파일의 기본 내보내기를 그대로 읽는다.
 const config = {
   appId: 'com.example.swingby',      // ← 출시 전 확정
-  appName: '스윙바이',
+  appName: '스페이스서퍼 달토끼',
   webDir: 'dist',
   android: {
     // 구형 WebView 가 유일한 호환성 위험이다. 빌드 타깃도 ES2020 으로 낮춰 뒀다

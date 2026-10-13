@@ -3,9 +3,9 @@
 import type { Dict } from './ko.js';
 
 export const en: Dict = {
-  'doc.title': 'Swingby',
+  'doc.title': 'Space Surfer: Moon Rabbit',
 
-  'title.sub': '',
+  'title.sub': 'MOON RABBIT',
   'title.stage': 'Stages',
   'title.infinity': 'Infinity',
   'title.infLocked': 'Clear 1-8 to unlock',
@@ -112,8 +112,8 @@ export const en: Dict = {
   'inf.share': 'Share',
   'inf.copied': 'Copied. Paste it to brag',
   'inf.shareFailed': "Can't share here",
-  'inf.shareText': "Swingby Today's Universe {date} — I lasted {sec}s",
-  'inf.shareTextRandom': 'Swingby Infinity — I lasted {sec}s',
+  'inf.shareText': "Space Surfer: Moon Rabbit · Today's Universe {date} — I lasted {sec}s",
+  'inf.shareTextRandom': 'Space Surfer: Moon Rabbit · Infinity — I lasted {sec}s',
   'inf.revive': 'Continue',
   'inf.reviveAd': 'Watch Ad to Continue',
   'inf.revived': 'continued once',
@@ -157,7 +157,7 @@ export const en: Dict = {
   'inf.codeStart': 'Start with a code',
   'inf.codePh': "Friend's 6-letter code",
   'inf.codeBad': 'That code is not valid',
-  'inf.shareClear': 'Swingby Infinity — conquered the 15-minute universe! {g} grazes',
+  'inf.shareClear': 'Space Surfer: Moon Rabbit · Infinity — conquered the 15-minute universe! {g} grazes',
   'perk.refill': 'Carrot Snack',
   'perk.refill.desc': 'Refills all boosts',
   'intro.wideExtra': " Now it's wide sideways, too.",

@@ -3,9 +3,9 @@
 import type { Dict } from './ko.js';
 
 export const ja: Dict = {
-  'doc.title': 'スイングバイ',
+  'doc.title': 'スペースサーファー 月うさぎ',
 
-  'title.sub': 'スイングバイ',
+  'title.sub': '月うさぎ',
   'title.stage': 'ステージ',
   'title.infinity': 'インフィニティ',
   'title.infLocked': '1-8 クリアで解放',
@@ -112,8 +112,8 @@ export const ja: Dict = {
   'inf.share': 'シェア',
   'inf.copied': 'コピーしました。貼り付けて自慢しよう',
   'inf.shareFailed': 'ここではシェアできません',
-  'inf.shareText': 'スウィングバイ 今日の宇宙 {date} — {sec}秒 耐えました',
-  'inf.shareTextRandom': 'スウィングバイ インフィニティ — {sec}秒 耐えました',
+  'inf.shareText': 'スペースサーファー 月うさぎ 今日の宇宙 {date} — {sec}秒 耐えました',
+  'inf.shareTextRandom': 'スペースサーファー 月うさぎ インフィニティ — {sec}秒 耐えました',
   'inf.revive': '続ける',
   'inf.reviveAd': '広告を見て続ける',
   'inf.revived': '続行 1回',
@@ -157,7 +157,7 @@ export const ja: Dict = {
   'inf.codeStart': 'コードで始める',
   'inf.codePh': '友だちのコード 6文字',
   'inf.codeBad': 'コードが正しくありません',
-  'inf.shareClear': 'スウィングバイ インフィニティ — 15分の宇宙を制覇！ かすり {g}回',
+  'inf.shareClear': 'スペースサーファー 月うさぎ インフィニティ — 15分の宇宙を制覇！ かすり {g}回',
   'perk.refill': 'にんじん一口',
   'perk.refill.desc': 'ブーストを全部補充',
   'intro.wideExtra': '今度は横にも広いです。',

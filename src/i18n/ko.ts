@@ -4,10 +4,10 @@
 // {n} 같은 자리표시자는 t() 가 채운다 — 언어마다 같은 이름을 써야 한다(테스트가 지킨다).
 
 export const ko = {
-  'doc.title': '스윙바이',
+  'doc.title': '스페이스서퍼 달토끼',
 
   // §13.1 타이틀
-  'title.sub': '스윙바이',
+  'title.sub': '달토끼',
   'title.stage': '스테이지',
   'title.infinity': '인피니티',
   'title.infLocked': '1-8 을 깨면 열려요',
@@ -122,8 +122,8 @@ export const ko = {
   'inf.share': '공유',
   'inf.copied': '복사했어요. 붙여 넣어 자랑하세요',
   'inf.shareFailed': '공유할 수 없는 환경이에요',
-  'inf.shareText': '스윙바이 오늘의 우주 {date} — {sec}초 버텼어요',
-  'inf.shareTextRandom': '스윙바이 인피니티 — {sec}초 버텼어요',
+  'inf.shareText': '스페이스서퍼 달토끼 오늘의 우주 {date} — {sec}초 버텼어요',
+  'inf.shareTextRandom': '스페이스서퍼 달토끼 인피니티 — {sec}초 버텼어요',
   'inf.revive': '이어하기',
   'inf.reviveAd': '광고 보고 이어하기',
   'inf.revived': '이어하기 1회',
@@ -168,7 +168,7 @@ export const ko = {
   'inf.codeStart': '코드로 시작',
   'inf.codePh': '친구의 코드 6자리',
   'inf.codeBad': '코드가 맞지 않아요',
-  'inf.shareClear': '스윙바이 인피니티 — 15분 우주 정복! 스침 {g}회',
+  'inf.shareClear': '스페이스서퍼 달토끼 인피니티 — 15분 우주 정복! 스침 {g}회',
   'perk.refill': '당근 한 입',
   'perk.refill.desc': '분사를 전부 보충해요',
   // §7.4: 5-1 에만 덧붙인다. 앞 공백까지 문구의 일부다 — 띄어 쓰는 언어만 넣는다
