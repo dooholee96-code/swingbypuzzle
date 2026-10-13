@@ -8,6 +8,7 @@ import {
   isChapterLast, nextLevel, resumeLevel,
 } from './levels/progress.js';
 import { starFlags, starsOf } from './levels/stars.js';
+import { FramePacer } from './game/pace.js';
 import { Camera } from './game/camera.js';
 import { ARENA_H, ARENA_W } from './core/boss.js';
 import { clampArc, padAngle } from './core/angle.js';
@@ -83,7 +84,6 @@ let aimAcc = 0;
 let shiftHeld = false;
 let bossShots = 0, bossHits = 0, bossAlarm = -1;
 let dragPointer = -1;              // 조준·미니맵을 잡고 있는 손가락
-let last = performance.now();
 let elapsed = 0;                   // 연출용 시계(초). 물리 시계와 따로 간다
 let demo = false;                  // 타이틀 데모가 도는 중인가
 let demoIdle = 0;
@@ -690,6 +690,7 @@ history.pushState({ depth: 1 }, '');
 // ── 생명주기 ────────────────────────────────────────────────────────────
 addEventListener('visibilitychange', () => {
   session.pauseReset();
+  pacer.reset();
   sfx.setMuted(document.hidden);
   sfx.bgm.setHidden(document.hidden);        // 스케줄러까지 멈춘다 — 숨은 탭에서 노드를 쌓지 않게
   if (document.hidden) save.flush();
@@ -828,15 +829,15 @@ function recordOutcome(): void {
 let lastClear: { stars: [boolean, boolean, boolean]; newBest: boolean } | null = null;
 
 // ── 루프 ────────────────────────────────────────────────────────────────
-let frameOdd = false;
+const pacer = new FramePacer();
 let wasBoss = false;
 function frame(now: number): void {
   requestAnimationFrame(frame);
-  // 30fps 설정: 두 프레임에 한 번만 돈다. 물리는 누산기가 그만큼 몰아서 밟으므로 결과가 같다 (§5.8)
-  frameOdd = !frameOdd;
-  if (save.data.settings.fps === 30 && frameOdd) return;
-  const dt = Math.min((now - last) / 1000, 0.1);
-  last = now;
+  // 설정한 fps 에 맞춰 그릴 프레임만 돈다. 흐른 시간은 화면 주사율의 정수배로 맞춰
+  // 물리 스텝 수가 프레임마다 같게 한다(60Hz·60fps 면 언제나 4스텝). 물리 결과는 같다 (§5.8, pace.ts)
+  const step = pacer.tick(now, save.data.settings.fps);
+  if (step === null) return;
+  const dt = Math.min(step, 0.1);
   // 보스전에 들어가고 나올 때 배율을 다시 잡는다 (아레나는 배율 1)
   const inBoss = !!session.boss;
   if (inBoss !== wasBoss) { wasBoss = inBoss; resize(); }
